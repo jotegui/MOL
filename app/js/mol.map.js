@@ -201,15 +201,12 @@ mol.modules.map = function(mol) {
                 this.bus.addHandler(
                         'map-idle',
                         function() {
-                            self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator',{source : "map"}));
-                            if (self.display.map.overlayMapTypes.length > 0) {
-                                //self.bus.fireEvent(new mol.bus.Event('show-loading-indicator',{source : "overlays"}));
-                                /*$("img",self.display.map.overlayMapTypes).imagesLoaded (
-                                    function(images, proper, broken) {
-                                        self.bus.fireEvent( new mol.bus.Event('hide-loading-indicator',{source : "overlays"}));
-                                    }
-                                 );*/
-                            }
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'hide-loading-indicator',
+                                    {source : "map"}
+                                )
+                            );
                         }
                 );
 

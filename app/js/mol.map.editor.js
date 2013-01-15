@@ -7,7 +7,7 @@ mol.modules.map.editor = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.layers = []; //array of user defined layers.
+            this.map.editable_layers = []; //array of user defined layers.
         },
 
         start : function() {
@@ -33,85 +33,195 @@ mol.modules.map.editor = function(mol) {
             params.display = this.display;
             this.bus.fireEvent(new mol.bus.Event('add-map-control', params));
         },
-        addEditableLayer : function (layer, json, status, xhr) {
+        autoSimplify: function(json, status, xhr) {
+            alert(json);
+        },
+        addEditableLayer : function (json, status, xhr) {
             var self = this;
             //this.layer = [];
-            /*if(this.editor == undefined) {
+            if(this.editor == undefined) {
                 this.editor = new google.maps.drawing.DrawingManager({
-                      //drawingMode: google.maps.drawing.OverlayType.POLYGON,
-                      //drawingControl: true,
+                      drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                      drawingControl: true,
                       drawingControlOptions: {
                         position: google.maps.ControlPosition.TOP_CENTER,
                         drawingModes: [
-                          //google.maps.drawing.OverlayType.POLYGON
+                          google.maps.drawing.OverlayType.POLYGON
                         ]
                       },
                       polygonOptions: {
-                        fillColor: '#ffff00',
-                        fillOpacity: 1,
-                        strokeWeight: 5,
-                        clickable: true,
-                        zIndex: 1,
                         editable: true
                       }
-                    });
-                this.editor.setMap(this.map);
-            }*/
-
-            _.each(
-                json.rows,
-                function(row) {
-                    var geojson = JSON.parse(row.geom),
-                        feature = new GeoJSON(geojson);
-                    if(feature.setMap != undefined) {
-                        //feature.draggable=true;
-                        feature.setOptions({editable:true, name: layer.id});
-                        feature.setMap(self.map)
-                        self.layers.push({id: layer.id, overlay: feature});
-                    } else {
-
-                        _.each(
-                            feature,
-                            function(f) {
-                                if(f.setMap != undefined) {
-                                    //f.draggable=true;
-                                    f.setOptions({editable:true, name: layer.id});
-                                    f.setMap(self.map);
-                                }
-                                self.layers.push({id: layer.id, overlay: f});
-                            }
-                        );
-                    }
+                });
+                google.maps.event.addListener(
+                    this.editor, 
+                    'overlaycomplete', 
+                    this.overlayComplete.bind(self)
+                );
+            }
+            this.editor.setMap(this.map);
+            this.editor.polygonOptions.name = this.current_layer.id;
+            this.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source: this.current_layer.dataset_id }))
+            if(json != null) {
+	            _.each(
+	                json.rows,
+	                function(row) {
+	                    var geojson = JSON.parse(row.geom),
+	                        feature = new GeoJSON(geojson);
+	                    if(feature.setMap != undefined) {
+	                        //feature.draggable=true;
+	                        feature.setOptions({editable:true, clickable:true, name: self.current_layer.id});
+	                        google.maps.event.addListener(
+	                            feature,
+	                            'click',
+	                            self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: feature})  
+	                        );
+	                        feature.setMap(self.map);
+	                        self.map.editable_layers.push({id: self.current_layer.id, overlay: feature});
+	                    } else {
+	
+	                        _.each(
+	                            feature,
+	                            function(f) {
+	                                if(f.setMap != undefined) {
+	                                    //f.draggable=true;
+	                                    f.setOptions({editable:true, name: self.current_layer.id});
+	                                    google.maps.event.addListener(
+	                                        f,
+	                                        'click',
+	                                        self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: f})  
+	                                    );
+	                                    f.setMap(self.map);
+	                                }
+	                                self.map.editable_layers.push({id: self.current_layer.id, overlay: f});
+	                            }
+	                        );
+	                    }
+	                }
+	            );
+			}
+            this.bus.fireEvent(new mol.bus.Event('add-layers',{layers:[this.current_layer]}));
+        },
+        overlayComplete: function (event) {
+            var self = this;
+            event.id = this.current_layer.id;
+            event.layer = this.current_layer;
+            google.maps.event.addListener(
+                event.overlay,
+                'click',
+                self.handleFeatureClick.bind(self, event)
+            );
+            this.handleFeatureClick(event);
+            this.map.editable_layers.push(event);
+        },
+        handleFeatureClick: function(event) {
+            var name = event.layer.name,
+            	display = new mol.map.editor.FeatureOptionsDisplay(name);
+            
+            display.cancel.click(
+                function(e) {
+                    display.dialog('close');
                 }
             );
-            this.bus.fireEvent(new mol.bus.Event('add-layers',{layers:[layer]}));
-
-
-
+            display.del.click(
+                function(e) {
+                    event.overlay.setMap(null);
+                    display.dialog('close');
+                    delete(event);
+                }
+            );
+            display.save.click(
+            	function(e) {
+            		event.seasonality = $(display.seasonality).val();
+            		event.description = $(display.description).val();
+            		display.dialog('close');
+            	}
+            );
+            $(display).dialog({width:650});
         },
         defineRange: function () {
-            var name = prompt(
-                'This feature creates a new range map based on the currently ' +
-                'visible layers. What species (scientific name) would you like ' +
-                'to define a range for?'
-            );
-            if (name) {
-                this.startEditing(name);
+            var display,
+            	mt = this.map.overlayMapTypes.getAt(0),
+            	name = "",
+            	self = this,
+            	useExisting = false,
+            	usePoints = false;
+            	detail = 150000;
+            if(mt) {	      	
+	    		name = mt.name.split('--')[1]
+	    			.replace(/_/g, ' ');
+	    		name = '{0}{1}'.format(
+	    			name[0].toUpperCase(),
+	    			name.substr(1)
+	            );
+            } else {
+            	name = '';
+            	
             }
+            
+            display = new mol.map.editor.NewRangeDialog(name);
+            if(name=='') {	
+            	$(display.useExistingContainer).hide();
+            }
+            
+            display.start.click(
+                function(event) {
+                    if(name!='') {
+                        useExisting = $(display.useExisting).val();
+                        usePoints = $(display.usePoints).val();
+                        detail = $(display.detail).val();
+                    } 
+                    self.startEditing(
+                        $(display.name).val(),
+                        useExisting, 
+                        usePoints,
+                        detail
+                    );
+                    $(display).dialog('close');
+                }   
+            );
+            display.cancel.click(
+                function(event) {
+                    $(display).dialog('close');
+                }
+            );
+            $(display).dialog({width:650});
         },
-        startEditing: function(name) {
+        storePolygon: function(feature, layer) {
+            var q,
+                coords  = new Array(),
+                path = feature.overlay.getPath(),
+                payload = { type: "MultiPolygon", coordinates: new Array()};
+            payload.coordinates.push(new Array());
+            payload.coordinates[0].push(new Array());
+            
+            for (var i = 0; i < path.length; i++) {
+              coord = path.getAt(i);
+              coords.push( coord.lng() + " " + coord.lat() );
+              payload.coordinates[0][0].push([coord.lng(),coord.lat()])
+            }
+            
+            q = "geojson={0}".format(JSON.stringify(payload)) +
+                "&userid=webuser" +
+                "&scientificname={0}".format(layer.name) +
+                "&seasonality={0}".format(feature.seasonality) +
+                "&description={0}".format(feature.description) +
+                "&dataset_id={0}".format(layer.dataset_id);
+            
+            $.ajax({
+              url: "userdata/put",
+              type: 'POST',
+              dataType: 'jsonp',
+                  data: q,
+                  success: function() { },
+                  error: function() { }
+            });
+        },
+        startEditing: function(name, useExisting, usePoints, detail) {
             //TODO: zoom to max layer extent
             //first get a very simplified convex hull of all available maps
             var layers = [], //all current layers
-                newLayer = {
-                    name: name,
-                    type:'custom',
-                    source:'webuser',
-                    dataset_id: 'www',
-                    id: 'layer--{0}--custom--webuser--www'
-                        .format(name.replace(/ /g, '_')),
-                    english: ''
-                },
+                key = '{0}{1}'.format(name, new Date().getTime()), //unique layer id
                 tiles = [],
                 gridres = 40075000/(256^this.map.getZoom()),
                 tilesql = ''+
@@ -124,17 +234,39 @@ mol.modules.map.editor = function(mol) {
                                     'ST_Union(' +
                                         'ST_Buffer(g.geom,0)' +
                                     '),' +
-                                    '200000' +
+                                    '{1}' +
                                 '),' +
                                 '4326' +
                             ')' +
                         ') as geom ' +
+                    'FROM ({0}) g ',
+                count_sql = '' +
+                    'SELECT ST_NPoints(ST_Simplify(' +
+                                    'ST_Union(' +
+                                        'g.geom,0' +
+                                    '),10000)' +
+                        ') as n ' +
                     'FROM ({0}) g ';
-
+            this.current_layer = {
+                    name: name,
+                    type:'custom',
+                    type_title: 'User defined layer.',
+                    source_title: 'Web user',
+                    source_type: 'webuser',
+                    source_type_title: 'Web user',
+                    source:'webuser',
+                    editing: true,
+                    dataset_id: key,
+                    id: 'layer--{0}--custom--webuser--{1}'
+                        .format(name.replace(/ /g, '_'),
+                        key),
+                    names: '',
+                    type_sort_order: 0
+            };
             //make an array of layer ids
             this.map.overlayMapTypes.forEach(
                 function(mt,i) {
-                    if(mt.name.split('--')[2]!='points') {
+                    if(usePoints) {
                         layers.push(mt.name);
                     }
                 }
@@ -143,13 +275,8 @@ mol.modules.map.editor = function(mol) {
                 layers,
                 function(layer) {
                     var collectsql = (layer.split('--')[2] == 'points') ?
-                        'ST_SnapToGrid(ST_ConcaveHull(' +
-                            'ST_Collect('+
-                                'the_geom_webmercator'+
-                            '),' +
-                            '0.90' +
-                        '),50000)' :
-                        ' ST_SnapToGrid(the_geom_webmercator,10000) ',
+                        'ST_SnapToGrid(ST_Buffer(the_geom_webmercator,20000),10000) ':
+                        'ST_SnapToGrid(the_geom_webmercator,10000) ',
                         source = layer.split('--')[3], //source
                         type = layer.split('--')[2], //type
                         name = layer.split('--')[1],
@@ -167,15 +294,30 @@ mol.modules.map.editor = function(mol) {
                     );
                 }
             );
-
-            $.getJSON(
-                mol.services.cartodb.sqlApi.jsonp_url.format(
-                    sql.format(
-                        tiles.join(' UNION ')
-                    )
-                ),
-                this.addEditableLayer.bind(this, newLayer)
-            );
+            
+            this.bus.fireEvent(new mol.bus.Event('show-loading-indicator', {source: this.current_layer.dataset_id }))
+            if(tiles.length>0 && useExisting == "true") {
+	            $.getJSON(
+	                mol.services.cartodb.sqlApi.jsonp_url.format(
+	                    sql.format(
+	                        tiles.join(' UNION '),
+	                        detail
+	                    )
+	                ),
+	                this.addEditableLayer.bind(this)
+	            );
+            } else if(false) {//tiles.length>0 && useExisting == "true" && detail == "auto"){
+                $.getJSON(
+                    mol.services.cartodb.sqlApi.jsonp_url.format(
+                        count_sql.format(
+                            tiles.join(' UNION ')
+                        )
+                    ),
+                    this.autoSimplify.bind(this)
+                );
+            } else {
+                this.addEditableLayer();
+            }
         },
         addEventHandlers : function () {
             var self = this;
@@ -196,12 +338,16 @@ mol.modules.map.editor = function(mol) {
                         layers,
                         function(layer_to_remove) {
                             _.each(
+                                self.map.editable_layers,
                                 function(existing_layer) {
                                     if(existing_layer.id
                                         == layer_to_remove.id) {
+                                        if(existing_layer.overlay.editable) {
+                                            self.editor.setMap(null);
+                                        }
                                         existing_layer.overlay.setMap(null);
-                                        self.layers = _.without(
-                                            self.layers,
+                                        self.map.editable_layers = _.without(
+                                            self.map.editable_layers,
                                             existing_layer
                                         );
                                     }
@@ -241,8 +387,33 @@ mol.modules.map.editor = function(mol) {
                     )
                     $.getJSON(
                         url,
-                        self.addEditableLayer(newLayer).bind(self)
+                        self.addEditableLayer.bind(self)
                     );
+                }
+            );
+            /*editing of an existing layer... TODO!*/
+            this.bus.addHandler(
+                'toggle-editing',
+                function(event) {
+                    var layer = event.layer;
+                            _.each(
+                                self.map.editable_layers,
+                                function(existing_layer) {
+                                    if(existing_layer.id
+                                        == layer.id) {
+                                        existing_layer.overlay.editable =
+                                            !existing_layer.overlay.editable;
+                                        if(!existing_layer.overlay.editable) {
+                                            self.editor.setMap(null);
+                                            self.storePolygon(existing_layer, layer);
+                                        } else {
+                                            self.editor.setMap(self.map);
+                                        }
+                                        existing_layer.overlay.editable_changed();
+                                    }
+                                }
+                            );
+                        
                 }
             )
         },
@@ -253,7 +424,7 @@ mol.modules.map.editor = function(mol) {
             var html = '' +
                     '<div class="mol-Map-EditorDisplay widgetTheme">' +
                         '<button class="edit">' +
-                            'Define Range' +
+                            'Create Map' +
                         '</button>' +
                     '</div>';
 
@@ -262,16 +433,76 @@ mol.modules.map.editor = function(mol) {
             this.defineRange=$(this).find('.edit');
         }
     });
+    mol.map.editor.FeatureOptionsDisplay = mol.mvp.View.extend({
+        init : function(name) {
+            var html = '' +
+                    '<div class="mol-Map-EditorFeatureOptions">' +
+                    	'Set Feature Metadata for {0} ' +
+                        'Seasonality'+
+                        '<select class="seasonality">'+
+                            '<option value=1>Resident</option>' +
+                            '<option value=2>Breeding Season</option>' +
+                            '<option value=3>Non-breeding Season</option>' +
+                            '<option value=4>Passage</option>' +
+                            '<option value=5>Seasonal Occurrence Uncertain</option>' +
+                         '</select><br>' +
+                         'Description' +
+                         '<textarea class="description" height=10 width=200 value=""></textarea>' +
+                         '<br>' +
+                         '<button class="delete">Delete feature</button>' +
+                         '<button class="save">Save Changes</button>' +
+                         '<button class="cancel">Cancel</button>' +
+                    '</div>';
+            this._super(html.format(name));
+            this.del = $(this).find('.delete');
+            this.cancel = $(this).find('.cancel');
+            this.save =$(this).find('.save');
+            this.seasonality = $(this).find('.seasonality');
+            this.description = $(this).find('.description');
+        }
+    });
     mol.map.editor.NewRangeDialog = mol.mvp.View.extend({
-            init: function() {
+            init: function(name) {
                 var html = '' +
                     '<div id="dialog">' +
-                        'This feature creates a new range map based on ' +
-                        'layers visible on the map.' +
-                        '<br>' +
+                        '<table width="600px"><tbody><tr><td>What species (scientific name) are you mapping?</td><td align="right">' +
+                        '<input type="text" class="name" value="{0}"></td></tr></tbody></table>' +
+                        '<div class="useExistingContainer"><table  width="600px"><tbody><tr>' +
+                            '<td>Would you like to use an outline of the ' +
+                            ' currently visible layers?</td>' +
+                            '<td  align="right"><select class="useExisting">' +
+                                '<option selected value=true>Yes</option>' +
+                                '<option value=false>No</option>' +
+                            '</select></td></tr>' +
+                            '<tr><td>Would you like to include points in the '+
+                            'outline?</td>' +
+                            '<td  align="right"><select class="usePoints">' +
+                                '<option selected value=true>Yes</option>' +
+                                '<option value=false>No</option>' +
+                            '</select></td></tr>' +
+                            '<tr><td>Full resolution polygon editing is not yet ' +
+                            ' supported in the Map of Life. What level of ' +
+                            ' simplification should be applied to the outline?</td>'  +
+                            '<td  align="right"><select class="detail">' +
+                                //'<option value="auto">Auto</option>' +
+                                '<option value="10000">10 km</option>' +
+                                '<option value="50000">50 km</option>' +
+                                '<option value="100000">100 km</option>' +
+                                '<option value="150000">150 km</option>' +
+                                '<option value="200000">150 km</option>' +
+                            '</select></td></tr></tbody></table>' +
+                        '</div>' +
+                        '<button class="start">Start mapping</button>' +
+                        '<button class="cancel">Cancel</button>' +
                     '</div>  ';
-                this._super(html);
-
+                this._super(html.format(name));
+                this.name = $(this).find('.name');
+                this.start = $(this).find('.start');
+                this.cancel = $(this).find('.cancel');
+                this.usePoints = $(this).find('.usePoints');
+                this.useExistingContainer = $(this).find('.useExistingContainer');
+                this.useExisting = $(this).find('.useExisting');
+                this.detail = $(this).find('.detail');
         }
     });
 };

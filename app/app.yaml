@@ -58,6 +58,9 @@ handlers:
 - url: /backend/.*
   script: search_cache_backend.application
 
+- url: /userdata/.*
+  script: edit_handler.application
+
 - url: /about.*
   script: homepage.application
 

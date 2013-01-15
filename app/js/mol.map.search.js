@@ -17,7 +17,7 @@ mol.modules.map.search = function(mol) {
                     '<span class="eng">{1}</span>' +
                 '</div>';
             this.ac_sql = "" +
-                "SELECT n,v FROM ac WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
+                "SELECT n,v FROM (SELECT n, v from ac UNION select distinct u.scientificname as n, t.common_names_eng as v from userdata u left join taxonomy t ON u.scientificname = t.scientificname) a WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
@@ -31,7 +31,8 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +   
+                    's.title as source_type_title, ' +  
+                    'false as editing, ' +
                     'l.feature_count as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
@@ -48,8 +49,8 @@ mol.modules.map.search = function(mol) {
                     'l.dataset_id as dataset_id, ' +
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
-                    
-                'FROM layer_metadata l ' +
+                'FROM (SELECT scientificname, extent, feature_count, provider, type, dataset_id FROM layer_metadata UNION ALL  ' +
+                " SELECT scientificname, box2d(ST_Extent(the_geom)) as extent, count(*) as feature_count, 'webuser' as provider, 'custom' as type, 'userdata' as dataset_id from userdata group by scientificname) l " +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -61,7 +62,7 @@ mol.modules.map.search = function(mol) {
                 'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
-                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
+                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}' or l.scientificname~*'\\m{0}'" +
                 'ORDER BY name, type_sort_order';
         },
 

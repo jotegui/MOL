@@ -463,7 +463,16 @@ mol.modules.map.layers = function(mol) {
                             mt.interaction.clickAction = "";
                         }
                     );
-
+                    
+                    if(layer.editing) {
+                        l.styler.css('visibility','hidden');
+                        l.find(".buttonContainer").hide();
+                        $(self.display).find('.selected')
+                                    .removeClass('selected');
+                        l.addClass('selected');
+                        l.edit.show();
+                    }
+                    
                     //Hack so that at the end
                     //we can fire opacity event with all layers
                     all.push({layer:layer, l:l, opacity:opacity});
@@ -493,7 +502,8 @@ mol.modules.map.layers = function(mol) {
 
                             //Hide the layer widget toggle in the main menu
                             //if no layers exist
-                            if(self.map.overlayMapTypes.length == 0) {
+                            if(self.map.overlayMapTypes.length == 0 &&
+                                self.map.editable_layers.length == 0 ) {
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
                                         'hide-layer-display-toggle'));
@@ -540,10 +550,18 @@ mol.modules.map.layers = function(mol) {
                         function(event) {
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'edit-layer',
+                                    'toggle-editing',
                                     {layer: layer}
                                 )
                             )
+                            if($(this).text()=="Edit") {
+                                $(this).text("Save");
+                            } else {
+                                $(this).text("Edit");
+                                $(self.display).find(".selected")
+                                    .removeClass("selected");
+                                $(l.layer).addClass("selected");
+                            }
                         }
                     );
                     // Click handler for style toggle
@@ -561,7 +579,7 @@ mol.modules.map.layers = function(mol) {
                                     $(b).qtip('destroy');
                                 }
                             );
-                            if(layer.type != 'custom') {
+                            if(!layer.editing) {
                                 self.displayLayerStyler(this, layer);
                             }
                             event.stopPropagation();
@@ -575,7 +593,9 @@ mol.modules.map.layers = function(mol) {
                                 isSelected = false;
 
                             $(l.layer).focus();
-
+                            if(layer.editing) {
+                                return;
+                            }
                             if($(this).hasClass('selected')) {
                                 $(this).removeClass('selected');
 
@@ -583,7 +603,7 @@ mol.modules.map.layers = function(mol) {
                                 boo = false;
                             } else {
 
-                                if($(self.display && l.type != 'custom')
+                                if($(self.display)
                                         .find('.selected').length > 0) {
                                     //get a reference to this layer
                                     self.toggleLayerHighlight(
@@ -706,8 +726,10 @@ mol.modules.map.layers = function(mol) {
             if(sortedLayers.length == 1) {
                 //if only one new layer is being added
                 //select it
-                this.display.list.find('.layer')
-                    [this.display.list.find('.layer').length-1].click();
+                if(!sortedLayers[0].editing) {
+                    this.display.list.find('.layer')
+                        [this.display.list.find('.layer').length-1].click();
+                }
             } else if(sortedLayers.length > 1) {
                 //if multiple layers are being added
                 //layer clickability returned to the
@@ -747,7 +769,9 @@ mol.modules.map.layers = function(mol) {
                 },
                 q,
                 self = this;
-
+           if(layer.editing) {
+                return;
+            }
             layer_curr_style = self.parseLayerStyle(layer, "current");
             layer_orig_style = self.parseLayerStyle(layer, "orig");
 
@@ -811,7 +835,9 @@ mol.modules.map.layers = function(mol) {
                         $(api.elements.content).find('#applyStyle').click(
                             function(event) {
                                 var o = {};
-
+                                if(layer.editing) {
+                                    return;
+                                }
                                 if(layer.type == "range") {
                                     //TODO issue #175 replace iucn ref
                                     if(layer.source == "jetz" ||
@@ -926,7 +952,9 @@ mol.modules.map.layers = function(mol) {
         getStylerLayout: function(element, layer) {
             var pickers,
                 sizer;
-
+            if(layer.editing) {
+                return;
+            }
             if(layer.style_table == "points_style") {
                pickers = '' +
                    '<div class="colorPicker">' +
@@ -1063,7 +1091,9 @@ mol.modules.map.layers = function(mol) {
                 max,
                 min,
                 layOpa;
-
+            if(lay.editing) {
+                return;
+            }
                 if(lay.type == "range") {
                     if(lay.source == "jetz" || lay.source == "iucn") {
                         objs.push({name: '#showFill1Palette',
@@ -1181,7 +1211,9 @@ mol.modules.map.layers = function(mol) {
                 s1Style, s2Style, s3Style, s4Style, s5Style, pStyle,
                 s1, s2, s3, s4, s5, p, pc,
                 c1, c2, c3, c4, c5;
-
+            if(layer.editing) {
+                return;
+            }
             if(original == "current") {
                 style = layer.style;
             } else if(original == "orig") {
@@ -1375,7 +1407,7 @@ mol.modules.map.layers = function(mol) {
                 smidStyle,
                 midStyle,
                 srestStyle;
-
+            
             if(isSeas) {
                 spreStyle = style.substring(
                                 0,
@@ -1428,7 +1460,9 @@ mol.modules.map.layers = function(mol) {
         updateStyle: function(layer, style, newStyle) {
             var updatedStyle,
                 season;
-
+            if(layer.editing) {
+                return;
+            }
             if(layer.style_table == "points_style") {
                 style = this.changeStyleProperty(
                             style, 'marker-fill', newStyle.fill, false);
@@ -1524,6 +1558,9 @@ mol.modules.map.layers = function(mol) {
         },
 
         updateLegendCss: function(button, o, layer, opa) {
+            if(layer.editing) {
+                return;
+            }
             if(layer.type == "range") {
                 if(layer.source == "jetz" || layer.source == "iucn") {
                     $(button).find('.s1').css({
@@ -1635,9 +1672,11 @@ mol.modules.map.layers = function(mol) {
                     style: null,
                     isSelected: sel
                 };
-
+            if(layer.editing) {
+                return;
+            }
                 oldStyle = self.parseLayerStyle(layer, "current");
-
+                
                 if(layer.style_table == "points_style") {
                     style = this.changeStyleProperty(
                                 style,
@@ -1731,9 +1770,9 @@ mol.modules.map.layers = function(mol) {
                 '    <button title="Remove layer." class="close">' +
                        'x' +
                 '    </button>' +
-                //'    <button title="Edit layer." class="edit">' +
-                //       'e' +
-                //'    </button>' +
+                '    <button title="Save layer." class="edit">' +
+                       'Save' +
+                '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
                        'z' +
                 '    </button>' +
@@ -1769,6 +1808,7 @@ mol.modules.map.layers = function(mol) {
             }
             this.info = $(this).find('.info');
             this.edit = $(this).find('.edit');
+            this.edit.hide();
             this.close = $(this).find('.close');
             this.type = $(this).find('.type');
             this.source = $(this).find('.source');
@@ -1788,8 +1828,8 @@ mol.modules.map.layers = function(mol) {
                 this.pointLegend.hide();
 
                 //TODO issue #175 replace iucn ref
-                if(layer.type == "range") {
-                    if(layer.source == "jetz" || layer.source == "iucn") {
+                if(layer.type == "range" || layer.type == "custom" ) {
+                    if(layer.source == "jetz" || layer.source == "iucn" || layer.source == "webuser") {
                        this.polygonLegend.hide();
 
                        if(layer.source == 'jetz') {
@@ -1863,8 +1903,12 @@ mol.modules.map.layers = function(mol) {
 
         addLayer: function(layer) {
             var ld = new mol.map.layers.LayerDisplay(layer);
-            this.list.append(ld);
-            this.layers.push(layer);
+            if(layer.editing) {
+                this.list.prepend(ld);
+            } else {
+                this.list.append(ld);
+                this.layers.push(layer);
+            }
             return ld;
         },
 

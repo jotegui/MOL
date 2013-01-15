@@ -290,10 +290,14 @@ mol.modules.services.cartodb = function(mol) {
         {
             init: function() {          
                 this.jsonp_url = '' +
-                    'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'api/v2/sql?callback=?&q={0}';
+                    'http://mol.cartodb.com/' +
                     'api/v2/sql?callback=?&q={0}';
                 this.url = ''
-                    'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'api/v2/sql?q={0}';
+                    'http://mol.cartodb.com/' +
                     'api/v2/sql?q={0}';
                 //cache key is mmddyyyyhhmm
                 this.sql_cache_key = '120420121435';
@@ -304,7 +308,8 @@ mol.modules.services.cartodb = function(mol) {
         {
             init: function() {          
                 this.host = '' +
-                    'd3dvrpov25vfw0.cloudfront.net';
+                    //'d3dvrpov25vfw0.cloudfront.net';
+                    'mol.cartodb.com';
                 //cache key is mmddyyyyhhmm of cache start
                 this.tile_cache_key = '121220121553';
             }
@@ -516,15 +521,12 @@ mol.modules.map = function(mol) {
                 this.bus.addHandler(
                         'map-idle',
                         function() {
-                            self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator',{source : "map"}));
-                            if (self.display.map.overlayMapTypes.length > 0) {
-                                //self.bus.fireEvent(new mol.bus.Event('show-loading-indicator',{source : "overlays"}));
-                                /*$("img",self.display.map.overlayMapTypes).imagesLoaded (
-                                    function(images, proper, broken) {
-                                        self.bus.fireEvent( new mol.bus.Event('hide-loading-indicator',{source : "overlays"}));
-                                    }
-                                 );*/
-                            }
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'hide-loading-indicator',
+                                    {source : "map"}
+                                )
+                            );
                         }
                 );
 
@@ -817,14 +819,14 @@ mol.modules.map.layers = function(mol) {
         layersToggle: function(event) {
             var self = this,
                 visible = event.visible;
-            
+
             if (visible == this.display.expanded) {
                 return;
             }
             if(this.display.expanded == true || visible == false) {
                 $(self.display.styleAll).prop('disabled', false);
                 $(self.display.styleAll).qtip('destroy');
-                
+
                 this.display.layersWrapper.animate(
                     {height: this.display.layersHeader.height()+18},
                     1000,
@@ -843,7 +845,7 @@ mol.modules.map.layers = function(mol) {
                     function() {
                         self.display.layersToggle.text('▲');
                         self.display.expanded = true;
-                        
+
                         $(self.display.layersWrapper).css({'height':''});
                     }
                 );
@@ -853,21 +855,21 @@ mol.modules.map.layers = function(mol) {
 
         addEventHandlers: function() {
             var self = this;
-            
+
             this.display.removeAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     $(self.display).find(".close").trigger("click");
                 }
             );
-            
+
             this.display.toggleAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     _.each(
                         $(self.display).find(".toggle"),
                         function(checkbox){
@@ -876,26 +878,26 @@ mol.modules.map.layers = function(mol) {
                     );
                 }
             );
-            
+
             this.display.resetAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     _.each(
                         self.display.layers,
                         function(layer) {
                             var l,
                                 o;
-                                
-                            //get original style    
-                            l = self.display.getLayer(layer);                                
+
+                            //get original style
+                            l = self.display.getLayer(layer);
                             o = self.parseLayerStyle(layer, "orig");
-                            
+
                             //update css
                             self.updateLegendCss(
-                                $(l).find('.styler'), 
-                                o, 
+                                $(l).find('.styler'),
+                                o,
                                 layer,
                                 layer.orig_opacity
                             );
@@ -904,48 +906,48 @@ mol.modules.map.layers = function(mol) {
                             self.updateLayerStyle(
                                 $(l).find('.styler'),
                                 o,
-                                layer, 
+                                layer,
                                 layer.orig_opacity
                             );
                         }
                     );
                 }
             );
-            
+
             this.display.styleAll.click (
                 function(event) {
                     var button = this,
                         baseHtml,
-                        q;      
-                        
-                    baseHtml = '' + 
+                        q;
+
+                    baseHtml = '' +
                            '<div class="mol-LayerControl-Styler">' +
-                           '  <div class="colorPickers">' + 
-                           '    <div class="colorPicker">' + 
-                           '      <span class="stylerLabel">Color:&nbsp</span>' + 
+                           '  <div class="colorPickers">' +
+                           '    <div class="colorPicker">' +
+                           '      <span class="stylerLabel">Color:&nbsp</span>' +
                            '      <input type="text" id="allFill" />' +
-                           '    </div>' + 
-                           '  </div>' + 
+                           '    </div>' +
+                           '  </div>' +
                            '  <div class="buttonWrapper allStyler">' +
                            '    <button id="applyStyle">Apply</button>' +
                            '    <button id="cancelStyle">Cancel</button>' +
-                           '  </div>' +      
+                           '  </div>' +
                            '</div>';
-                           
+
                     _.each(
                         self.display.layers,
                         function(layer) {
-                            var l, 
+                            var l,
                                 b;
-                            
+
                             l = self.display.getLayer(layer);
                             b = $(l).find('.styler');
                             $(b).qtip('destroy');
                         }
-                    );       
-                    
+                    );
+
                     $(button).removeData('qtip');
-                    
+
                     q = $(button).qtip({
                         content: {
                             text: baseHtml,
@@ -970,29 +972,29 @@ mol.modules.map.layers = function(mol) {
                             classes: 'ui-tooltip-widgettheme'
                         },
                         events: {
-                            render: function(event, api) {                                       
+                            render: function(event, api) {
                                 var colors = ['black','white','red','yellow',
                                               'blue','green','orange','purple'],
                                     colors2 = ['#66C2A5','#FC8D62', '#8DA0CB',
                                                '#E78AC3', '#A6D854', '#FFD92F',
                                                '#E5C494'];
-         
+
                                 $("#allFill").spectrum({
                                       color: 'black',
                                       showPaletteOnly: true,
                                       palette: [colors, colors2]
-                                });         
+                                });
 
                                 $(api.elements.content)
                                     .find('#applyStyle').click(
                                         function(event) {
                                             var o = {},
                                                 color;
-                                            
+
                                             color = $('#allFill')
                                                         .spectrum("get")
-                                                            .toHexString();               
-                                            
+                                                            .toHexString();
+
                                             o.fill = color;
                                             o.size = 1;
                                             o.border = color;
@@ -1002,59 +1004,59 @@ mol.modules.map.layers = function(mol) {
                                             o.s4 = color;
                                             o.s5 = color;
                                             o.p = color;
-                                            
+
                                             _.each(
                                                 self.display.layers,
                                                 function(layer) {
                                                     var l, current;
-                                                            
+
                                                     l = self.display
                                                             .getLayer(layer);
-                                                        
+
                                                     current = self
                                                             .parseLayerStyle(
-                                                                layer, 
+                                                                layer,
                                                                 "current");
-                                                            
+
                                                     o.s1c = current.s1c;
                                                     o.s2c = current.s2c;
                                                     o.s3c = current.s3c;
                                                     o.s4c = current.s4c;
                                                     o.s5c = current.s5c;
                                                     o.pc = current.pc;
-                                                    
+
                                                     if(layer.type == "range") {
                                                         o.size = 0;
                                                     }
-                                                    
-                                                    if(layer.style_table == 
+
+                                                    if(layer.style_table ==
                                                                 "point_style") {
                                                         o.size = 3;
-                                                    }        
-                                                    
+                                                    }
+
                                                     //update css
                                                     self.updateLegendCss(
-                                                        $(l).find('.styler'), 
-                                                        o, 
+                                                        $(l).find('.styler'),
+                                                        o,
                                                         layer,
                                                         0.9
                                                     );
-                        
+
                                                     //update tiles
                                                     self.updateLayerStyle(
                                                         $(l).find('.styler'),
                                                         o,
-                                                        layer, 
+                                                        layer,
                                                         0.9
                                                     );
                                                 }
-                                            );  
-                                                   
-                                            $(button).prop('disabled', false);            
+                                            );
+
+                                            $(button).prop('disabled', false);
                                             $(button).qtip('destroy');
                                         }
                                 );
-                                    
+
                                 $(api.elements.content)
                                     .find('#cancelStyle').click(
                                         function(event) {
@@ -1063,7 +1065,7 @@ mol.modules.map.layers = function(mol) {
                                         }
                                     );
                             },
-                            show: function(event, api) {                              
+                            show: function(event, api) {
                                 $(button).prop('disabled', true);
                             },
                             hide: function(event, api) {
@@ -1074,7 +1076,7 @@ mol.modules.map.layers = function(mol) {
                     });
                 }
             );
-            
+
             this.display.layersToggle.click(
                 function(event) {
                     self.layersToggle(event);
@@ -1113,7 +1115,7 @@ mol.modules.map.layers = function(mol) {
                                 } else {
                                     bounds.union(layer_bounds)
                                 }
-                                
+
                             }
                             catch(e) {
                                 //invalid extent
@@ -1126,7 +1128,7 @@ mol.modules.map.layers = function(mol) {
                     }
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-display-toggle',
                 function(event) {
@@ -1141,20 +1143,20 @@ mol.modules.map.layers = function(mol) {
                     }
                 }
             );
-            
+
             this.bus.addHandler(
                 'layers-toggle',
                 function(event) {
                     self.layersToggle(event);
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-click-toggle',
                 function(event) {
-                    
+
                     self.clickDisabled = event.disable;
-                    
+
                     //true to disable
                     if(event.disable) {
                         self.map.overlayMapTypes.forEach(
@@ -1167,23 +1169,23 @@ mol.modules.map.layers = function(mol) {
                         _.any($(self.display.list).children(),
                             function(layer) {
                                 if($(layer).find('.layer')
-                                        .hasClass('selected')) {    
+                                        .hasClass('selected')) {
                                     self.map.overlayMapTypes.forEach(
                                         function(mt) {
-                                            if(mt.name == $(layer).attr('id')) {      
+                                            if(mt.name == $(layer).attr('id')) {
                                                 mt.interaction.add();
                                                 mt.interaction.clickAction
                                                     = "full";
                                             } else {
                                                 mt.interaction.remove();
-                                                mt.interaction.clickAction 
+                                                mt.interaction.clickAction
                                                     = "";
                                             }
 
                                         }
                                     );
-                                    
-                                    return true;     
+
+                                    return true;
                                 }
                             }
                         );
@@ -1260,22 +1262,31 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
                     
-                    //Hack so that at the end 
+                    if(layer.editing) {
+                        l.styler.css('visibility','hidden');
+                        l.find(".buttonContainer").hide();
+                        $(self.display).find('.selected')
+                                    .removeClass('selected');
+                        l.addClass('selected');
+                        l.edit.show();
+                    }
+                    
+                    //Hack so that at the end
                     //we can fire opacity event with all layers
                     all.push({layer:layer, l:l, opacity:opacity});
-                    
+
                     //style legends initially
                     o = self.parseLayerStyle(layer, "orig");
-                                    
+
                     //initalize css
                     self.updateLegendCss(
-                        $(l).find('.styler'), 
-                        o, 
+                        $(l).find('.styler'),
+                        o,
                         layer,
                         layer.orig_opacity
                     );
 
-                    //Close handler for x button 
+                    //Close handler for x button
                     //fires a 'remove-layers' event.
                     l.close.click(
                         function(event) {
@@ -1286,18 +1297,19 @@ mol.modules.map.layers = function(mol) {
 
                             self.bus.fireEvent(e);
                             l.remove();
-                            
-                            //Hide the layer widget toggle in the main menu 
+
+                            //Hide the layer widget toggle in the main menu
                             //if no layers exist
-                            if(self.map.overlayMapTypes.length == 0) {
+                            if(self.map.overlayMapTypes.length == 0 &&
+                                self.map.editable_layers.length == 0 ) {
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
                                         'hide-layer-display-toggle'));
-                                        
+
                                 $(self.display.styleAll)
                                     .prop('disabled', false);
                                 $(self.display.styleAll).qtip('destroy');
-                                        
+
                                 self.display.toggle(false);
                             }
                             event.stopPropagation();
@@ -1305,7 +1317,7 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
 
-                    //Click handler for zoom button 
+                    //Click handler for zoom button
                     //fires 'layer-zoom-extent'
                     //and 'show-loading-indicator' events.
                     l.zoom.click(
@@ -1317,12 +1329,12 @@ mol.modules.map.layers = function(mol) {
                                 extent = eval('({0})'.format(layer.extent)),
                                 bounds = new google.maps.LatLngBounds(
                                             new google.maps.LatLng(
-                                                extent.sw.lat, 
-                                                extent.sw.lng), 
+                                                extent.sw.lat,
+                                                extent.sw.lng),
                                             new google.maps.LatLng(
-                                                extent.ne.lat, 
+                                                extent.ne.lat,
                                                 extent.ne.lng));
-                                                
+
                             if(!$(l.layer).hasClass('selected')){
                                 l.layer.click();
                             }
@@ -1336,52 +1348,62 @@ mol.modules.map.layers = function(mol) {
                         function(event) {
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'edit-layer',
+                                    'toggle-editing',
                                     {layer: layer}
                                 )
                             )
+                            if($(this).text()=="Edit") {
+                                $(this).text("Save");
+                            } else {
+                                $(this).text("Edit");
+                                $(self.display).find(".selected")
+                                    .removeClass("selected");
+                                $(l.layer).addClass("selected");
+                            }
                         }
                     );
-                    // Click handler for style toggle 
+                    // Click handler for style toggle
                     l.styler.click(
                         function(event) {
                             _.each(
                                 self.display.layers,
                                 function(layer) {
-                                    var l, 
+                                    var l,
                                         b;
-                                    
+
                                     l = self.display.getLayer(layer);
                                     b = $(l).find('.styler');
                                     $(b).prop('disabled', false);
                                     $(b).qtip('destroy');
                                 }
                             );
-                             
-                            self.displayLayerStyler(this, layer);
-                            
+                            if(!layer.editing) {
+                                self.displayLayerStyler(this, layer);
+                            }
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
                     );
-                    
+
                     l.layer.click(
                         function(event) {
                             var boo = false,
                                 isSelected = false;
 
                             $(l.layer).focus();
-                            
+                            if(layer.editing) {
+                                return;
+                            }
                             if($(this).hasClass('selected')) {
                                 $(this).removeClass('selected');
-                                
+
                                 //unstyle previous layer
                                 boo = false;
                             } else {
-                                
+
                                 if($(self.display)
-                                        .find('.selected').length > 0) {       
-                                    //get a reference to this layer    
+                                        .find('.selected').length > 0) {
+                                    //get a reference to this layer
                                     self.toggleLayerHighlight(
                                         self.display
                                             .getLayerById(
@@ -1392,20 +1414,20 @@ mol.modules.map.layers = function(mol) {
                                                             false,
                                                             false);
                                 }
-                                
+
                                 $(self.display).find('.selected')
                                     .removeClass('selected');
-                                    
+
                                 $(this).addClass('selected');
-                                
+
                                 //style selected layer
                                 boo = true;
                                 isSelected = true;
                             }
-                            
+
                             self.map.overlayMapTypes.forEach(
                                 function(mt) {
-                                    if(mt.name == layer.id && 
+                                    if(mt.name == layer.id &&
                                        $(l.layer).hasClass('selected')) {
                                         if(!self.clickDisabled) {
                                            mt.interaction.add();
@@ -1420,13 +1442,13 @@ mol.modules.map.layers = function(mol) {
                                     }
                                 }
                             )
-                            
+
                             if(self.clickDisabled) {
                                 isSelected = false;
                             }
-                            
+
                             self.toggleLayerHighlight(layer,boo,isSelected);
-                            
+
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
@@ -1491,10 +1513,10 @@ mol.modules.map.layers = function(mol) {
                     return layer.id;
                 },
                 this);
-                
+
             this.bus.fireEvent(
                 new mol.bus.Event(
-                    'reorder-layers', 
+                    'reorder-layers',
                     {layers:layerIds}
                 )
             );
@@ -1502,13 +1524,15 @@ mol.modules.map.layers = function(mol) {
             if(sortedLayers.length == 1) {
                 //if only one new layer is being added
                 //select it
-                this.display.list.find('.layer')
-                    [this.display.list.find('.layer').length-1].click();
+                if(!sortedLayers[0].editing) {
+                    this.display.list.find('.layer')
+                        [this.display.list.find('.layer').length-1].click();
+                }
             } else if(sortedLayers.length > 1) {
                 //if multiple layers are being added
                 //layer clickability returned to the
                 //previously selected layer
-                
+
                 if(wasSelected.length > 0) {
                     this.map.overlayMapTypes.forEach(
                         function(mt) {
@@ -1522,15 +1546,15 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
                 }
-                
+
             }
-            
+
             //done making widgets, toggle on if we have layers.
             if(layerIds.length>0) {
                 this.layersToggle({visible:true});
             }
         },
-            
+
         displayLayerStyler: function(button, layer) {
             var baseHtml,
                 layer_curr_style,
@@ -1543,13 +1567,15 @@ mol.modules.map.layers = function(mol) {
                 },
                 q,
                 self = this;
-            
+           if(layer.editing) {
+                return;
+            }
             layer_curr_style = self.parseLayerStyle(layer, "current");
             layer_orig_style = self.parseLayerStyle(layer, "orig");
-            
-            baseHtml = '' + 
+
+            baseHtml = '' +
                    '<div class="mol-LayerControl-Styler ' +layer.source+ '">' +
-                   '  <div class="colorPickers"></div>' + 
+                   '  <div class="colorPickers"></div>' +
                    '  <div class="sizerHolder"></div>' +
                    '  <div class="opacityHolder">' +
                    '    <span class="sliderLabel">Opacity:&nbsp</span>' +
@@ -1562,11 +1588,11 @@ mol.modules.map.layers = function(mol) {
                    '    <button id="applyStyle">Apply</button>' +
                    '    <button id="resetStyle">Reset</button>' +
                    '    <button id="cancelStyle">Cancel</button>' +
-                   '  </div>' +      
+                   '  </div>' +
                    '</div>';
-            
-            $(button).removeData('qtip'); 
-            
+
+            $(button).removeData('qtip');
+
             q = $(button).qtip({
                 content: {
                     text: baseHtml,
@@ -1591,53 +1617,55 @@ mol.modules.map.layers = function(mol) {
                     classes: 'ui-tooltip-widgettheme'
                 },
                 events: {
-                    render: function(event, api) {   
+                    render: function(event, api) {
                         self.getStylerLayout(
                                 $(api.elements.content)
                                     .find('.mol-LayerControl-Styler'),
                                 layer);
-                                
+
                         self.setStylerProperties(
                                     api.elements.content,
                                     layer,
-                                    layer_curr_style, 
+                                    layer_curr_style,
                                     layer_orig_style,
                                     false);
-               
+
                         $(api.elements.content).find('#applyStyle').click(
                             function(event) {
                                 var o = {};
-
+                                if(layer.editing) {
+                                    return;
+                                }
                                 if(layer.type == "range") {
-                                    //TODO issue #175 replace iucn ref 
-                                    if(layer.source == "jetz" || 
+                                    //TODO issue #175 replace iucn ref
+                                    if(layer.source == "jetz" ||
                                        layer.source == "iucn") {
                                         o.s1 = $('#showFill1Palette')
                                              .spectrum("get")
                                                 .toHexString();
                                         o.s1c = $('#seasChk1')
-                                                    .is(':checked') ? 1:0;        
+                                                    .is(':checked') ? 1:0;
                                         o.s2 = $('#showFill2Palette')
                                                  .spectrum("get")
                                                     .toHexString();
                                         o.s2c = $('#seasChk2')
-                                                    .is(':checked') ? 1:0;            
+                                                    .is(':checked') ? 1:0;
                                         o.s3 = $('#showFill3Palette')
                                                  .spectrum("get")
                                                     .toHexString();
                                         o.s3c = $('#seasChk3')
-                                                    .is(':checked') ? 1:0; 
+                                                    .is(':checked') ? 1:0;
                                     }
-                                    
-                                    //TODO issue #175 replace iucn ref               
+
+                                    //TODO issue #175 replace iucn ref
                                     if(layer.source == "iucn") {
                                         o.s4 = $('#showFill4Palette')
                                              .spectrum("get")
                                                 .toHexString();
                                         o.s4c = $('#seasChk4')
                                                     .is(':checked') ? 1:0;
-                                    }                
-                                     
+                                    }
+
                                     if(layer.source != "jetz") {
                                         o.s5 = $('#showFill5Palette')
                                              .spectrum("get")
@@ -1645,61 +1673,61 @@ mol.modules.map.layers = function(mol) {
                                         o.s5c = $('#seasChk5')
                                                     .is(':checked') ? 1:0;
                                     }
-                                    
-                                    if(layer.source == "iucn") {               
+
+                                    if(layer.source == "iucn") {
                                         o.p = $('#showFill6Palette')
                                              .spectrum("get")
-                                                .toHexString(); 
+                                                .toHexString();
                                         o.pc = $('#seasChk6')
-                                                    .is(':checked') ? 1:0;                
-                                    }                                                               
+                                                    .is(':checked') ? 1:0;
+                                    }
                                 } else {
                                     o.fill = $('#showFillPalette')
                                             .spectrum("get")
                                                 .toHexString();
                                 }
-                                
+
                                 o.border = $('#showBorderPalette')
                                                 .spectrum("get")
-                                                    .toHexString();                
+                                                    .toHexString();
                                 o.size = $(api.elements.content)
                                                 .find('.sizer')
                                                     .slider('value');
-                                
+
                                 self.updateLegendCss(
-                                        button, 
-                                        o, 
+                                        button,
+                                        o,
                                         layer,
                                         parseFloat($(api.elements.content)
                                             .find('.opacity')
                                                 .slider("value")));
-                                
+
                                 self.updateLayerStyle(
                                         button,
                                         o,
                                         layer,
                                         parseFloat($(api.elements.content)
                                             .find('.opacity')
-                                                .slider("value")) 
-                                );       
-                                       
-                                $(button).prop('disabled', false);           
+                                                .slider("value"))
+                                );
+
+                                $(button).prop('disabled', false);
                                 $(button).qtip('destroy');
                             }
                         );
-                        
+
                         $(api.elements.content)
                             .find('#resetStyle').click(
                                 function(event) {
                                     self.setStylerProperties(
                                                     api.elements.content,
                                                     layer,
-                                                    layer_orig_style, 
+                                                    layer_orig_style,
                                                     layer_orig_style,
                                                     true);
                                 }
                             );
-                            
+
                         $(api.elements.content)
                             .find('#cancelStyle').click(
                                 function(event) {
@@ -1708,7 +1736,7 @@ mol.modules.map.layers = function(mol) {
                                 }
                             );
                     },
-                    show: function(event, api) {                              
+                    show: function(event, api) {
                         $(button).prop('disabled', true);
                     },
                     hide: function(event, api) {
@@ -1718,138 +1746,140 @@ mol.modules.map.layers = function(mol) {
                 }
             });
         },
-            
+
         getStylerLayout: function(element, layer) {
             var pickers,
-                sizer;    
-                   
+                sizer;
+            if(layer.editing) {
+                return;
+            }
             if(layer.style_table == "points_style") {
-               pickers = '' + 
-                   '<div class="colorPicker">' + 
-                   '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+               pickers = '' +
+                   '<div class="colorPicker">' +
+                   '  <span class="stylerLabel">Fill:&nbsp</span>' +
                    '  <input type="text" id="showFillPalette" />' +
                    '</div>' +
-                   '<div class="colorPicker">' + 
-                   '  <span class="stylerLabel">Border:&nbsp</span>' + 
+                   '<div class="colorPicker">' +
+                   '  <span class="stylerLabel">Border:&nbsp</span>' +
                    '  <input type="text" id="showBorderPalette" />' +
                    '</div>';
-                   
+
                sizer = '' +
                    '<span class="sliderLabel">Size:&nbsp</span>' +
                    '  <div class="sliderContainer">' +
                    '    <div class="sizer"></div>' +
                    '  </div>' +
                    '<span id="pointSizeValue">8px</span>';
-               
+
                $(element).find('.colorPickers').prepend(pickers);
                $(element).find('.sizerHolder').prepend(sizer);
             } else {
                 if(layer.type == "range") {
                    pickers = '';
-                   
-                   //TODO issue #175 replace iucn ref     
+
+                   //TODO issue #175 replace iucn ref
                    if(layer.source == "jetz" || layer.source == "iucn") {
                        pickers+=''+
                            '<span class="seasonLabel">Breeding</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
                            '  <input type="text" id="showFill2Palette" />' +
-                           '  <input type="checkbox" id="seasChk2" ' + 
+                           '  <input type="checkbox" id="seasChk2" ' +
                                     'class="seasChk" checked="checked"/>' +
                            '</div>' +
                            '<span class="seasonLabel">Resident</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
                            '  <input type="text" id="showFill1Palette" />' +
-                           '  <input type="checkbox" id="seasChk1" ' + 
+                           '  <input type="checkbox" id="seasChk1" ' +
                                     'class="seasChk" checked="checked"/>' +
                            '</div>' +
                            '<span class="seasonLabel">Non-breeding</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
                            '  <input type="text" id="showFill3Palette" />' +
-                           '  <input type="checkbox" id="seasChk3" ' + 
+                           '  <input type="checkbox" id="seasChk3" ' +
                                     'class="seasChk" checked="checked"/>' +
                            '</div>';
-                   }                           
-                   
-                   //TODO issue #175 replace iucn ref                           
+                   }
+
+                   //TODO issue #175 replace iucn ref
                    if (layer.source == "iucn") {
                        pickers+=''+
                            '<span class="seasonLabel">Passage</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
                            '  <input type="text" id="showFill4Palette" />' +
-                           '  <input type="checkbox" id="seasChk4" ' + 
+                           '  <input type="checkbox" id="seasChk4" ' +
                                     'class="seasChk" checked="checked"/>' +
                            '</div>';
                    }
-                   
-                   //TODO issue #175 replace iucn ref  
+
+                   //TODO issue #175 replace iucn ref
                    if(layer.source != 'jetz') {
                         pickers+=''+
-                           '<span class="seasonLabel">' + 
+                           '<span class="seasonLabel">' +
                                'Seasonality Uncertain</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
                            '  <input type="text" id="showFill5Palette" />' +
-                           '  <input type="checkbox" id="seasChk5" ' + 
-                                    'class="seasChk" checked="checked"/>' +
-                           '</div>';
-                   }            
-                     
-                   //TODO issue #175 replace iucn ref         
-                   if(layer.source == "iucn") {        
-                           '<span class="seasonLabel">' + 
-                               'Extinct or Presence Uncertain</span>' +
-                           '<div class="colorPicker">' + 
-                           '  <span class="stylerLabel">Fill:&nbsp</span>' + 
-                           '  <input type="text" id="showFill6Palette" />' +
-                           '  <input type="checkbox" id="seasChk6" ' + 
+                           '  <input type="checkbox" id="seasChk5" ' +
                                     'class="seasChk" checked="checked"/>' +
                            '</div>';
                    }
-                   
+
+                   //TODO issue #175 replace iucn ref
+                   if(layer.source == "iucn") {
+                           '<span class="seasonLabel">' +
+                               'Extinct or Presence Uncertain</span>' +
+                           '<div class="colorPicker">' +
+                           '  <span class="stylerLabel">Fill:&nbsp</span>' +
+                           '  <input type="text" id="showFill6Palette" />' +
+                           '  <input type="checkbox" id="seasChk6" ' +
+                                    'class="seasChk" checked="checked"/>' +
+                           '</div>';
+                   }
+
                    pickers+=''+
                        '<span class="seasonLabel">All</span>' +
-                       '<div class="colorPicker">' + 
-                       '  <span class="stylerLabel">Border:&nbsp</span>' + 
+                       '<div class="colorPicker">' +
+                       '  <span class="stylerLabel">Border:&nbsp</span>' +
                        '  <input type="text" id="showBorderPalette" />' +
                        '</div>';
-                       
-                   sizer = '' +
-                       '<span class="sliderLabel">Width:&nbsp</span>' +
-                       '  <div class="sliderContainer">' +
-                       '    <div class="sizer"></div>' +
-                       '  </div>' +
-                       '<span id="pointSizeValue">8px</span>';    
-                       
-                   $(element).find('.colorPickers').prepend(pickers);
-                   $(element).find('.sizerHolder').prepend(sizer);
-                } else {
-                   pickers = '' + 
-                       '<div class="colorPicker">' + 
-                       '  <span class="stylerLabel">Fill:&nbsp</span>' + 
-                       '  <input type="text" id="showFillPalette" />' +
-                       '</div>' +
-                       '<div class="colorPicker">' + 
-                       '  <span class="stylerLabel">Border:&nbsp</span>' + 
-                       '  <input type="text" id="showBorderPalette" />' +
-                       '</div>';
-                       
+
                    sizer = '' +
                        '<span class="sliderLabel">Width:&nbsp</span>' +
                        '  <div class="sliderContainer">' +
                        '    <div class="sizer"></div>' +
                        '  </div>' +
                        '<span id="pointSizeValue">8px</span>';
-                   
+
+                   $(element).find('.colorPickers').prepend(pickers);
+                   $(element).find('.sizerHolder').prepend(sizer);
+                } else {
+                   pickers = '' +
+                       '<div class="colorPicker">' +
+                       '  <span class="stylerLabel">Fill:&nbsp</span>' +
+                       '  <input type="text" id="showFillPalette" />' +
+                       '</div>' +
+                       '<div class="colorPicker">' +
+                       '  <span class="stylerLabel">Border:&nbsp</span>' +
+                       '  <input type="text" id="showBorderPalette" />' +
+                       '</div>';
+
+                   sizer = '' +
+                       '<span class="sliderLabel">Width:&nbsp</span>' +
+                       '  <div class="sliderContainer">' +
+                       '    <div class="sizer"></div>' +
+                       '  </div>' +
+                       '<span id="pointSizeValue">8px</span>';
+
                    $(element).find('.colorPickers').prepend(pickers);
                    $(element).find('.sizerHolder').prepend(sizer);
                 }
             }
         },
-            
+
         setStylerProperties: function(cont, lay, currSty, origSty, reset) {
             var colors = ['black','white','red','yellow',
                           'blue','green','orange','purple'],
@@ -1858,66 +1888,68 @@ mol.modules.map.layers = function(mol) {
                 objs = [],
                 max,
                 min,
-                layOpa;    
-                            
+                layOpa;
+            if(lay.editing) {
+                return;
+            }
                 if(lay.type == "range") {
                     if(lay.source == "jetz" || lay.source == "iucn") {
-                        objs.push({name: '#showFill1Palette', 
-                                color: currSty.s1, 
+                        objs.push({name: '#showFill1Palette',
+                                color: currSty.s1,
                                 def: origSty.s1});
-                        objs.push({name: '#showFill2Palette', 
-                                color: currSty.s2, 
+                        objs.push({name: '#showFill2Palette',
+                                color: currSty.s2,
                                 def: origSty.s2});
-                        objs.push({name: '#showFill3Palette', 
-                                color: currSty.s3, 
+                        objs.push({name: '#showFill3Palette',
+                                color: currSty.s3,
                                 def: origSty.s3});
-                                
+
                         $(cont).find('#seasChk1')
                             .prop('checked', (currSty.s1c == 1) ? true : false);
                         $(cont).find('#seasChk2')
                             .prop('checked', (currSty.s2c == 1) ? true : false);
                         $(cont).find('#seasChk3')
-                            .prop('checked', (currSty.s3c == 1) ? true : false);         
+                            .prop('checked', (currSty.s3c == 1) ? true : false);
                     }
-                    
-                    objs.push({name: '#showBorderPalette', 
-                                color: currSty.border, 
-                                def: origSty.border});                        
-                          
-                   //TODO issue #175 replace iucn ref           
+
+                    objs.push({name: '#showBorderPalette',
+                                color: currSty.border,
+                                def: origSty.border});
+
+                   //TODO issue #175 replace iucn ref
                     if(lay.source == "iucn") {
                         $(cont).find('#seasChk4')
                             .prop('checked', (currSty.s4c == 1) ? true : false);
-                        objs.push({name: '#showFill4Palette', 
-                              color: currSty.s4, 
-                              def: origSty.s4});                         
+                        objs.push({name: '#showFill4Palette',
+                              color: currSty.s4,
+                              def: origSty.s4});
                     }
-                   
+
                     if(lay.source != 'jetz') {
                         $(cont).find('#seasChk5')
                             .prop('checked', (currSty.s5c == 1) ? true : false);
-                        objs.push({name: '#showFill5Palette', 
-                              color: currSty.s5, 
+                        objs.push({name: '#showFill5Palette',
+                              color: currSty.s5,
                               def: origSty.s5});
                     }
-                   
+
                     if(lay.source == "iucn") {
                         $(cont).find('#seasChk6')
                             .prop('checked', (currSty.pc == 1) ? true : false);
-                        objs.push({name: '#showFill6Palette', 
-                                  color: currSty.p, 
-                                  def: origSty.p});       
-                    }        
+                        objs.push({name: '#showFill6Palette',
+                                  color: currSty.p,
+                                  def: origSty.p});
+                    }
                 } else {
-                    objs = [ {name: '#showFillPalette', 
-                              color: currSty.fill, 
+                    objs = [ {name: '#showFillPalette',
+                              color: currSty.fill,
                               def: origSty.fill},
-                             {name: '#showBorderPalette', 
-                              color: currSty.border, 
-                              def: origSty.border}     
+                             {name: '#showBorderPalette',
+                              color: currSty.border,
+                              def: origSty.border}
                            ];
                 }
-                
+
                 _.each(objs, function(obj) {
                     $(obj.name).spectrum({
                       color: obj.color,
@@ -1926,50 +1958,50 @@ mol.modules.map.layers = function(mol) {
                           [obj.def],
                           colors, colors2
                       ]
-                   }); 
+                   });
                 });
-                
-                //sizer        
+
+                //sizer
                 if(lay.style_table == "points_style") {
                     max = 8;
                     min = 1;
                 } else {
                     max = 3;
                     min = 0;
-                }        
-                                  
+                }
+
                 $(cont).find('.sizer').slider({
-                    value: currSty.size, 
-                    min:min, 
-                    max:max, 
-                    step:1, 
+                    value: currSty.size,
+                    min:min,
+                    max:max,
+                    step:1,
                     animate:"slow",
                     slide: function(event, ui) {
                         $(cont).find('#pointSizeValue').html(ui.value + "px");
                     }
                 });
-                    
+
                 $(cont).find('#pointSizeValue').html(
-                    $(cont).find('.sizer').slider('value') + "px"); 
+                    $(cont).find('.sizer').slider('value') + "px");
 
                 layOpa = reset ? lay.orig_opacity : lay.style_opacity;
-                        
+
                 //opacity
                 $(cont).find('.opacity').slider({
-                    value: layOpa, 
-                    min:0, 
-                    max:1, 
-                    step: 0.1, 
+                    value: layOpa,
+                    min:0,
+                    max:1,
+                    step: 0.1,
                     animate:"slow",
                     slide: function(event, ui) {
                         $(cont).find('#opacityValue').html(
                             (ui.value)*100 + "&#37");
                     }}
                 );
-                
+
                 $(cont).find('#opacityValue').html((layOpa)*100 + "&#37");
         },
-            
+
         parseLayerStyle: function(layer, original) {
             var o = {},
                 fillStyle, borderStyle, sizeStyle,
@@ -1977,7 +2009,9 @@ mol.modules.map.layers = function(mol) {
                 s1Style, s2Style, s3Style, s4Style, s5Style, pStyle,
                 s1, s2, s3, s4, s5, p, pc,
                 c1, c2, c3, c4, c5;
-                
+            if(layer.editing) {
+                return;
+            }
             if(original == "current") {
                 style = layer.style;
             } else if(original == "orig") {
@@ -1985,20 +2019,20 @@ mol.modules.map.layers = function(mol) {
             } else {
                 style = layer.tile_style;
             }
-            
+
             if(layer.style_table == "points_style") {
                 fillStyle = style.substring(
                                     style.indexOf('marker-fill'),
                                     style.length-1);
-                                    
+
                 borderStyle = style.substring(
                                     style.indexOf('marker-line-color'),
-                                    style.length-1);   
-                                    
+                                    style.length-1);
+
                 sizeStyle = style.substring(
                                     style.indexOf('marker-width'),
-                                    style.length-1);                  
-                
+                                    style.length-1);
+
                 o = {fill: fillStyle.substring(
                                     fillStyle.indexOf('#'),
                                     fillStyle.indexOf(';')),
@@ -2014,39 +2048,39 @@ mol.modules.map.layers = function(mol) {
                         s1Style = style.substring(
                                         style.indexOf('seasonality=1'),
                                         style.length-1);
-                                            
+
                         s1 = s1Style.substring(
                                         s1Style.indexOf('polygon-fill'),
                                         s1Style.length-1);
-                                        
+
                         c1 = s1Style.substring(
                                         s1Style.indexOf('polygon-opacity'),
-                                        s1Style.length-1);           
-      
+                                        s1Style.length-1);
+
                         s2Style = style.substring(
                                         style.indexOf('seasonality=2'),
                                         style.length-1);
-                                            
+
                         s2 = s2Style.substring(
                                         s2Style.indexOf('polygon-fill'),
                                         s2Style.length-1);
-                                        
+
                         c2 = s2Style.substring(
                                         s2Style.indexOf('polygon-opacity'),
-                                        s2Style.length-1);                 
-                                    
+                                        s2Style.length-1);
+
                         s3Style = style.substring(
                                         style.indexOf('seasonality=3'),
                                         style.length-1);
-                                            
+
                         s3 = s3Style.substring(
                                         s3Style.indexOf('polygon-fill'),
                                         s3Style.length-1);
-                                        
+
                         c3 = s3Style.substring(
                                         s3Style.indexOf('polygon-opacity'),
-                                        s3Style.length-1);                                 
-                                    
+                                        s3Style.length-1);
+
                         o.s1 = s1.substring(
                                         s1.indexOf('#'),
                                         s1.indexOf(';'));
@@ -2064,105 +2098,105 @@ mol.modules.map.layers = function(mol) {
                                         c2.indexOf(';'));
                         o.s3c = c3.substring(
                                         c3.indexOf(':')+1,
-                                        c3.indexOf(';'));    
+                                        c3.indexOf(';'));
                     }
-                    
-                    //TODO issue #175 replace iucn ref    
+
+                    //TODO issue #175 replace iucn ref
                     if(layer.source == "iucn") {
                         s4Style = style.substring(
                                     style.indexOf('seasonality=4'),
                                     style.length-1);
-                                        
+
                         s4 = s4Style.substring(
                                         s4Style.indexOf('polygon-fill'),
-                                        s4Style.length-1); 
-                                  
+                                        s4Style.length-1);
+
                         c4 = s4Style.substring(
                                         s4Style.indexOf('polygon-opacity'),
-                                        s4Style.length-1);  
-                        
+                                        s4Style.length-1);
+
                         o.s4 = s4.substring(
                                     s4.indexOf('#'),
                                     s4.indexOf(';'));
-                        
+
                         o.s4c = c4.substring(
                                     c4.indexOf(':')+1,
-                                    c4.indexOf(';'));               
+                                    c4.indexOf(';'));
                     }
-                    
+
                     if(layer.source != 'jetz') {
                         s5Style = style.substring(
                                     style.indexOf('seasonality=5'),
                                     style.length-1);
-                                        
+
                         s5 = s5Style.substring(
                                     s5Style.indexOf('polygon-fill'),
-                                    s5Style.length-1); 
-                                    
+                                    s5Style.length-1);
+
                         c5 = s5Style.substring(
                                     s5Style.indexOf('polygon-opacity'),
-                                    s5Style.length-1);                        
-                                    
+                                    s5Style.length-1);
+
                         o.s5 = s5.substring(
                                     s5.indexOf('#'),
                                     s5.indexOf(';'));
-                                    
+
                         o.s5c = c5.substring(
                                     c5.indexOf(':')+1,
-                                    c5.indexOf(';'));    
+                                    c5.indexOf(';'));
                     }
-                    
+
                     if(layer.source == "iucn") {
                         pStyle = style.substring(
                                     style.indexOf('presence=4'),
                                     style.length-1);
-                                        
+
                         p = pStyle.substring(
                                     pStyle.indexOf('polygon-fill'),
-                                    pStyle.length-1);      
-                                    
+                                    pStyle.length-1);
+
                         pc = pStyle.substring(
                                     pStyle.indexOf('polygon-opacity'),
-                                    pStyle.length-1);                  
-                                    
+                                    pStyle.length-1);
+
                         o.p = p.substring(
                                     p.indexOf('#'),
-                                    p.indexOf(';')); 
-                                    
+                                    p.indexOf(';'));
+
                         o.pc = pc.substring(
                                     pc.indexOf(':')+1,
                                     pc.indexOf(';'));
                     }
-                } else {
+                } else  {
                     fillStyle = style.substring(
                                     style.indexOf('polygon-fill'),
-                                    style.length-1);                  
-                    
+                                    style.length-1);
+
                     o = {fill: fillStyle.substring(
                                     fillStyle.indexOf('#'),
                                     fillStyle.indexOf(';'))};
                 }
-                
+
                 borderStyle = style.substring(
                                     style.indexOf('line-color'),
-                                    style.length-1); 
-                              
+                                    style.length-1);
+
                 sizeStyle = style.substring(
                                 style.indexOf('line-width'),
-                                style.length-1);                   
-                
+                                style.length-1);
+
                 o.border = borderStyle.substring(
                                 borderStyle.indexOf('#'),
                                 borderStyle.indexOf(';'));
-                                
+
                 o.size = Number($.trim(sizeStyle.substring(
                                 sizeStyle.indexOf(':')+1,
                                 sizeStyle.indexOf(';'))));
             }
-                           
+
             return o;
         },
-            
+
         changeStyleProperty: function(style, prop, newSty, isSeas, seasonProp) {
             var updatedStyle,
                 subStyle,
@@ -2171,44 +2205,44 @@ mol.modules.map.layers = function(mol) {
                 smidStyle,
                 midStyle,
                 srestStyle;
-                            
+            
             if(isSeas) {
                 spreStyle = style.substring(
                                 0,
                                 style.indexOf(prop+"]")
                             );
-                
+
                 preStyle = style.substring(
                                 style.indexOf(prop+"]"),
                                 style.length
                            );
-                            
+
                 smidStyle = preStyle.substring(
                                 0,
                                 preStyle.indexOf(seasonProp+":")
                             );
-                
+
                 midStyle = preStyle.substring(
                                 preStyle.indexOf(seasonProp+":"),
                                 preStyle.length
                            );
-                
+
                 srestStyle = midStyle.substring(
                                 midStyle.indexOf(";"),
                                 midStyle.length
                              );
-                
-                updatedStyle = spreStyle + 
+
+                updatedStyle = spreStyle +
                               smidStyle +
-                              seasonProp + ":" + 
+                              seasonProp + ":" +
                               newSty +
-                              srestStyle;                  
+                              srestStyle;
             } else {
                 subStyle = style.substring(style.indexOf(prop), style.length);
-                
+
                 updatedStyle = style.substring(
                                     0,
-                                    style.indexOf(prop + ":") + 
+                                    style.indexOf(prop + ":") +
                                     prop.length+1
                                ) +
                                newSty +
@@ -2216,20 +2250,22 @@ mol.modules.map.layers = function(mol) {
                                     subStyle.indexOf(";"),
                                     subStyle.length
                                );
-            }                
-            
+            }
+
             return updatedStyle;
         },
 
         updateStyle: function(layer, style, newStyle) {
             var updatedStyle,
                 season;
-            
+            if(layer.editing) {
+                return;
+            }
             if(layer.style_table == "points_style") {
                 style = this.changeStyleProperty(
                             style, 'marker-fill', newStyle.fill, false);
                 style = this.changeStyleProperty(
-                            style, 'marker-line-color', newStyle.border, 
+                            style, 'marker-line-color', newStyle.border,
                                 false);
                 style = this.changeStyleProperty(
                             style, 'marker-width', newStyle.size, false);
@@ -2237,93 +2273,96 @@ mol.modules.map.layers = function(mol) {
                 if(layer.type == "range") {
                     if(layer.source == "jetz" || layer.source == "iucn") {
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=1', newStyle.s1, true, 
+                                    style, 'seasonality=1', newStyle.s1, true,
                                     'polygon-fill');
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=2', newStyle.s2, true, 
+                                    style, 'seasonality=2', newStyle.s2, true,
                                     'polygon-fill');
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=3', newStyle.s3, true, 
-                                    'polygon-fill');                    
-                                    
+                                    style, 'seasonality=3', newStyle.s3, true,
+                                    'polygon-fill');
+
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=1', newStyle.s1c, true, 
+                                    style, 'seasonality=1', newStyle.s1c, true,
                                     'polygon-opacity');
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=2', newStyle.s2c, true, 
+                                    style, 'seasonality=2', newStyle.s2c, true,
                                     'polygon-opacity');
                         style = this.changeStyleProperty(
-                                    style, 'seasonality=3', newStyle.s3c, true, 
-                                    'polygon-opacity');    
+                                    style, 'seasonality=3', newStyle.s3c, true,
+                                    'polygon-opacity');
                     }
 
-                    //TODO issue #175 replace iucn ref                
+                    //TODO issue #175 replace iucn ref
                     if(layer.source == "iucn") {
                         style = this.changeStyleProperty(
-                                style, 'seasonality=4', newStyle.s4, true, 
+                                style, 'seasonality=4', newStyle.s4, true,
                                 'polygon-fill');
                         style = this.changeStyleProperty(
-                                style, 'seasonality=4', newStyle.s4c, true, 
-                                'polygon-opacity');               
+                                style, 'seasonality=4', newStyle.s4c, true,
+                                'polygon-opacity');
                     }
-                    
+
                     if(layer.source != 'jetz') {
                         style = this.changeStyleProperty(
-                                style, 'seasonality=5', newStyle.s5, true, 
+                                style, 'seasonality=5', newStyle.s5, true,
                                 'polygon-fill');
                         style = this.changeStyleProperty(
-                                style, 'seasonality=5', newStyle.s5c, true, 
+                                style, 'seasonality=5', newStyle.s5c, true,
                                 'polygon-opacity');
                         style = this.changeStyleProperty(
-                                style, 'seasonality=0', newStyle.s5, true, 
+                                style, 'seasonality=0', newStyle.s5, true,
                                 'polygon-fill');
                         style = this.changeStyleProperty(
-                                style, 'seasonality=0', newStyle.s5c, true, 
-                                'polygon-opacity');        
+                                style, 'seasonality=0', newStyle.s5c, true,
+                                'polygon-opacity');
                     }
-                    
+
                     if(layer.source == 'iucn') {
                         style = this.changeStyleProperty(
-                                style, 'presence=4', newStyle.p, true, 
+                                style, 'presence=4', newStyle.p, true,
                                 'polygon-fill');
                         style = this.changeStyleProperty(
-                                style, 'presence=5', newStyle.p, true, 
-                                'polygon-fill'); 
-                        style = this.changeStyleProperty(
-                                style, 'presence=6', newStyle.p, true, 
+                                style, 'presence=5', newStyle.p, true,
                                 'polygon-fill');
                         style = this.changeStyleProperty(
-                                style, 'presence=4', newStyle.pc, true, 
+                                style, 'presence=6', newStyle.p, true,
+                                'polygon-fill');
+                        style = this.changeStyleProperty(
+                                style, 'presence=4', newStyle.pc, true,
                                 'polygon-opacity');
                         style = this.changeStyleProperty(
-                                style, 'presence=5', newStyle.pc, true, 
-                                'polygon-opacity'); 
-                        style = this.changeStyleProperty(
-                                style, 'presence=6', newStyle.pc, true, 
+                                style, 'presence=5', newStyle.pc, true,
                                 'polygon-opacity');
-                    }                                                 
+                        style = this.changeStyleProperty(
+                                style, 'presence=6', newStyle.pc, true,
+                                'polygon-opacity');
+                    }
                 } else {
                     style = this.changeStyleProperty(
-                                style, 'polygon-fill', newStyle.fill, 
+                                style, 'polygon-fill', newStyle.fill,
                                     false);
                 }
-                
+
                 style = this.changeStyleProperty(
                                 style, 'line-color', newStyle.border, false);
                 style = this.changeStyleProperty(
-                                style, 'line-width', newStyle.size, false); 
+                                style, 'line-width', newStyle.size, false);
             }
-            
+
             updatedStyle = style;
-            
+
             return updatedStyle;
         },
-            
+
         updateLegendCss: function(button, o, layer, opa) {
+            if(layer.editing) {
+                return;
+            }
             if(layer.type == "range") {
                 if(layer.source == "jetz" || layer.source == "iucn") {
                     $(button).find('.s1').css({
-                        'background-color':o.s2, 
+                        'background-color':o.s2,
                         'opacity': (o.s2c == 0) ? 0 : opa});
                     $(button).find('.s2').css({
                         'background-color':o.s1,
@@ -2331,21 +2370,21 @@ mol.modules.map.layers = function(mol) {
                     $(button).find('.s3').css({
                         'background-color':o.s3,
                         'opacity': (o.s3c == 0) ? 0 : opa});
-                        
-                    //TODO issue #175 replace iucn ref                
+
+                    //TODO issue #175 replace iucn ref
                     if(layer.source == "iucn") {
                         $(button).find('.s4').css({
                             'background-color':o.s4,
-                            'opacity': (o.s4c == 0) ? 0 : opa}); 
+                            'opacity': (o.s4c == 0) ? 0 : opa});
                     }
-                    
+
                     $(button).find('.legend-seasonal')
                         .css({
                             'border-color':o.border,
                             'border-width':o.size+"px",
                             'opacity':opa
                         }
-                    );     
+                    );
                 } else {
                     $(button).find('.legend-polygon')
                         .css({
@@ -2355,7 +2394,7 @@ mol.modules.map.layers = function(mol) {
                             'opacity':(o.s5c == 0) ? 0 : opa
                         }
                     );
-                }                                  
+                }
             } else {
                 if(layer.style_table == "points_style") {
                     $(button).find('.legend-point')
@@ -2375,11 +2414,11 @@ mol.modules.map.layers = function(mol) {
                             'border-width':o.size+"px",
                             'opacity':opa
                         }
-                    );    
+                    );
                 }
             }
         },
-            
+
         updateLayerStyle: function(button, obj, lay, opa) {
             var o = obj,
                 os = {},
@@ -2388,22 +2427,22 @@ mol.modules.map.layers = function(mol) {
                 params = {},
                 oparams = {},
                 self = this;
-                
+
             $.extend(os, o);
-                                
-            if($(button).parent().hasClass('selected')) {   
+
+            if($(button).parent().hasClass('selected')) {
                 os.border = "#FF00FF";
             }
-            
+
             sel_style_desc = self.updateStyle(lay, lay.tile_style, os);
-            style_desc = self.updateStyle(lay, lay.tile_style, o);                                    
-            
+            style_desc = self.updateStyle(lay, lay.tile_style, o);
+
             params.layer = lay;
             params.style = sel_style_desc;
-            
-            //keep the style around for later        
+
+            //keep the style around for later
             lay.style = style_desc;
-            
+
             self.bus.fireEvent(new mol.bus.Event(
                 'apply-layer-style', params));
 
@@ -2415,9 +2454,9 @@ mol.modules.map.layers = function(mol) {
 
             //store the opacity on the layer object
             lay.style_opacity = oparams.style_opacity;
-            
+
             self.bus.fireEvent(new mol.bus.Event(
-                'layer-opacity', oparams));                
+                'layer-opacity', oparams));
         },
 
         toggleLayerHighlight: function(layer, visible, sel) {
@@ -2431,42 +2470,44 @@ mol.modules.map.layers = function(mol) {
                     style: null,
                     isSelected: sel
                 };
-                
+            if(layer.editing) {
+                return;
+            }
                 oldStyle = self.parseLayerStyle(layer, "current");
                 
                 if(layer.style_table == "points_style") {
                     style = this.changeStyleProperty(
-                                style, 
-                                'marker-line-color', 
-                                visible ? '#FF00FF' : oldStyle.border, 
+                                style,
+                                'marker-line-color',
+                                visible ? '#FF00FF' : oldStyle.border,
                                 false
                             );
                 } else {
                     style = this.changeStyleProperty(
-                                style, 
-                                'line-color', 
-                                visible ? '#FF00FF' : oldStyle.border, 
+                                style,
+                                'line-color',
+                                visible ? '#FF00FF' : oldStyle.border,
                                 false
                             );
-                                
+
                     style = this.changeStyleProperty(
-                                style, 
-                                'line-width', 
-                                visible ? 2 : oldStyle.size, 
+                                style,
+                                'line-width',
+                                visible ? 2 : oldStyle.size,
                                 false
                             );
                 }
 
                 style_desc = style;
 
-                params.style = style_desc;   
-                
+                params.style = style_desc;
+
                 self.bus.fireEvent(
                     new mol.bus.Event(
-                        'apply-layer-style', 
+                        'apply-layer-style',
                         params));
         },
-            
+
         /**
         * Add sorting capability to LayerListDisplay, when a result is
         * drag-n-drop, and the order of the result list is changed,
@@ -2474,13 +2515,13 @@ mol.modules.map.layers = function(mol) {
         **/
 
         initSortable: function() {
-            var self = this, 
+            var self = this,
                 display = this.display;
 
             display.list.sortable({
                 update : function(event, ui) {
-                    var layers = [], 
-                        params = {}, 
+                    var layers = [],
+                        params = {},
                         e = null;
 
                     $(display.list)
@@ -2503,7 +2544,7 @@ mol.modules.map.layers = function(mol) {
                 '<div class="layerContainer">' +
                 '  <div class="layer">' +
                 '    <button title="Click to edit layer style." ' +
-                            'class="styler">' + 
+                            'class="styler">' +
                 '      <div class="legend-point"></div> ' +
                 '      <div class="legend-polygon"></div> ' +
                 '      <div class="legend-seasonal">' +
@@ -2524,11 +2565,11 @@ mol.modules.map.layers = function(mol) {
                 '      <div title="{2}" class="layerNomial">{2}</div>' +
                 '      <div title="{3}" class="layerEnglishName">{3}</div>'+
                 '    </div>' +
-                '    <button title="Remove layer." class="close">' + 
-                       'x' + 
+                '    <button title="Remove layer." class="close">' +
+                       'x' +
                 '    </button>' +
-                '    <button title="Edit layer." class="edit">' +
-                       'e' +
+                '    <button title="Save layer." class="edit">' +
+                       'Save' +
                 '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
                        'z' +
@@ -2536,7 +2577,7 @@ mol.modules.map.layers = function(mol) {
                 '    <label class="buttonContainer">' +
                 '       <input class="toggle" type="checkbox">' +
                 '       <span title="Toggle layer visibility." ' +
-                        'class="customCheck"></span>' + 
+                        'class="customCheck"></span>' +
                 '    </label>' +
                 '   </div>' +
                 '   <div class="break"></div>' +
@@ -2555,7 +2596,7 @@ mol.modules.map.layers = function(mol) {
                     layer.type_title
                 )
             );
-            
+
             this.attr('id', layer.id);
             this.toggle = $(this).find('.toggle').button();
             this.styler = $(this).find('.styler');
@@ -2565,35 +2606,36 @@ mol.modules.map.layers = function(mol) {
             }
             this.info = $(this).find('.info');
             this.edit = $(this).find('.edit');
+            this.edit.hide();
             this.close = $(this).find('.close');
             this.type = $(this).find('.type');
             this.source = $(this).find('.source');
             this.layer = $(this).find('.layer');
             this.layerObj = layer;
-            
+
             //legend items
             this.pointLegend = $(this).find('.legend-point');
             this.polygonLegend = $(this).find('.legend-polygon');
             this.seasonalLegend = $(this).find('.legend-seasonal');
             this.s4 = $(this).find('.s4');
-            
+
             if(layer.style_table == "points_style") {
                 this.polygonLegend.hide();
                 this.seasonalLegend.hide();
             } else {
                 this.pointLegend.hide();
-                
-                //TODO issue #175 replace iucn ref    
-                if(layer.type == "range") {
-                    if(layer.source == "jetz" || layer.source == "iucn") {
+
+                //TODO issue #175 replace iucn ref
+                if(layer.type == "range" || layer.type == "custom" ) {
+                    if(layer.source == "jetz" || layer.source == "iucn" || layer.source == "webuser") {
                        this.polygonLegend.hide();
-                       
+
                        if(layer.source == 'jetz') {
                             this.s4.hide();
-                       }    
+                       }
                     } else {
                         this.seasonalLegend.hide();
-                    }          
+                    }
                 } else {
                     this.seasonalLegend.hide();
                 }
@@ -2653,14 +2695,18 @@ mol.modules.map.layers = function(mol) {
         },
 
         getLayerById: function(id) {
-            return _.find(this.layers, function(layer){ 
+            return _.find(this.layers, function(layer){
                             return layer.id === id; });
         },
 
         addLayer: function(layer) {
             var ld = new mol.map.layers.LayerDisplay(layer);
-            this.list.append(ld);
-            this.layers.push(layer);
+            if(layer.editing) {
+                this.list.prepend(ld);
+            } else {
+                this.list.append(ld);
+                this.layers.push(layer);
+            }
             return ld;
         },
 
@@ -3612,7 +3658,7 @@ mol.modules.map.search = function(mol) {
                     '<span class="eng">{1}</span>' +
                 '</div>';
             this.ac_sql = "" +
-                "SELECT n,v FROM ac WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
+                "SELECT n,v FROM (SELECT n, v from ac UNION select distinct u.scientificname as n, t.common_names_eng as v from userdata u left join taxonomy t ON u.scientificname = t.scientificname) a WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
@@ -3626,7 +3672,8 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +   
+                    's.title as source_type_title, ' +  
+                    'false as editing, ' +
                     'l.feature_count as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
@@ -3643,8 +3690,8 @@ mol.modules.map.search = function(mol) {
                     'l.dataset_id as dataset_id, ' +
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
-                    
-                'FROM layer_metadata l ' +
+                'FROM (SELECT scientificname, extent, feature_count, provider, type, dataset_id FROM layer_metadata UNION ALL  ' +
+                " SELECT scientificname, box2d(ST_Extent(the_geom)) as extent, count(*) as feature_count, 'webuser' as provider, 'custom' as type, 'userdata' as dataset_id from userdata group by scientificname) l " +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -3656,7 +3703,7 @@ mol.modules.map.search = function(mol) {
                 'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
-                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
+                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}' or l.scientificname~*'\\m{0}'" +
                 'ORDER BY name, type_sort_order';
         },
 
@@ -4212,7 +4259,8 @@ mol.modules.map.tiles = function(mol) {
                     'remove-layers',
                     function(event) {
                         var layers = event.layers,
-                            mapTypes = self.map.overlayMapTypes;
+                            mapTypes = self.map.overlayMapTypes,
+                            overlays = self.map.overlays;
 
                         _.each(
                             layers,
@@ -4275,7 +4323,9 @@ mol.modules.map.tiles = function(mol) {
                 _.each(
                     newLayers,
                     function(layer) {
-                        var maptype = self.getTile(layer);
+                        if(!layer.editing) { 
+                            self.getTile(layer);
+                        }
                     },
                     self
                 );
@@ -7100,88 +7150,365 @@ mol.modules.map.editor = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            //this.editor = new google.maps.drawing.DrawingManager();
+            this.map.editable_layers = []; //array of user defined layers.
         },
 
         start : function() {
+            this.addEditorDisplay();
             this.addEventHandlers();
             //disable all map clicks
             this.toggleMapLayerClicks(false);
         },
-        
-        toggleMapLayerClicks : function(boo) {            
+
+        toggleMapLayerClicks : function(boo) {
             //true to disable
             this.bus.fireEvent(
-                new mol.bus.Event('layer-click-toggle', {disable: boo}));          
+                new mol.bus.Event('layer-click-toggle', {disable: boo}));
         },
-        addEditableLayer : function (json) {
+        addEditorDisplay : function() {
+            var params = {
+                display: null,
+                slot: mol.map.ControlDisplay.Slot.TOP,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            };
+
+            this.display = new mol.map.editor.EditorControlDisplay();
+            params.display = this.display;
+            this.bus.fireEvent(new mol.bus.Event('add-map-control', params));
+        },
+        autoSimplify: function(json, status, xhr) {
+            alert(json);
+        },
+        addEditableLayer : function (json, status, xhr) {
             var self = this;
-            this.layer = [];
-            if(this.editer = undefined) {
+            //this.layer = [];
+            if(this.editor == undefined) {
                 this.editor = new google.maps.drawing.DrawingManager({
-                      drawingMode: google.maps.drawing.OverlayType.MARKER,
+                      drawingMode: google.maps.drawing.OverlayType.POLYGON,
                       drawingControl: true,
                       drawingControlOptions: {
                         position: google.maps.ControlPosition.TOP_CENTER,
                         drawingModes: [
-                          google.maps.drawing.OverlayType.POLYGON,
-                          google.maps.drawing.OverlayType.MARKER
+                          google.maps.drawing.OverlayType.POLYGON
                         ]
                       },
                       polygonOptions: {
-                        fillColor: '#ffff00',
-                        fillOpacity: 1,
-                        strokeWeight: 5,
-                        clickable: true,
-                        zIndex: 1,
                         editable: true
                       }
-                    });
-                this.editor.setMap(this.map);
+                });
+                google.maps.event.addListener(
+                    this.editor, 
+                    'overlaycomplete', 
+                    this.overlayComplete.bind(self)
+                );
+            }
+            this.editor.setMap(this.map);
+            this.editor.polygonOptions.name = this.current_layer.id;
+            this.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source: this.current_layer.dataset_id }))
+            if(json != null) {
+	            _.each(
+	                json.rows,
+	                function(row) {
+	                    var geojson = JSON.parse(row.geom),
+	                        feature = new GeoJSON(geojson);
+	                    if(feature.setMap != undefined) {
+	                        //feature.draggable=true;
+	                        feature.setOptions({editable:true, clickable:true, name: self.current_layer.id});
+	                        google.maps.event.addListener(
+	                            feature,
+	                            'click',
+	                            self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: feature})  
+	                        );
+	                        feature.setMap(self.map);
+	                        self.map.editable_layers.push({id: self.current_layer.id, overlay: feature});
+	                    } else {
+	
+	                        _.each(
+	                            feature,
+	                            function(f) {
+	                                if(f.setMap != undefined) {
+	                                    //f.draggable=true;
+	                                    f.setOptions({editable:true, name: self.current_layer.id});
+	                                    google.maps.event.addListener(
+	                                        f,
+	                                        'click',
+	                                        self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: f})  
+	                                    );
+	                                    f.setMap(self.map);
+	                                }
+	                                self.map.editable_layers.push({id: self.current_layer.id, overlay: f});
+	                            }
+	                        );
+	                    }
+	                }
+	            );
+			}
+            this.bus.fireEvent(new mol.bus.Event('add-layers',{layers:[this.current_layer]}));
+        },
+        overlayComplete: function (event) {
+            var self = this;
+            event.id = this.current_layer.id;
+            event.layer = this.current_layer;
+            google.maps.event.addListener(
+                event.overlay,
+                'click',
+                self.handleFeatureClick.bind(self, event)
+            );
+            this.handleFeatureClick(event);
+            this.map.editable_layers.push(event);
+        },
+        handleFeatureClick: function(event) {
+            var name = event.layer.name,
+            	display = new mol.map.editor.FeatureOptionsDisplay(name);
+            
+            display.cancel.click(
+                function(e) {
+                    display.dialog('close');
+                }
+            );
+            display.del.click(
+                function(e) {
+                    event.overlay.setMap(null);
+                    display.dialog('close');
+                    delete(event);
+                }
+            );
+            display.save.click(
+            	function(e) {
+            		event.seasonality = $(display.seasonality).val();
+            		event.description = $(display.description).val();
+            		display.dialog('close');
+            	}
+            );
+            $(display).dialog({width:650});
+        },
+        defineRange: function () {
+            var display,
+            	mt = this.map.overlayMapTypes.getAt(0),
+            	name = "",
+            	self = this,
+            	useExisting = false,
+            	usePoints = false;
+            	detail = 150000;
+            if(mt) {	      	
+	    		name = mt.name.split('--')[1]
+	    			.replace(/_/g, ' ');
+	    		name = '{0}{1}'.format(
+	    			name[0].toUpperCase(),
+	    			name.substr(1)
+	            );
+            } else {
+            	name = '';
+            	
             }
             
-            _.each(
-                json.rows,
-                function(row) {
-                    var geojson = JSON.parse(row.geom),
-                        feature = new GeoJSON(geojson);
-                    if(feature.setMap != undefined) {
-                        //feature.draggable=true;
-                        feature.setOptions({editable:true});
-                        feature.setMap(self.map)
-                    } else {
-                    
-                        _.each(
-                            feature,
-                            function(f) {
-                                if(f.setMap != undefined) {
-                                    //f.draggable=true;
-                                    f.setOptions({editable:true});
-                                    f.setMap(self.map);
-                                }
-                                self.layer.push(f);
-                            }
-                        );
+            display = new mol.map.editor.NewRangeDialog(name);
+            if(name=='') {	
+            	$(display.useExistingContainer).hide();
+            }
+            
+            display.start.click(
+                function(event) {
+                    if(name!='') {
+                        useExisting = $(display.useExisting).val();
+                        usePoints = $(display.usePoints).val();
+                        detail = $(display.detail).val();
+                    } 
+                    self.startEditing(
+                        $(display.name).val(),
+                        useExisting, 
+                        usePoints,
+                        detail
+                    );
+                    $(display).dialog('close');
+                }   
+            );
+            display.cancel.click(
+                function(event) {
+                    $(display).dialog('close');
+                }
+            );
+            $(display).dialog({width:650});
+        },
+        storePolygon: function(feature, layer) {
+            var q,
+                coords  = new Array(),
+                path = feature.overlay.getPath(),
+                payload = { type: "MultiPolygon", coordinates: new Array()};
+            payload.coordinates.push(new Array());
+            payload.coordinates[0].push(new Array());
+            
+            for (var i = 0; i < path.length; i++) {
+              coord = path.getAt(i);
+              coords.push( coord.lng() + " " + coord.lat() );
+              payload.coordinates[0][0].push([coord.lng(),coord.lat()])
+            }
+            
+            q = "geojson={0}".format(JSON.stringify(payload)) +
+                "&userid=webuser" +
+                "&scientificname={0}".format(layer.name) +
+                "&seasonality={0}".format(feature.seasonality) +
+                "&description={0}".format(feature.description) +
+                "&dataset_id={0}".format(layer.dataset_id);
+            
+            $.ajax({
+              url: "userdata/put",
+              type: 'POST',
+              dataType: 'jsonp',
+                  data: q,
+                  success: function() { },
+                  error: function() { }
+            });
+        },
+        startEditing: function(name, useExisting, usePoints, detail) {
+            //TODO: zoom to max layer extent
+            //first get a very simplified convex hull of all available maps
+            var layers = [], //all current layers
+                key = '{0}{1}'.format(name, new Date().getTime()), //unique layer id
+                tiles = [],
+                gridres = 40075000/(256^this.map.getZoom()),
+                tilesql = ''+
+                    'SELECT {0} as geom '+
+                    'FROM get_tile(\'{1}\',\'{2}\',\'{3}\',\'{4}\')';
+                sql = '' +
+                    'SELECT ST_AsGeoJson(' +
+                            'ST_Transform(' +
+                                'ST_Simplify(' +
+                                    'ST_Union(' +
+                                        'ST_Buffer(g.geom,0)' +
+                                    '),' +
+                                    '{1}' +
+                                '),' +
+                                '4326' +
+                            ')' +
+                        ') as geom ' +
+                    'FROM ({0}) g ',
+                count_sql = '' +
+                    'SELECT ST_NPoints(ST_Simplify(' +
+                                    'ST_Union(' +
+                                        'g.geom,0' +
+                                    '),10000)' +
+                        ') as n ' +
+                    'FROM ({0}) g ';
+            this.current_layer = {
+                    name: name,
+                    type:'custom',
+                    type_title: 'User defined layer.',
+                    source_title: 'Web user',
+                    source_type: 'webuser',
+                    source_type_title: 'Web user',
+                    source:'webuser',
+                    editing: true,
+                    dataset_id: key,
+                    id: 'layer--{0}--custom--webuser--{1}'
+                        .format(name.replace(/ /g, '_'),
+                        key),
+                    names: '',
+                    type_sort_order: 0
+            };
+            //make an array of layer ids
+            this.map.overlayMapTypes.forEach(
+                function(mt,i) {
+                    if(usePoints) {
+                        layers.push(mt.name);
                     }
+                }
+            )
+            tiles = _.map(
+                layers,
+                function(layer) {
+                    var collectsql = (layer.split('--')[2] == 'points') ?
+                        'ST_SnapToGrid(ST_Buffer(the_geom_webmercator,20000),10000) ':
+                        'ST_SnapToGrid(the_geom_webmercator,10000) ',
+                        source = layer.split('--')[3], //source
+                        type = layer.split('--')[2], //type
+                        name = layer.split('--')[1],
+                        dataset_id = layer.split('--')[4];
+                    name = '{0}{1}'
+                        .format(name[0].toUpperCase(),name.substr(1))
+                        .replace('_', ' ');
+
+                    return tilesql.format(
+                            collectsql,
+                            source,
+                            type,
+                            name,
+                            dataset_id
+                    );
                 }
             );
             
-            
+            this.bus.fireEvent(new mol.bus.Event('show-loading-indicator', {source: this.current_layer.dataset_id }))
+            if(tiles.length>0 && useExisting == "true") {
+	            $.getJSON(
+	                mol.services.cartodb.sqlApi.jsonp_url.format(
+	                    sql.format(
+	                        tiles.join(' UNION '),
+	                        detail
+	                    )
+	                ),
+	                this.addEditableLayer.bind(this)
+	            );
+            } else if(false) {//tiles.length>0 && useExisting == "true" && detail == "auto"){
+                $.getJSON(
+                    mol.services.cartodb.sqlApi.jsonp_url.format(
+                        count_sql.format(
+                            tiles.join(' UNION ')
+                        )
+                    ),
+                    this.autoSimplify.bind(this)
+                );
+            } else {
+                this.addEditableLayer();
+            }
         },
         addEventHandlers : function () {
             var self = this;
             /*
-             *  Makes a layer editable by removing it from teh map and adding it
+             *  Makes a layer editable by removing it from the map and adding it
              *  back as an editable polygon, simplified to match the zoom level
              */
+            this.display.defineRange.click(
+                  function(event) {
+                      self.defineRange();
+                  }
+            );
+            this.bus.addHandler(
+                'remove-layers',
+                function(event) {
+                    var layers = event.layers;
+                    _.each(
+                        layers,
+                        function(layer_to_remove) {
+                            _.each(
+                                self.map.editable_layers,
+                                function(existing_layer) {
+                                    if(existing_layer.id
+                                        == layer_to_remove.id) {
+                                        if(existing_layer.overlay.editable) {
+                                            self.editor.setMap(null);
+                                        }
+                                        existing_layer.overlay.setMap(null);
+                                        self.map.editable_layers = _.without(
+                                            self.map.editable_layers,
+                                            existing_layer
+                                        );
+                                    }
+                                }
+                            );
+                        }
+                    )
+                }
+            );
+            /*editing of an existinglayer... TODO!*/
             this.bus.addHandler(
                 'edit-layer',
                 function(event) {
                     var layer = event.layer,
-                        gridres = 40075000/(256^self.map.getZoom()), 
+                        gridres = 40075000/(256^self.map.getZoom()),
                         sql = 'SELECT ' +
-                            'ST_AsGeoJson(ST_Transform(the_geom_webmercator' +
-                                ',4326)' +
+                            'ST_AsGeoJson('+
+                                'ST_Transform(the_geom_webmercator,4326)' +
                             ') as geom ' +
                             'FROM get_tile(\'{1}\',\'{2}\',\'{3}\',\'{4}\')';
                         url = mol.services.cartodb.sqlApi.jsonp_url.format(
@@ -7196,7 +7523,8 @@ mol.modules.map.editor = function(mol) {
                     self.map.overlayMapTypes.forEach(
                         function(mt,i) {
                             if(mt.name==layer.id) {
-                                
+                                self.maptype = self.map.overlayMapTypes.removeAt(i);
+                                self.maptype_index = i;
                             }
                         }
                     )
@@ -7205,20 +7533,119 @@ mol.modules.map.editor = function(mol) {
                         self.addEditableLayer.bind(self)
                     );
                 }
+            );
+            /*editing of an existing layer... TODO!*/
+            this.bus.addHandler(
+                'toggle-editing',
+                function(event) {
+                    var layer = event.layer;
+                            _.each(
+                                self.map.editable_layers,
+                                function(existing_layer) {
+                                    if(existing_layer.id
+                                        == layer.id) {
+                                        existing_layer.overlay.editable =
+                                            !existing_layer.overlay.editable;
+                                        if(!existing_layer.overlay.editable) {
+                                            self.editor.setMap(null);
+                                            self.storePolygon(existing_layer, layer);
+                                        } else {
+                                            self.editor.setMap(self.map);
+                                        }
+                                        existing_layer.overlay.editable_changed();
+                                    }
+                                }
+                            );
+                        
+                }
             )
         },
     });
 
-    mol.map.EditorDisplay = mol.mvp.View.extend({
+    mol.map.editor.EditorControlDisplay = mol.mvp.View.extend({
         init : function(names) {
-            var className = 'mol-Map-EditorDisplay',
-                html = '' +
-                    '<button class="edit">' +
-                        'Edit' 
-                    '</button>';
+            var html = '' +
+                    '<div class="mol-Map-EditorDisplay widgetTheme">' +
+                        '<button class="edit">' +
+                            'Create Map' +
+                        '</button>' +
+                    '</div>';
 
             this._super(html);
-            this.editButton=$(this).find('.edit');
+
+            this.defineRange=$(this).find('.edit');
+        }
+    });
+    mol.map.editor.FeatureOptionsDisplay = mol.mvp.View.extend({
+        init : function(name) {
+            var html = '' +
+                    '<div class="mol-Map-EditorFeatureOptions">' +
+                    	'Set Feature Metadata for {0} ' +
+                        'Seasonality'+
+                        '<select class="seasonality">'+
+                            '<option value=1>Resident</option>' +
+                            '<option value=2>Breeding Season</option>' +
+                            '<option value=3>Non-breeding Season</option>' +
+                            '<option value=4>Passage</option>' +
+                            '<option value=5>Seasonal Occurrence Uncertain</option>' +
+                         '</select><br>' +
+                         'Description' +
+                         '<textarea class="description" height=10 width=200 value=""></textarea>' +
+                         '<br>' +
+                         '<button class="delete">Delete feature</button>' +
+                         '<button class="save">Save Changes</button>' +
+                         '<button class="cancel">Cancel</button>' +
+                    '</div>';
+            this._super(html.format(name));
+            this.del = $(this).find('.delete');
+            this.cancel = $(this).find('.cancel');
+            this.save =$(this).find('.save');
+            this.seasonality = $(this).find('.seasonality');
+            this.description = $(this).find('.description');
+        }
+    });
+    mol.map.editor.NewRangeDialog = mol.mvp.View.extend({
+            init: function(name) {
+                var html = '' +
+                    '<div id="dialog">' +
+                        '<table width="600px"><tbody><tr><td>What species (scientific name) are you mapping?</td><td align="right">' +
+                        '<input type="text" class="name" value="{0}"></td></tr></tbody></table>' +
+                        '<div class="useExistingContainer"><table  width="600px"><tbody><tr>' +
+                            '<td>Would you like to use an outline of the ' +
+                            ' currently visible layers?</td>' +
+                            '<td  align="right"><select class="useExisting">' +
+                                '<option selected value=true>Yes</option>' +
+                                '<option value=false>No</option>' +
+                            '</select></td></tr>' +
+                            '<tr><td>Would you like to include points in the '+
+                            'outline?</td>' +
+                            '<td  align="right"><select class="usePoints">' +
+                                '<option selected value=true>Yes</option>' +
+                                '<option value=false>No</option>' +
+                            '</select></td></tr>' +
+                            '<tr><td>Full resolution polygon editing is not yet ' +
+                            ' supported in the Map of Life. What level of ' +
+                            ' simplification should be applied to the outline?</td>'  +
+                            '<td  align="right"><select class="detail">' +
+                                //'<option value="auto">Auto</option>' +
+                                '<option value="10000">10 km</option>' +
+                                '<option value="50000">50 km</option>' +
+                                '<option value="100000">100 km</option>' +
+                                '<option value="150000">150 km</option>' +
+                                '<option value="200000">150 km</option>' +
+                            '</select></td></tr></tbody></table>' +
+                        '</div>' +
+                        '<button class="start">Start mapping</button>' +
+                        '<button class="cancel">Cancel</button>' +
+                    '</div>  ';
+                this._super(html.format(name));
+                this.name = $(this).find('.name');
+                this.start = $(this).find('.start');
+                this.cancel = $(this).find('.cancel');
+                this.usePoints = $(this).find('.usePoints');
+                this.useExistingContainer = $(this).find('.useExistingContainer');
+                this.useExisting = $(this).find('.useExisting');
+                this.detail = $(this).find('.detail');
         }
     });
 };

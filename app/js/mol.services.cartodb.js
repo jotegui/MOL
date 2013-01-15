@@ -4,10 +4,14 @@ mol.modules.services.cartodb = function(mol) {
         {
             init: function() {          
                 this.jsonp_url = '' +
-                    'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'api/v2/sql?callback=?&q={0}';
+                    'http://mol.cartodb.com/' +
                     'api/v2/sql?callback=?&q={0}';
                 this.url = ''
-                    'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'http://d3dvrpov25vfw0.cloudfront.net/' +
+                    //'api/v2/sql?q={0}';
+                    'http://mol.cartodb.com/' +
                     'api/v2/sql?q={0}';
                 //cache key is mmddyyyyhhmm
                 this.sql_cache_key = '120420121435';
@@ -18,7 +22,8 @@ mol.modules.services.cartodb = function(mol) {
         {
             init: function() {          
                 this.host = '' +
-                    'd3dvrpov25vfw0.cloudfront.net';
+                    //'d3dvrpov25vfw0.cloudfront.net';
+                    'mol.cartodb.com';
                 //cache key is mmddyyyyhhmm of cache start
                 this.tile_cache_key = '121220121553';
             }

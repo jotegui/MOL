@@ -588,7 +588,6 @@ white-space: nowrap;
 .mol-LayerControl-Layers .layer .zoom {
     float: right;
     position: relative;
-    width: 24px;
     font-style: italic;
     font-size: 1.2em;
     height: 24px;
@@ -596,7 +595,7 @@ white-space: nowrap;
 .mol-LayerControl-Layers .layer .edit {
     float: right;
     position: relative;
-    width: 24px;
+    width: 68px;
     font-style: italic;
     font-size: 1.2em;
     height: 24px;
@@ -1285,7 +1284,9 @@ div.mol-Dashboard-TableWindow {
     pointer-events:auto;
 
 }
-
+.mol-Map-EditorFeatureOptions {
+    size: 12pt;
+}
 /*
  * Start Query Bar
  */

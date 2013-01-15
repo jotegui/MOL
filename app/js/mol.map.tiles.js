@@ -285,7 +285,7 @@ mol.modules.map.tiles = function(mol) {
                 _.each(
                     newLayers,
                     function(layer) {
-                        if(layer.type!='custom') { 
+                        if(!layer.editing) { 
                             self.getTile(layer);
                         }
                     },
