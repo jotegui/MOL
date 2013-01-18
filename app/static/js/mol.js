@@ -7193,12 +7193,13 @@ mol.modules.map.editor = function(mol) {
                         ]
                       },
                       polygonOptions: {
-                        editable: true
+                        editable: true,
+                        geodesic:true
                       }
                 });
                 google.maps.event.addListener(
-                    this.editor, 
-                    'overlaycomplete', 
+                    this.editor,
+                    'overlaycomplete',
                     this.overlayComplete.bind(self)
                 );
             }
@@ -7206,45 +7207,60 @@ mol.modules.map.editor = function(mol) {
             this.editor.polygonOptions.name = this.current_layer.id;
             this.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source: this.current_layer.dataset_id }))
             if(json != null) {
-	            _.each(
-	                json.rows,
-	                function(row) {
-	                    var geojson = JSON.parse(row.geom),
-	                        feature = new GeoJSON(geojson);
-	                    if(feature.setMap != undefined) {
-	                        //feature.draggable=true;
-	                        feature.setOptions({editable:true, clickable:true, name: self.current_layer.id});
-	                        google.maps.event.addListener(
-	                            feature,
-	                            'click',
-	                            self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: feature})  
-	                        );
-	                        feature.setMap(self.map);
-	                        self.map.editable_layers.push({id: self.current_layer.id, overlay: feature});
-	                    } else {
-	
-	                        _.each(
-	                            feature,
-	                            function(f) {
-	                                if(f.setMap != undefined) {
-	                                    //f.draggable=true;
-	                                    f.setOptions({editable:true, name: self.current_layer.id});
-	                                    google.maps.event.addListener(
-	                                        f,
-	                                        'click',
-	                                        self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: f})  
-	                                    );
-	                                    f.setMap(self.map);
-	                                }
-	                                self.map.editable_layers.push({id: self.current_layer.id, overlay: f});
-	                            }
-	                        );
-	                    }
-	                }
-	            );
-			}
+                _.each(
+                    json.rows,
+                    function(row) {
+                        var geojson = JSON.parse(row.geom),
+                            feature = new GeoJSON(geojson);
+                        if(feature.setMap != undefined) {
+                            //feature.draggable=true;
+                            feature.setOptions({editable:true, geodesic:true,  clickable:true, name: self.current_layer.id});
+                            google.maps.event.addListener(
+                                feature,
+                                'click',
+                                self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: feature})
+                            );
+                            google.maps.event.addListener(feature,'rightclick',self.deleteNode);
+                            feature.setMap(self.map);
+                            self.map.editable_layers.push({id: self.current_layer.id, overlay: feature});
+                        } else {
+
+                            _.each(
+                                feature,
+                                function(f) {
+                                    if(f.setMap != undefined) {
+                                        //f.draggable=true;
+                                        f.setOptions({editable:true, geodesic:true, name: self.current_layer.id});
+                                        google.maps.event.addListener(
+                                            f,
+                                            'click',
+                                            self.handleFeatureClick.bind(self, {id: self.current_layer.id, overlay: f})
+                                        );
+                                        google.maps.event.addListener(f,'rightclick',self.deleteNode);
+                                        f.setMap(self.map);
+                                    }
+                                    self.map.editable_layers.push({id: self.current_layer.id, overlay: f});
+                                }
+                            );
+                        }
+                    }
+                );
+            }
             this.bus.fireEvent(new mol.bus.Event('add-layers',{layers:[this.current_layer]}));
         },
+        /*
+         * Deletes a node in an editable feature.
+         */
+        deleteNode: function(mev) {
+            var proj = this.map.getProjection(),
+                path = this.getPath(),
+                vertex = mev.vertex;
+                path.removeAt(vertex);
+            return false;
+        },
+        /*
+         * Overlay complete event handler
+         */
         overlayComplete: function (event) {
             var self = this;
             event.id = this.current_layer.id;
@@ -7257,10 +7273,14 @@ mol.modules.map.editor = function(mol) {
             this.handleFeatureClick(event);
             this.map.editable_layers.push(event);
         },
+        /*
+         * Shows a dialog on feature click that
+         * allows metadata to be edited and the feature to be deleted.
+         */
         handleFeatureClick: function(event) {
             var name = event.layer.name,
-            	display = new mol.map.editor.FeatureOptionsDisplay(name);
-            
+                display = new mol.map.editor.FeatureOptionsDisplay(name);
+
             display.cancel.click(
                 function(e) {
                     display.dialog('close');
@@ -7274,54 +7294,52 @@ mol.modules.map.editor = function(mol) {
                 }
             );
             display.save.click(
-            	function(e) {
-            		event.seasonality = $(display.seasonality).val();
-            		event.description = $(display.description).val();
-            		display.dialog('close');
-            	}
+                function(e) {
+                    event.seasonality = $(display.seasonality).val();
+                    event.description = $(display.description).val();
+                    display.dialog('close');
+                }
             );
             $(display).dialog({width:650});
         },
         defineRange: function () {
             var display,
-            	mt = this.map.overlayMapTypes.getAt(0),
-            	name = "",
-            	self = this,
-            	useExisting = false,
-            	usePoints = false;
-            	detail = 150000;
-            if(mt) {	      	
-	    		name = mt.name.split('--')[1]
-	    			.replace(/_/g, ' ');
-	    		name = '{0}{1}'.format(
-	    			name[0].toUpperCase(),
-	    			name.substr(1)
-	            );
+                mt = this.map.overlayMapTypes.getAt(0),
+                name = "",
+                self = this,
+                useExisting = false,
+                usePoints = false,
+                detail = 150000;
+            if(mt) {
+                name = mt.name.split('--')[1].replace(/_/g, ' ');
+                name = '{0}{1}'.format(
+                    name[0].toUpperCase(),
+                    name.substr(1)
+                );
             } else {
-            	name = '';
-            	
+                name = '';
             }
-            
+
             display = new mol.map.editor.NewRangeDialog(name);
-            if(name=='') {	
-            	$(display.useExistingContainer).hide();
+            if(name=='') {
+                $(display.useExistingContainer).hide();
             }
-            
+
             display.start.click(
                 function(event) {
                     if(name!='') {
                         useExisting = $(display.useExisting).val();
                         usePoints = $(display.usePoints).val();
                         detail = $(display.detail).val();
-                    } 
+                    }
                     self.startEditing(
                         $(display.name).val(),
-                        useExisting, 
+                        useExisting,
                         usePoints,
                         detail
                     );
                     $(display).dialog('close');
-                }   
+                }
             );
             display.cancel.click(
                 function(event) {
@@ -7337,20 +7355,20 @@ mol.modules.map.editor = function(mol) {
                 payload = { type: "MultiPolygon", coordinates: new Array()};
             payload.coordinates.push(new Array());
             payload.coordinates[0].push(new Array());
-            
+
             for (var i = 0; i < path.length; i++) {
               coord = path.getAt(i);
               coords.push( coord.lng() + " " + coord.lat() );
               payload.coordinates[0][0].push([coord.lng(),coord.lat()])
             }
-            
+
             q = "geojson={0}".format(JSON.stringify(payload)) +
                 "&userid=webuser" +
                 "&scientificname={0}".format(layer.name) +
                 "&seasonality={0}".format(feature.seasonality) +
                 "&description={0}".format(feature.description) +
                 "&dataset_id={0}".format(layer.dataset_id);
-            
+
             $.ajax({
               url: "userdata/put",
               type: 'POST',
@@ -7369,18 +7387,12 @@ mol.modules.map.editor = function(mol) {
                 gridres = 40075000/(256^this.map.getZoom()),
                 tilesql = ''+
                     'SELECT {0} as geom '+
-                    'FROM get_tile(\'{1}\',\'{2}\',\'{3}\',\'{4}\')';
+                    'FROM get_tile(\'{1}\',\'{2}\',\'{3}\',\'{4}\') ';
                 sql = '' +
                     'SELECT ST_AsGeoJson(' +
-                            'ST_Transform(' +
-                                'ST_Simplify(' +
-                                    'ST_Union(' +
-                                        'ST_Buffer(g.geom,0)' +
-                                    '),' +
-                                    '{1}' +
-                                '),' +
-                                '4326' +
-                            ')' +
+                                'ST_Transform(ST_Simplify(ST_Union(' +
+                                    'ST_Buffer(g.geom,0)' +
+                                '),{1}),4326)' +
                         ') as geom ' +
                     'FROM ({0}) g ',
                 count_sql = '' +
@@ -7418,7 +7430,7 @@ mol.modules.map.editor = function(mol) {
                 layers,
                 function(layer) {
                     var collectsql = (layer.split('--')[2] == 'points') ?
-                        'ST_SnapToGrid(ST_Buffer(the_geom_webmercator,20000),10000) ':
+                        'ST_ConcaveHull(ST_Collect(ST_Buffer(the_geom_webmercator,10000)),0.99,true)  ':
                         'ST_SnapToGrid(the_geom_webmercator,10000) ',
                         source = layer.split('--')[3], //source
                         type = layer.split('--')[2], //type
@@ -7437,7 +7449,7 @@ mol.modules.map.editor = function(mol) {
                     );
                 }
             );
-            
+
             this.bus.fireEvent(new mol.bus.Event('show-loading-indicator', {source: this.current_layer.dataset_id }))
             if(tiles.length>0 && useExisting == "true") {
 	            $.getJSON(
@@ -7556,7 +7568,7 @@ mol.modules.map.editor = function(mol) {
                                     }
                                 }
                             );
-                        
+
                 }
             )
         },
@@ -7580,7 +7592,7 @@ mol.modules.map.editor = function(mol) {
         init : function(name) {
             var html = '' +
                     '<div class="mol-Map-EditorFeatureOptions">' +
-                    	'Set Feature Metadata for {0} ' +
+                    	'Set Feature Metadata for {0}<br><br> ' +
                         'Seasonality'+
                         '<select class="seasonality">'+
                             '<option value=1>Resident</option>' +
@@ -7623,16 +7635,16 @@ mol.modules.map.editor = function(mol) {
                                 '<option selected value=true>Yes</option>' +
                                 '<option value=false>No</option>' +
                             '</select></td></tr>' +
-                            '<tr><td>Full resolution polygon editing is not yet ' +
+                            '<tr><td>Full resolution polygon editing is not fully  ' +
                             ' supported in the Map of Life. What level of ' +
                             ' simplification should be applied to the outline?</td>'  +
                             '<td  align="right"><select class="detail">' +
                                 //'<option value="auto">Auto</option>' +
-                                '<option value="10000">10 km</option>' +
-                                '<option value="50000">50 km</option>' +
-                                '<option value="100000">100 km</option>' +
-                                '<option value="150000">150 km</option>' +
-                                '<option value="200000">150 km</option>' +
+                                '<option value="0">None</option>' +
+                                '<option value="10000">10 KM</option>' +
+                                '<option value="50000">50 KM</option>' +
+                                '<option selected value="100000">100 KM </option>' +
+                                '<option value="250000">250 KM</option>' +
                             '</select></td></tr></tbody></table>' +
                         '</div>' +
                         '<button class="start">Start mapping</button>' +

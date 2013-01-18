@@ -463,7 +463,7 @@ mol.modules.map.layers = function(mol) {
                             mt.interaction.clickAction = "";
                         }
                     );
-                    
+
                     if(layer.editing) {
                         l.styler.css('visibility','hidden');
                         l.find(".buttonContainer").hide();
@@ -472,7 +472,7 @@ mol.modules.map.layers = function(mol) {
                         l.addClass('selected');
                         l.edit.show();
                     }
-                    
+
                     //Hack so that at the end
                     //we can fire opacity event with all layers
                     all.push({layer:layer, l:l, opacity:opacity});
@@ -562,6 +562,16 @@ mol.modules.map.layers = function(mol) {
                                     .removeClass("selected");
                                 $(l.layer).addClass("selected");
                             }
+                        }
+                    );
+                    l.del.click(
+                        function(event) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'delete-layers',
+                                    {dataset_id: layer.dataset_id}
+                                )
+                            )
                         }
                     );
                     // Click handler for style toggle
@@ -1407,7 +1417,7 @@ mol.modules.map.layers = function(mol) {
                 smidStyle,
                 midStyle,
                 srestStyle;
-            
+
             if(isSeas) {
                 spreStyle = style.substring(
                                 0,
@@ -1676,7 +1686,7 @@ mol.modules.map.layers = function(mol) {
                 return;
             }
                 oldStyle = self.parseLayerStyle(layer, "current");
-                
+
                 if(layer.style_table == "points_style") {
                     style = this.changeStyleProperty(
                                 style,
@@ -1773,6 +1783,9 @@ mol.modules.map.layers = function(mol) {
                 '    <button title="Save layer." class="edit">' +
                        'Save' +
                 '    </button>' +
+                '    <button title="Delete layer." class="del">' +
+                       'Delete' +
+                '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
                        'z' +
                 '    </button>' +
@@ -1809,6 +1822,7 @@ mol.modules.map.layers = function(mol) {
             this.info = $(this).find('.info');
             this.edit = $(this).find('.edit');
             this.edit.hide();
+            this.del = $(this).find('.del');
             this.close = $(this).find('.close');
             this.type = $(this).find('.type');
             this.source = $(this).find('.source');
