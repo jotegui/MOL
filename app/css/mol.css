@@ -4,8 +4,8 @@ html {
 
 body { 
     height: 100%; 
-    margin: 0px; 
-    padding: 0px; 
+    margin: 0; 
+    padding: 0; 
     overflow: hidden;
     min-width: 720px; 
     min-height: 500px;
@@ -47,31 +47,31 @@ body {
     float: left; 
     width: 100%; 
     height: auto; 
-    margin-bottom: 5px; 
+    margin-bottom: 0.42em; 
 }
 
 /* Set up RightControl defaults */
 .mol-Map-RightControl { 
-    margin-right: 5px; 
+    margin-right: 0.42em; 
     width: 500px;
 }
 
 /* Set up CenterControl defaults */
 .mol-Map-CenterTopControl { 
-    margin-right: -50px; 
+    margin-right: -4.167em; 
     width: 465px; 
 }
 
 /* Set up LeftControl defaults */
 .mol-Map-LeftBottomControl { 
     position:absolute; 
-    left:0px; 
+    left: 0; 
     width: 500px; 
 }
 
 /* Set up TopLeftControl defaults */
 .mol-Map-TopLeftControl {
-    margin-left: 5px;
+    margin-left: 0.42em;
 	width: 550px;
     height: auto;
     color: #141414;

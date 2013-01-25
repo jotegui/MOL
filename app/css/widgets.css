@@ -29,9 +29,9 @@
         rgba(29,43,82,0.75) 57%
     );
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#A51D2B52', endColorstr='#BF1D2B52');
-    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
-    -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.347656);
-    box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
+    -moz-box-shadow: 0.17em 0.17em 0.25em rgba(0, 0, 0, 0.347656);
+    box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
     color: rgb(240, 240, 260);
     pointer-events: auto;
     -webkit-touch-callout: none;
@@ -45,17 +45,17 @@
 button {
     behavior: url(/css/pie/PIE.htc);
     width: auto;
-    margin: 2px;
+    margin: 0.17em;
     font-weight:700;
     color: rgb(240, 240, 260);
     background-color: rgba(25, 25, 25, 0.75);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#BF191919', endColorstr='#BF191919');
-    -moz-box-shadow: 2px 2px 5px #000;
-    -webkit-box-shadow: 2px 2px 5px #000;
-    box-shadow: 2px 2px 5px #222;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    -moz-box-shadow: 0.17em 0.17em 0.42em #000;
+    -webkit-box-shadow: 0.17em 0.17em 0.42em #000;
+    box-shadow: 0.17em 0.17em 0.42em #222;
+    -webkit-border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    border-radius: 0.25em;
     border: none;
 }
 
@@ -64,6 +64,8 @@ button:hover {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FF191919', endColorstr='#FF191919');
     cursor: pointer;
 }
+
+/*TODO webkit-scrollbar ems*/
 
 .mol-LayerControl-Layers ::-webkit-scrollbar,
 .mol-LayerControl-Results ::-webkit-scrollbar {
@@ -98,17 +100,49 @@ button:hover {
     display: none;
 }
 
+/* CSS for multiple widgets */
+
+.mol-BaseMapControl div:first-child,
+.mol-BottomRightMenu div:first-child {
+    -moz-border-radius-bottomleft: 0.25em;
+    border-bottom-left-radius: 0.25em;
+    -moz-border-radius-topleft: 0.25em;
+    border-top-left-radius: 0.25em;
+}
+
+.mol-BaseMapControl div:last-child,
+.mol-BottomRightMenu div:last-child  {
+    -moz-border-radius-bottomright: 0.25em;
+    border-bottom-right-radius: 0.25em;
+    -moz-border-radius-topright: 0.25em;
+    border-top-right-radius: 0.25em;
+}
+
+.mol-BaseMapControl div,
+.mol-BottomRightMenu div  {
+    display: inline-block;
+    text-align: center;
+    padding: 0.42em;
+    margin: 0;
+}
+
+.mol-BaseMapControl .button:hover,
+.mol-BottomRightMenu .button:hover {
+    color: #FFF;
+    cursor: pointer;
+}
+
 /* SPLASH WIDGET */
 
 .mol-Splash .IEwarning {
     color: red;
-    font-size: 10pt;
+    font-size: 0.75em;
 }
 
 .mol-Splash div#footer_imgs {
     max-height: 32px;
     width: 100%;
-    font-size: 10pt;
+    font-size: 0.75em;
 }
 
 .mol-Splash div#footer_imgs img {
@@ -120,37 +154,16 @@ button:hover {
 .mol-BaseMapControl {
     list-style-type: none;
     font-size: 0.8em;
-    border-radius: 3px;
-    -moz-border-radius: 3px;
-    -ms-border-radius: 3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
     white-space: nowrap;
 }
-.mol-BaseMapControl .button:hover {
-    color: #FFF;
-    cursor: pointer;
-}
-.mol-BaseMapControl div {
-    display: inline-block;
-    text-align: center;
-    padding: 5px;
-    margin: 0px;
-}
-.mol-BaseMapControl div:first-child {
-    -moz-border-radius-bottomleft: 3px;
-    border-bottom-left-radius: 3px;
-    -moz-border-radius-topleft: 3px;
-    border-top-left-radius: 3px;
-}
-.mol-BaseMapControl div:last-child {
-    -moz-border-radius-bottomright: 3px;
-    border-bottom-right-radius: 3px;
-    -moz-border-radius-topright: 3px;
-    border-top-right-radius: 3px;
-}
+
 .mol-BaseMapControl div.label {
-    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
-    -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.347656);
-    box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
+    -moz-box-shadow: 0.17em 0.17em 0.25em rgba(0, 0, 0, 0.347656);
+    box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
     background-image: -ms-linear-gradient(rgba(35, 35, 35,0.85) 37%,rgba(66,66,66,0.85) 69%);
     background-image: -webkit-gradient(
         linear,
@@ -169,11 +182,10 @@ button:hover {
         rgba(35, 35, 35,0.85) 37%,
         rgba(66,66,66,0.85) 69%
     );
-
     color: #fff;
     text-align: left;
     cursor: pointer;
-    padding-bottom: 5px;
+    padding-bottom: 0.42em;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FF191919', endColorstr='#FF191919');
     pointer-events: none;
 }
@@ -185,36 +197,12 @@ button:hover {
     width: 100%;
     float: right;
     pointer-events: auto;
-    border-radius: 3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
     list-style-type: none;
     font-size: 0.8em;
     white-space: nowrap;
-}
-
-.mol-BottomRightMenu .button:hover {
-    color: white;
-    cursor: pointer;
-}
-
-.mol-BottomRightMenu div:first-child {
-    -moz-border-radius-bottomleft: 3px;
-    border-bottom-left-radius: 3px;
-    -moz-border-radius-topleft: 3px;
-    border-top-left-radius: 3px;
-}
-
-.mol-BottomRightMenu div:last-child {
-    -moz-border-radius-bottomright: 3px;
-    border-bottom-right-radius: 3px;
-    -moz-border-radius-topright: 3px;
-    border-top-right-radius: 3px;
-}
-
-.mol-BottomRightMenu div {
-    display: inline-block;
-    text-align: center;
-    padding: 5px;
-    margin: 0px;
 }
 
 /*
@@ -229,18 +217,19 @@ button:hover {
 .mol-LayerControl-Layers .layers {
     float: right;
     width: 500px;
-    border-radius: 3px;
-    -moz-border-radius: 3px;
-    box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
+    box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
     overflow: hidden;
 }
 
 .mol-LayerControl-Layers .scrollContainer {
-    max-height:380px;
+    max-height: 380px;
     overflow-y: auto;
     overflow-x: hidden;
     margin-top: 0.5em;
-    margin-bottom:0;
+    margin-bottom: 0;
 }
 
 .mol-LayerControl-Layers .layersToggle {
@@ -248,20 +237,20 @@ button:hover {
 }
 
 .mol-LayerControl-Layers .layersHeader {
-    margin: 5px;
-    margin-bottom: 0px;
-    padding: 4px;
-    line-height: 25px;
+    margin: 0.42em;
+    margin-bottom: 0;
+    padding: 0.33em;
+    line-height: 2.08em;
 }
 
 .mol-LayerControl-Layers .layersContainer {
-    margin: 5px;
-    margin-top: 0px;
-    padding: 4px;
-    border-bottom-left-radius:3px;
-    border-bottom-right-radius:3px;
-    -moz-border-radius-bottomleft: 3px;
-    -moz-border-radius-bottomright: 3px;
+    margin: 0.42em;
+    margin-top: 0;
+    padding: 0.33em;
+    border-bottom-left-radius: 0.25em;
+    border-bottom-right-radius: 0.25em;
+    -moz-border-radius-bottomleft: 0.25em;
+    -moz-border-radius-bottomright: 0.25em;
     pointer-events:auto;
     cursor:default;
 }
@@ -269,15 +258,15 @@ button:hover {
 .mol-LayerControl-Layers .break {
     float: left;
     width: 100%;
-    height: 1px;
-    border-bottom: 1px solid rgba(11,11,11,0.3);
-    margin-bottom: 2px;
+    height: 0.08em;
+    border-bottom: 0.08em solid rgba(11,11,11,0.3);
+    margin-bottom: 0.17em;
 }
 
 .mol-LayerControl-Layers ::-webkit-scrollbar-thumb:vertical {
     height: 50px;
     background-color: white;
-    border: 1px solid black;
+    border: 0.08em solid black;
 }
 
 .mol-LayerControl-Layers .ui-sortable {
@@ -287,15 +276,15 @@ button:hover {
 .mol-LayerControl-Layers .pageNavigation{
     width: 100%;
     height: 25px;
-    padding: 0px;
-    margin: 4px;
-    margin-top: 0px;
+    padding: 0;
+    margin: 0.33em;
+    margin-top: 0;
 }
 
 .mol-LayerControl-Layers .pageNavigation button {
     float: right;
-    margin-right: 4px;
-    padding: 3px;
+    margin-right: 0.33em;
+    padding: 0.25em;
 }
 
 .mol-LayerControl-Layers .layerContainer {
@@ -304,8 +293,8 @@ button:hover {
 }
 
 .mol-LayerControl-Layers .layer {
-    padding: 2px;
-    margin-bottom: 2px;
+    padding: 0.17em;
+    margin-bottom: 0.17em;
     text-align: left;
     width: 99%;
     float: left;
@@ -313,19 +302,19 @@ button:hover {
 }
 
 .mol-LayerControl-Layers .layer.selected {
-    border: 2px solid rgba(255, 100, 88, .45);
-    border-radius:5px;
-    -moz-border-radius:5px;
-    -ms-border-radius:5px;
-    padding:0px;
+    border: 0.17em solid rgba(255, 100, 88, .45);
+    border-radius: 0.42em;
+    -moz-border-radius: 0.42em;
+    -ms-border-radius: 0.42em;
+    padding: 0;
 }
 
 .mol-LayerControl-Layers .layer .layerName {
     float: left;
     white-space:normal;
     width: 280px;
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 0.42em;
+    margin-right: 0.42em;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -349,7 +338,7 @@ button:hover {
 .mol-LayerControl-Layers .layer .layerRecords {
     float: right;
     font-size: 0.8em;
-    padding-top: 2px;
+    padding-top: 0.17em;
 }
 
 .mol-LayerControl-Layers .layer .type, 
@@ -358,8 +347,8 @@ button:hover {
     text-align: center;
     width: 24px;
     height: 24px;
-    padding: 0px;
-    padding-top: 2px;
+    padding: 0;
+    padding-top: 0.17em;
 }
 
 .mol-LayerControl-Layers .layer button.styler {
@@ -378,7 +367,7 @@ button:hover {
     -moz-box-shadow: none;
     -webkit-box-shadow: none;
     box-shadow: none;
-    opacity:0.5;
+    opacity: 0.5;
 }
 
 .mol-LayerControl-Layers .layer button.styler[disabled]:hover{
@@ -389,51 +378,51 @@ button:hover {
     float: left;
     width: 24px;
     height: 24px;
-    padding: 0px;
+    padding: 0;
 }
 
 .mol-LayerControl-Layers .layer .styler div {
     background-color: #FF0000;
     height: 20px;
     width: 20px;
-    margin: 0px auto;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    margin: 0 auto;
+    -webkit-border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    border-radius: 0.25em;
     border: none;
 }
 
 .mol-LayerControl-Layers .layer .styler div.legend-point {
     height: 7px;
     width: 7px;
-    border-style:solid;
-    border-width:1px;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    border-radius: 10px;
+    border-style: solid;
+    border-width: 0.08em;
+    -webkit-border-radius: 0.83em;
+    -moz-border-radius: 0.83em;
+    border-radius: 0.83em;
 }
 
 .mol-LayerControl-Layers .layer .styler div.legend-polygon {
-    border-style:solid;
-    width:18px;
-    height:18px;
+    border-style: solid;
+    width: 18px;
+    height: 18px;
 }
 
 .mol-LayerControl-Layers .layer .styler div.legend-seasonal {
-    background-color:transparent;
+    background-color: transparent;
     border: solid;
 }
 
 .mol-LayerControl-Layers .layer .styler div.legend-seasonal div.seasonal {
     width: 20px;
-    margin: 0px auto;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    margin: 0 auto;
+    -webkit-border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    border-radius: 0.25em;
 }
 
 .mol-LayerControl-Layers .layer .styler div.legend-seasonal div {
-    height:5px;
+    height: 5px;
 }
 
 .mol-LayerControl-Layers .layer .type img,
@@ -447,33 +436,34 @@ button:hover {
     height: 20px;
     float: right;
     position: relative;
-    margin-right: 10px;
+    margin-right: 0.83em;
 }
 
 .mol-LayerControl-Layers .layer .toggle {
     opacity: 0.0;
-    position:absolute;
-    left:0;
-    z-index:100;
+    position: absolute;
+    left: 0;
+    z-index: 100;
     float: left;
-    width:24px;
-    height:24px;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
 }
 
 .mol-LayerControl-Layers .layer .customCheck:after {
     content:url('/static/maps/layers/inactive.png');
-    margin: 2px;
-    padding: 0px 1px 0px 1px;
+    margin: 0.17em;
+    padding: 0 0.08em 0 0.08em;
     height: 24px;
     position:absolute;
     left: 0;
     background-color: rgba(25, 25, 25, 0.75);
-    -moz-box-shadow: 2px 2px 5px #000;
-    -webkit-box-shadow: 2px 2px 5px #000;
-    box-shadow: 2px 2px 5px #222;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    -moz-box-shadow: 0.17em 0.17em 0.42em #000;
+    -webkit-box-shadow: 0.17em 0.17em 0.42em #000;
+    box-shadow: 0.17em 0.17em 0.42em #222;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
+    border-radius: 0.25em;
     border: none;
 }
 
@@ -643,10 +633,6 @@ button:hover {
 }
 
 /* SEARCH WIDGET */
-
-.mol-LayerControl-Search {
-    white-space: nowrap;
-}
 
 .mol-LayerControl-Search {
     display: table-cell;
