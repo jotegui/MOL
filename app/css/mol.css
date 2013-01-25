@@ -10,8 +10,9 @@ body {
     min-width: 720px; 
     min-height: 500px;
     font-family: Arial, sans-serif; 
+    font-size: 1em;
+    font-weight: 700;
     color: #141414; 
-    font-weight:700;
 }
 
 .map_container {
@@ -34,8 +35,6 @@ body {
 .mol-Map-TopLeftControl, .mol-Map-CenterTopControl, .mol-Map-RightControl,
 .mol-Map-LeftBottomControl, .mol-Map-RightBottomControl {
     pointer-events: none;
-    font-family: Arial, sans-serif;
-    font-weight:700;
 }
 
 .mol-Map-RightControl .TOP, .mol-Map-RightControl .MIDDLE, 

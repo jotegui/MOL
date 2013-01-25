@@ -638,7 +638,7 @@ button:hover {
 }
 
 .mol-LayerControl-Styler .buttonWrapper button {
-    font-size:10px;
+    font-size: 1em;
     margin:2px 0 2px 0;
 }
 
@@ -686,7 +686,7 @@ button:hover {
     overflow-x: hidden;
     /* add padding to account for vertical scrollbar */
     pointer-events: auto;
-    font-size: 9pt;
+    font-size: 0.75em;
     line-height: 1;
     font-weight: 400;
 }
@@ -727,7 +727,7 @@ button:hover {
     margin: 0px;
     pointer-events: none;
     cursor:default;
-    font-size:0.8em;
+    font-size: 0.8em;
 }
 
 .mol-LayerControl-Results .resultRecords {
@@ -1070,7 +1070,7 @@ button:hover {
 }
 
 .mol-Map-ListQueryInfo {
-     font-size: 12px;
+     font-size: 0.75em;
      font-style: normal;
      font-weight: normal;
 }
@@ -1111,7 +1111,7 @@ button:hover {
 
 .mol-Map-ListQueryEmptyInfoWindow {
      margin: 5px;
-     font-size: 14px;
+     font-size: 0.85em;
      font-style: normal;
      font-weight: normal;
 }
@@ -1123,12 +1123,13 @@ button:hover {
     clear:both;
     float:left;
     padding: 5px;
-    font-size:0.8em;
+    font-size: 0.8em;
     font-weight:700;
 }
+
 .mol-LayerMetadata .val {
     display: inline-block;
-    font-size:10pt;
+    font-size: 0.75em;
     font-weight:300;
 }
 
@@ -1188,7 +1189,7 @@ button:hover {
 .mol-Dashboard #dialog {
     font-weight: normal;
     font-style: normal;
-    font-size: 12px;
+    font-size: 0.75em;
     min-height: 360px;
     overflow-y: hidden;
 }
@@ -1197,7 +1198,6 @@ button:hover {
     padding-top: 5px;
     padding-bottom: 10px;
     white-space: nowrap;
-    font-size: 12px;
 }
 
 .mol-Dashboard #dialog .summary span {
@@ -1206,11 +1206,9 @@ button:hover {
 
 .mol-Dashboard #dialog .summary .label {
     font-weight: bold;
-    font-size: 12px;
 }
 
 .mol-Dashboard div.mol-Dashboard-TableWindow {
-    font-size: 12px;
     font-style:normal;
     font-weight:normal;
     overflow-y:auto;
