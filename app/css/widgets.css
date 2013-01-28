@@ -511,12 +511,13 @@ button:hover {
         rgba(29,43,82,0.75) 57%
     );
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#A51D2B52', endColorstr='#BF1D2B52');
-    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
-    -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.347656);
-    box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
+    -moz-box-shadow: 0.17em 0.17em 0.25em rgba(0, 0, 0, 0.347656);
+    box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
     color: rgb(240, 240, 260);
-    border-radius:3px;
-    -moz-border-radius:3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
 }
 
 .ui-tooltip-widgettheme .ui-tooltip-titlebar {
@@ -539,14 +540,16 @@ button:hover {
         rgba(29,43,82,0.95) 75%
     );
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#A51D2B52', endColorstr='#BF1D2B52');
-    border-radius:3px;
-    -moz-border-radius:3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
 }
 
 .ui-tooltip-widgettheme .ui-tooltip .qtip {
-    border-width:0;
-    border-radius:3px;
-    -moz-border-radius:3px;
+    border-width: 0;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
 }
 
 .mol-LayerControl-Styler .colorPicker {
@@ -554,7 +557,7 @@ button:hover {
 }
 
 .mol-LayerControl-Styler .colorPickers div + div {
-    padding-top: 4px;
+    padding-top: 0.33em;
 }
 
 .mol-LayerControl-Styler .seasChk {
@@ -564,49 +567,49 @@ button:hover {
 .mol-LayerControl-Styler .sliderLabel, 
 .mol-LayerControl-Styler .opacityLabel,
 .mol-LayerControl-Styler .stylerLabel {
-    float:left;
-    width:48px;
-    margin-top:4px;
-    margin-right:4px;
-    text-align:right;
+    float: left;
+    width: 48px;
+    margin-top: 0.33em;
+    margin-right: 0.33em;
+    text-align: right;
 }
 
 .mol-LayerControl-Styler .stylerLabel {
-    margin-top:10px;   
+    margin-top: 0.83em;   
 }
 
 .mol-LayerControl-Styler .colorPickers span + div {
-    margin-top:2px;
-    margin-bottom:2px;
+    margin-top: 0.17em;
+    margin-bottom: 0.17em;
 }
 
 .mol-LayerControl-Styler .sizerHolder,
 .mol-LayerControl-Styler .opacityHolder {
-    padding-top:4px;
-    padding-bottom:4px;
+    padding-top: 0.33em;
+    padding-bottom: 0.33em;
     width: 140px;
 }
 
 .mol-LayerControl-Styler #pointSizeValue,
 .mol-LayerControl-Styler #opacityValue {
-    margin-top:4px;
-    float:left;
-    clear:right;
-    width:28px;
+    margin-top: 0.33em;
+    float: left;
+    clear: right;
+    width: 28px;
 }
 
 .mol-LayerControl-Styler .sliderContainer {
     float: left;
     position: relative;
     width: 38%;
-    margin-right:4px;
-    margin-bottom:8px;
+    margin-right: 0.33em;
+    margin-bottom: 0.67em;
 }
 
 .mol-LayerControl-Styler .sliderContainer .sizer,
 .mol-LayerControl-Styler .sliderContainer .opacity {
     height: 5px;
-    margin-top: 5px;
+    margin-top: 0.42em;
 }
 
 .mol-LayerControl-Styler .sliderContainer .sizer .ui-slider-handle,
@@ -616,20 +619,20 @@ button:hover {
 }
 
 .mol-LayerControl-Styler .buttonWrapper {
-    width:135px;
-    margin:0 auto;
-    margin-top:20px;
+    width: 135px;
+    margin: 0 auto;
+    margin-top: 1.67em;
 }
 
 .mol-LayerControl-Styler .buttonWrapper.allStyler {
     width: 75%;
     margin: 0 auto;
-    margin-top: 4px;
+    margin-top: 0.33em;
 }
 
 .mol-LayerControl-Styler .buttonWrapper button {
-    font-size: 1em;
-    margin:2px 0 2px 0;
+    font-size: 0.99em;
+    margin: 0.17em 0 0.17em 0;
 }
 
 /* SEARCH WIDGET */
@@ -637,11 +640,11 @@ button:hover {
 .mol-LayerControl-Search {
     display: table-cell;
     height: 26px;
-    margin-bottom: 5px;
-    margin-right: 5px;
-    padding: 3px 5px 2px 5px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
+    margin-bottom: 0.42em;
+    margin-right: 0.42em;
+    padding: 0.25em 0.42em 0.17em 0.42em;
+    -moz-border-radius: 0.33em;
+    border-radius: 0.33em;
     white-space: nowrap;
     pointer-events: auto;
     -moz-user-select: text;
@@ -652,13 +655,13 @@ button:hover {
     float: left;
     line-height: 25px;
     font-size: 0.8em;
-    margin-right: 2px;
+    margin-right: 0.17em;
     -moz-user-select: none;
 }
 
 .mol-LayerControl-Search .value {
     display:inline-block;
-    margin-right: 5px;
+    margin-right: ;
     -moz-user-select: text;
     -webkit-user-select: text;
     -ms-user-select: text;
@@ -688,16 +691,16 @@ button:hover {
 
 .mol-LayerControl-Search .execute {
     display:inline-block;
-    margin-left: 4px;
+    margin-left: 0.33em;
     width: 50px;
-    height:20px;
+    height: 20px;
 }
 
 .mol-LayerControl-Search .toggle {
     float: left;
     height: 20px;
     width: 23px;
-    margin-left: 4px;
+    margin-left: 0.33em;
 }    
 
 /* RESULTS WIDGET */
@@ -709,8 +712,8 @@ button:hover {
     text-align: left;
     outline: none;
     position: relative;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
     pointer-events: none;
     cursor:default;
     font-size: 0.8em;
@@ -724,7 +727,7 @@ button:hover {
 .mol-LayerControl-Results ::-webkit-scrollbar-thumb:vertical {
     height: 25px;
     background-color: white;
-    border: 1px solid black;
+    border: 0.08em solid black;
 }
 
 .mol-LayerControl-Results .noresults {
@@ -735,21 +738,22 @@ button:hover {
     float: left;
     width: 30%;
     height: 100%;
-    margin-right: 5px;
-    padding: 0px;
-    border: 0px;
+    margin-right: 0.42em;
+    padding: 0;
+    border: 0;
 }
 .mol-LayerControl-Results .filters .filter {
-    padding: 4px;
-    margin: 0px 0px 5px 0px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    padding: 0.33em;
+    margin: 0 0 0.42em 0;
+    -moz-border-radius: 0.25em;
+    border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
     pointer-events: auto;
 }
 
 .mol-LayerControl-Results .filters .filter .all {
     text-align: right;
-    margin-right: 10px;
+    margin-right: 0.83em;
 }
 
 .mol-LayerControl-Results .filters .filter .options {
@@ -758,13 +762,13 @@ button:hover {
 }
 
 .mol-LayerControl-Results .filters .filter .filterName {
-    margin-bottom: 5px;
+    margin-bottom: 0.42em;
 }
 
 .mol-LayerControl-Results .filters .filter .option {
     text-decoration: none;
-    margin-left: 10px;
-    margin-bottom: 2px;
+    margin-left: 0.83em;
+    margin-bottom: 0.17em;
     font-weight: normal;
     cursor: pointer;
 }
@@ -776,7 +780,7 @@ button:hover {
 .mol-LayerControl-Results .filters .filter .option img {
     width: 12px;
     height: 12px;
-    margin: 0.5px;
+    margin: 0.04em;
 }
 
 .mol-LayerControl-Results .filters .filter .option button {
@@ -796,14 +800,14 @@ button:hover {
 }
 
 .mol-LayerControl-Results .searchResults {
-    padding: 5px;
-    margin: 0px;
+    padding: 0.42em;
+    margin: 0;
     width: 61%;
     float: left;
-    padding-top: 10px;
+    padding-top: 0.83em;
     position: relative;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
+    -moz-border-radius: 0.25em;
+    border-radius: 0.25em;
     pointer-events: auto;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -815,7 +819,7 @@ button:hover {
 
 .mol-LayerControl-Results .searchResults .selectAll {
     color: #E6FAE6;
-    padding-left: 2px;
+    padding-left: 0.17em;
     font-size: 0.9em;
     float: right;
     padding-right: 10px;
@@ -826,16 +830,16 @@ button:hover {
     padding-left: 2px;
     font-size: 0.9em;
     float: right;
-    padding-right: 10px;
+    padding-right: 0.83em;
 }
 
 .mol-LayerControl-Results .searchResults .resultList {
     position: relative;
     list-style-type: none;
-    padding: 0px;
+    padding: 0;
     max-height: 380px;
-    margin-top: 3px;
-    margin-bottom: 0px;
+    margin-top: 0.25em;
+    margin-bottom: 0;
     overflow-y: auto;
 }
 
@@ -847,8 +851,8 @@ button:hover {
 }
 
 .mol-LayerControl-Results ul {
-    padding-left: 0px;
-    margin-bottom: 5px;
+    padding-left: 0;
+    margin-bottom: 0.42em;
     text-align: left;
     width: 100%;
     float: left;
@@ -859,8 +863,8 @@ button:hover {
     width: 20px;
     height: 20px;
     color: #fff;
-    padding: 0px;
-    padding-top: 2px;
+    padding: 0;
+    padding-top: 0.17em;
 
 }
 
@@ -872,7 +876,7 @@ button:hover {
 .mol-LayerControl-Results .result div.resultName {
     width: 62%;
     display:inline-block;
-    margin-left: 4px;
+    margin-left: 0.33em;
     text-overflow: ellipsis;
 }
 
