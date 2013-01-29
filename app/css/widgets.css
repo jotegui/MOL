@@ -882,7 +882,7 @@ button:hover {
 
 .mol-LayerControl-Results .result .resultAuthor {
     font-size: 0.8em;
-    margin-top: -4px;
+    margin-top: -0.33em;
 }
 
 .mol-LayerControl-Results .resultType,
@@ -895,17 +895,17 @@ button:hover {
     height: 24px;
     position: relative;
     float: right;
-    margin-right: 10px;
+    margin-right: 0.83em;
 }
 
 .mol-LayerControl-Results .result .checkbox {
     opacity: 0.0;
-    position:absolute;
-    left:0;
-    z-index:100;
+    position: absolute;
+    left: 0;
+    z-index: 100;
     float: left;
-    width:24px;
-    height:24px;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
 }
 
@@ -913,8 +913,8 @@ button:hover {
     float: left;
     width: 100%;
     height: 1px;
-    border-bottom: 1px solid rgba(11,11,11,0.3);
-    margin-bottom: 2px;
+    border-bottom: 0.08em solid rgba(11,11,11,0.3);
+    margin-bottom: 0.17em;
 }
 
 .mol-LayerControl-Results .result .customCheck:after {
@@ -934,8 +934,8 @@ button:hover {
     white-space: nowrap;
 }
 .mol-LayerControl-Results .searchResults .pageNavigation button{
-    margin-right: 4px;
-    padding: 3px;
+    margin-right: 0.33em;
+    padding: 0.25em;
 }
 
 /* QUERY WIDGET */
@@ -944,18 +944,18 @@ button:hover {
     float: right;
     display: table-cell;
     height: 26px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
+    -moz-border-radius: 0.33em;
+    border-radius: 0.33em;
     white-space: nowrap;
-    padding: 2px 3px 2px 3px;
-    pointer-events:auto;
+    padding: 0.17em 0.25em 0.17em 0.25em;
+    pointer-events: auto;
 }
 
 .mol-Map-QueryDisplay button.toggleBtn {
-    width:32px;
+    width: 32px;
     height: 22px;
     color: #fff;
-    padding: 3px;
+    padding: 0.25em;
     float: left;
 }
 
@@ -965,32 +965,32 @@ button:hover {
 }
 
 .mol-Map-QueryDisplay button.selected {
-    border: 3px solid rgba(255, 100, 88, .45);
-    border-radius:5px;
-    -moz-border-radius:5px;
-    -ms-border-radius:5px;
-    padding:0px;
+    border: 0.25em solid rgba(255, 100, 88, .45);
+    border-radius: 0.42em;
+    -moz-border-radius: 0.42em;
+    -ms-border-radius: 0.42em;
+    padding: 0;
 }
 
 .mol-Map-QueryDisplay span.title {
     line-height: 25px;
     font-size: 0.8em;
-    margin-right: 2px;
+    margin-right: 0.17em;
     -moz-user-select: none;
-    padding-left: 2px;
+    padding-left: 0.137em;
     float: left;
 }
 
 .mol-Map-QueryDisplay span.types {
-    display:inline-block;
-    height:14px;
+    display: inline-block;
+    height: 14px;
 }
 
 .mol-Map-QueryDisplay div.speciesDisplay {
     float: left;
     font-size: 0.7em;
-    margin-right: 2px;
-    margin-top: 2px;
+    margin-right: 0.17em;
+    margin-top: 0.17em;
     -moz-user-select: none;
 }
 
@@ -999,23 +999,23 @@ button:hover {
 }
 
 .mol-Map-QueryDisplay div.speciesDisplay select.radius {
-    margin-right: 2px;
+    margin-right: 0.17em;
 }
 
 .mol-Map-QueryDisplay .types button {
     width: 20px;
     height: 20px;
     color: #fff;
-    padding: 3px;
-    margin: 0px;
+    padding: 0.25em;
+    margin: 0;
 }
 
 .mol-Map-ListDialog #tabs {
-    overflow-y:hidden;
+    overflow-y: hidden;
 }
 
 .mol-Map-ListDialogContent.ui-tabs div.ui-tabs-panel {
-    padding:0px;
+    padding: 0;
 }
 
 .mol-Map-ListDialogContent.ui-dialog-content.ui-widget-content {
@@ -1056,7 +1056,7 @@ button:hover {
 }
 
 .mol-Map-ListQuery {
-     margin:4px;
+     margin: 0.33em;
 }
 
 .mol-Map-ListQueryInfo {
@@ -1065,13 +1065,13 @@ button:hover {
      font-weight: normal;
 }
 
-.mol-Map-ListQueryInfoWindow {
-     overflow-y: auto;
-     overflow-x: hidden;
-}
-
 .mol-Map-ListQueryInfo .iucn_stats{
     float: right;
+}
+
+.mol-Map-ListQueryInfoWindow {
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .mol-Map-ListQueryInfoWindow td.wiki:hover,
@@ -1085,11 +1085,11 @@ button:hover {
     background: #cc9900;
 }
 
- .mol-Map-ListQueryInfoWindow tr.iucnen td {
+.mol-Map-ListQueryInfoWindow tr.iucnen td {
     background: #cc6633;
 }
 
- .mol-Map-ListQueryInfoWindow tr.iucncr td {
+.mol-Map-ListQueryInfoWindow tr.iucncr td {
     background: #cc3333;
 }
 
@@ -1100,7 +1100,7 @@ button:hover {
 }
 
 .mol-Map-ListQueryEmptyInfoWindow {
-     margin: 5px;
+     margin: 0.42em;
      font-size: 0.85em;
      font-style: normal;
      font-weight: normal;
@@ -1110,9 +1110,9 @@ button:hover {
 
 .mol-LayerMetadata .key {
     display: inline-block;
-    clear:both;
-    float:left;
-    padding: 5px;
+    clear: both;
+    float: left;
+    padding: 0.42em;
     font-size: 0.8em;
     font-weight:700;
 }
@@ -1129,8 +1129,8 @@ button:hover {
 
 .mol-LayerMetadata .values {
     display: inline-block;
-    float:left;
-    max-width:350px;
+    float: left;
+    max-width: 350px;
 }
 
 /* DASHBOARD WIDGET */
@@ -1159,9 +1159,9 @@ button:hover {
 
     filter: progid:DXImageTransform.Microsoft.gradient(
         startColorstr='#A51D2B52', endColorstr='#BF1D2B52');
-    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
-    -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.347656);
-    box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
+    -moz-box-shadow: 0.17em 0.17em 0.25em rgba(0, 0, 0, 0.347656);
+    box-shadow: rgba(0, 0, 0, 0.347656) 0.17em 0.17em 0.25em;
     color: rgb(240, 240, 260);
     pointer-events: auto;
     -webkit-touch-callout: none;
@@ -1171,9 +1171,9 @@ button:hover {
     -ms-user-select: none;
     user-select: none;
     border: none;
-    border-radius: 3px;
-    -moz-border-radius: 3px;
-    -ms-border-radius: 3px;
+    border-radius: 0.25em;
+    -moz-border-radius: 0.25em;
+    -ms-border-radius: 0.25em;
 }
 
 .mol-Dashboard #dialog {
@@ -1185,13 +1185,13 @@ button:hover {
 }
 
 .mol-Dashboard #dialog .summary {
-    padding-top: 5px;
-    padding-bottom: 10px;
+    padding-top: 0.42em;
+    padding-bottom: 0.83em;
     white-space: nowrap;
 }
 
 .mol-Dashboard #dialog .summary span {
-    padding-right: 5px;
+    padding-right: 0.42em;
 }
 
 .mol-Dashboard #dialog .summary .label {
@@ -1208,7 +1208,7 @@ button:hover {
 /* IMAGES WIDGET */
 
 .mol-Thumbnail {
-    height:25px;
+    height: 25px;
 }
 
 /*
@@ -1216,8 +1216,8 @@ button:hover {
  */
 
 div.cartodb_infowindow div.top p {
-    padding-top:1px;
-    margin-bottom:2px;
+    padding-top: 0.08em;
+    margin-bottom: 0.17em;
     max-height: 40px;
     white-space: normal;
 }
