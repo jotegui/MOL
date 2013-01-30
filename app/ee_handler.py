@@ -79,19 +79,18 @@ class MainPage(webapp2.RequestHandler):
             'opacity': 0.5
         })
 
+        #compute the area
         area = ee.call("Image.pixelArea")
         sum_reducer = ee.call("Reducer.sum")
         geometry = fc.geometry()
         total = area.mask(result.mask())
+        #what is the 200 for?
         total_area = total.reduceRegion(sum_reducer, geometry, 200)
-        properties = {'total': total_area}
-        area = ee.data.getValue({json: feature.update(properties).serialize()})
-
 
         template_values = {
             'mapid' : mapid['mapid'],
             'token' : mapid['token'],
-            'area' : area
+            'area' : total_area
         }
 
         self.render_template('ee.js', template_values)
