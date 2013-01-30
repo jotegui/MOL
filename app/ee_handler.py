@@ -57,30 +57,41 @@ class MainPage(webapp2.RequestHandler):
         fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
         filled = empty.paint(fc, 2);
         species = filled.paint(fc, 1, 5);
-       
-        
-       
+
+
+
         #parse the CDB response
-        
-        
+
+
         min = int(elevation.split(',')[0])
         max = int(elevation.split(',')[1])
         habitat_list = habitats.split(",")
-        
-        output = putput.mask(species.eq(2))
+
+        output = output.mask(species.eq(2))
         for pref in habitat_list:
             output = output.where(cover.eq(int(pref)).And(elev.gt(min)).And(elev.lt(max)),1)
 
         result = output.mask(output)
-        
+
         mapid = result.getMapId({
             'palette': '000000,FF0000',
             'max': 1,
             'opacity': 0.5
         })
+
+        area = ee.call("Image.pixelArea")
+        sum_reducer = ee.call("Reducer.sum")
+        geometry = fc.geometry()
+        total = area.mask(result.mask())
+        total_area = total.reduceRegion(sum_reducer, geometry, 200)
+        properties = {'total': total_area}
+        area = ee.data.getValue({json: feature.update(properties).serialize()})
+
+
         template_values = {
             'mapid' : mapid['mapid'],
-            'token' : mapid['token']
+            'token' : mapid['token'],
+            'area' : area
         }
 
         self.render_template('ee.js', template_values)
