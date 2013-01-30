@@ -55,7 +55,8 @@ class MainPage(webapp2.RequestHandler):
         output = ee.Image(0)
         empty = ee.Image(0)
         fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
-        species = empty.toByte().paint(fc,1)
+        filled = empty.paint(fc, 2);
+        species = filled.paint(fc, 1, 5);
        
         
        
@@ -66,7 +67,7 @@ class MainPage(webapp2.RequestHandler):
         max = int(elevation.split(',')[1])
         habitat_list = habitats.split(",")
         
-        output = output.mask(species.neq(1))
+        output = putput.mask(species.eq(2))
         for pref in habitat_list:
             output = output.where(cover.eq(int(pref)).And(elev.gt(min)).And(elev.lt(max)),1)
 
