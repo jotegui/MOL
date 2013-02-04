@@ -1,2 +1,3 @@
 {"urlPattern" : "https://earthengine.googleapis.com/map/{{ mapid }}/{Z}/{X}/{Y}?token={{ token }}",
- "area" : {{ area }}}
+ "total_area" : {{ total_area }},
+ "clipped_area" : {{ clipped_area }}}

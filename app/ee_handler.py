@@ -4,6 +4,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 import os
 import ee
+import json
 import webapp2
 import httplib2
 import urllib
@@ -55,10 +56,15 @@ class MainPage(webapp2.RequestHandler):
         output = ee.Image(0)
         empty = ee.Image(0)
         fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
-        filled = empty.paint(fc, 2);
-        species = filled.paint(fc, 1, 5);
-
-
+        #feature = fc.union()
+        #feature = feature.getInfo()
+        #feature = feature.features[0]
+        
+        #coords = extent.getInfo() #.features[0].geometry.coordinates[0]
+        
+        filled = empty.paint(fc, 2)
+        species = filled.paint(fc, 1, 5)
+        #bbox = fc.map_bounds()
 
         #parse the CDB response
 
@@ -82,15 +88,32 @@ class MainPage(webapp2.RequestHandler):
         #compute the area
         area = ee.call("Image.pixelArea")
         sum_reducer = ee.call("Reducer.sum")
-        geometry = fc.geometry()
+        
         total = area.mask(result.mask())
-        #what is the 200 for?
-        total_area = total.reduceRegion(sum_reducer, geometry, 200)
-
+        
+        geometry = fc.geometry()
+        #compute area on 1km scale 
+        total_area = area.reduceRegion(sum_reducer, geometry, 1000)
+        clipped_area = total.reduceRegion(sum_reducer, geometry, 1000)
+        
+        properties = {'total': total_area, 'clipped': clipped_area}
+        
+        fc = fc.map_update(properties)
+        
+        data = json.parse(ee.data.getValue({"json": fc.serialize()}))
+        ta = 0
+        ca = 0
+       
+       
+        for feature in data.features:
+            ta=ta+feature.total.area
+            ca=ca+feature.clipped.area
+            
         template_values = {
             'mapid' : mapid['mapid'],
             'token' : mapid['token'],
-            'area' : total_area
+            'total_area' : data,
+            'clipped_area': 'ca'
         }
 
         self.render_template('ee.js', template_values)
