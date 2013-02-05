@@ -4,7 +4,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 import os
 import ee
-import json
 import webapp2
 import httplib2
 import urllib
@@ -55,15 +54,12 @@ class MainPage(webapp2.RequestHandler):
 
         output = ee.Image(0)
         empty = ee.Image(0)
+
         fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
-        #feature = fc.union()
-        #feature = feature.getInfo()
-        #feature = feature.features[0]
-        
-        #coords = extent.getInfo() #.features[0].geometry.coordinates[0]
-        
+
         filled = empty.paint(fc, 2)
         species = filled.paint(fc, 1, 5)
+        feature = fc.union()
         #bbox = fc.map_bounds()
 
         #parse the CDB response
@@ -73,7 +69,7 @@ class MainPage(webapp2.RequestHandler):
         max = int(elevation.split(',')[1])
         habitat_list = habitats.split(",")
 
-        output = output.mask(species.eq(2))
+        output = output.mask(species.neq(2))
         for pref in habitat_list:
             output = output.where(cover.eq(int(pref)).And(elev.gt(min)).And(elev.lt(max)),1)
 
@@ -88,32 +84,34 @@ class MainPage(webapp2.RequestHandler):
         #compute the area
         area = ee.call("Image.pixelArea")
         sum_reducer = ee.call("Reducer.sum")
-        
+
         total = area.mask(result.mask())
-        
-        geometry = fc.geometry()
-        #compute area on 1km scale 
+
+        geometry = feature.geometry()
+        #compute area on 1km scale
         total_area = area.reduceRegion(sum_reducer, geometry, 1000)
         clipped_area = total.reduceRegion(sum_reducer, geometry, 1000)
-        
+
         properties = {'total': total_area, 'clipped': clipped_area}
-        
-        fc = fc.map_update(properties)
-        
-        data = json.parse(ee.data.getValue({"json": fc.serialize()}))
+
+        feature = feature.map_update(properties)
+
+        data = ee.data.getValue({"json": feature.serialize()})
         ta = 0
         ca = 0
-       
-       
-        for feature in data.features:
-            ta=ta+feature.total.area
-            ca=ca+feature.clipped.area
-            
+
+        for feature in data["features"]:
+           if ("properties" in feature):
+               if ("total" in feature.get("properties")):
+                   ta=ta+feature.get("properties").get("total").get("area")
+               if ("clipped" in feature.get("properties")):
+                   ca=ca+feature.get("properties").get("clipped").get("area")
+
         template_values = {
             'mapid' : mapid['mapid'],
             'token' : mapid['token'],
-            'total_area' : data,
-            'clipped_area': 'ca'
+            'total_area' : ta/1000000,
+            'clipped_area': ca/1000000
         }
 
         self.render_template('ee.js', template_values)

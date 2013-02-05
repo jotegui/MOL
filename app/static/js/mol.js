@@ -4378,8 +4378,12 @@ mol.modules.map.tiles = function(mol) {
                                     )
                                 )
                             };
-
-                            self.map.overlayMapTypes.insertAt(0,maptype.layer);
+                            $("<div>" +
+                                "Total area of range map: {0}".format(Math.round(ee.total_area)) +
+                                " km<sup>2</sup><br>" +
+                                "Refined area: {0}".format(Math.round(ee.clipped_area)) +
+                            " km<sup>2</sup></div>").dialog();
+                           self.map.overlayMapTypes.insertAt(0,maptype.layer);
                         }
                     );
                 };
