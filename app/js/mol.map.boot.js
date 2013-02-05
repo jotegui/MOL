@@ -10,7 +10,7 @@ mol.modules.map.boot = function(mol) {
             this.IE8 = false;
             this.maxLayers = ($.browser.chrome) ? 6 : 25;
             this.sql = '' +
-                 'SELECT DISTINCT l.scientificname as name,'+
+ 'SELECT DISTINCT l.scientificname as name,'+
                     '\'cdb\' as mode, ' +
                     't.type as type,'+
                     "CASE d.style_table WHEN 'points_style' " +
@@ -43,12 +43,12 @@ mol.modules.map.boot = function(mol) {
                     'e.finalmin as mine, ' +
                     'e.finalmax as maxe, ' +
                     'e.habitatprefs as habitat, ' +
-                    '(l.provider = \'jetz\') as inft ' +
+                    '(sl.latin is not Null and l.provider = \'jetz\') as inft ' +
                 'FROM layer_metadata l ' +
                 'LEFT JOIN elevandhabitat e ON ' +
                     'l.scientificname = e.scientific ' +
-                //'LEFT JOIN specieslist sl ON ' +
-                //    'l.scientificname = sl.latin ' +
+                'LEFT JOIN specieslist sl ON ' +
+                    'l.scientificname = sl.latin ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -60,7 +60,7 @@ mol.modules.map.boot = function(mol) {
                 'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
-                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
+                     "n.n~*'\\m{0}' OR n.v~*'\\m{0}'" +
                 'ORDER BY name, type_sort_order';
         },
         start: function() {

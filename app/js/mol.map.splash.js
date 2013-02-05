@@ -74,6 +74,7 @@ mol.modules.map.splash = function(mol) {
                 }
             //modal: true
             });
+            this.display.dialog('close');
             $(this.display).width('98%');
             $(".ui-widget-overlay").live("click", function() {
                 self.display.dialog("close");

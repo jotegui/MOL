@@ -53,14 +53,14 @@ class MainPage(webapp2.RequestHandler):
         elev = ee.Image('srtm90_v4')
 
         output = ee.Image(0)
-        empty = ee.Image(0)
+        empty = ee.Image(0).mask(0)
 
-        fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
-
-        filled = empty.paint(fc, 2)
-        species = filled.paint(fc, 1, 5)
+        #fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
+        fc = ee.FeatureCollection('ft:1ugWA45wi7yRdIxKAEbcfd1ks8nhuTcIUyx1Lv18').filter(ee.Filter().eq('Latin',sciname))
         feature = fc.union()
-        #bbox = fc.map_bounds()
+
+
+        species = empty.paint(fc, 2)
 
         #parse the CDB response
 
@@ -69,9 +69,12 @@ class MainPage(webapp2.RequestHandler):
         max = int(elevation.split(',')[1])
         habitat_list = habitats.split(",")
 
+
         output = output.mask(species.neq(2))
+
         for pref in habitat_list:
             output = output.where(cover.eq(int(pref)).And(elev.gt(min)).And(elev.lt(max)),1)
+
 
         result = output.mask(output)
 

@@ -400,10 +400,11 @@ mol.modules.map.tiles = function(mol) {
                                 )
                             };
                             $("<div>" +
-                                "Total area of range map: {0}".format(Math.round(ee.total_area)) +
-                                " km<sup>2</sup><br>" +
-                                "Refined area: {0}".format(Math.round(ee.clipped_area)) +
-                            " km<sup>2</sup></div>").dialog();
+                                "{0}<br>".format(layer.name) +
+                                "Expert map range size: {0}".format(Math.round(ee.total_area)) +
+                                " km<sup><font size=-2>2</font></sup><br>" +
+                                "Refined range size: {0}".format(Math.round(ee.clipped_area)) +
+                            " km<sup><font size=-2>2</font></sup></div>").dialog({width: 400});
                            self.map.overlayMapTypes.insertAt(0,maptype.layer);
                         }
                     );
