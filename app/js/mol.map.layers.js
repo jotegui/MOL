@@ -887,17 +887,24 @@ mol.modules.map.layers = function(mol) {
                    '<div class="mol-LayerControl-Styler">' +
                         '<div class="habitats"></div>' +
                         '<br>' +
-                        '<div>Habitat from MODIS MCD12Q1 V005</div>' +
-                        '<div>Choose Year' +
-                            '<select class="year">' +
-                                '<option value="2001">2001</option>' +
-                                '<option value="2002">2002</option>' +
-                                '<option value="2003">2003</option>' +
-                                '<option value="2004">2004</option>' +
-                                '<option value="2005">2005</option>' +
-                                '<option value="2006">2006</option>' +
-                                '<option value="2007">2007</option>' +
-                             '</select>' +
+                        '<div>Choose source:' +
+                            '<select class="mode">' +
+                                '<option value="modis">MODIS MCD12Q1 V005</option>' +
+                                '<option value="consensus">Consensus land cover</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div class="modis_year">Habitat from ' +
+                            '<div>Choose Year' +
+                                '<select class="year">' +
+                                    '<option value="2001">2001</option>' +
+                                    '<option value="2002">2002</option>' +
+                                    '<option value="2003">2003</option>' +
+                                    '<option value="2004">2004</option>' +
+                                    '<option value="2005">2005</option>' +
+                                    '<option value="2006">2006</option>' +
+                                    '<option value="2007">2007</option>' +
+                                 '</select>' +
+                            '</div>' +
                         '</div>' +
                         '<div class="elevLabel">' +
                             'Elevation Range:<br>0m-10000m' +
@@ -948,9 +955,26 @@ mol.modules.map.layers = function(mol) {
                                     layer: layer
                                 };
                                 params.layer.mode = 'ee';
+                                params.layer.filter_mode =  $(api.elements.content).find('.mode');
                                 self.bus.fireEvent(
                                     new mol.bus.Event('toggle-ee-filter',  params)
                                 );
+                            }
+                        );
+                        
+                        $(api.elements.content).find('.mode').change(
+                            function(event) {
+                                if($(this).val()=='modis') {
+                                    $(api.elements.content).find('.modis_year')
+                                        .show()
+                                } else {
+                                    $(api.elements.content).find('.modis_year')
+                                        .hide()
+                                }
+                                self.setHabitatProperties(
+                                    api.elements.content,
+                                    layer,
+                                    false);
                             }
                         );
 
@@ -980,37 +1004,70 @@ mol.modules.map.layers = function(mol) {
         },
         setHabitatProperties: function(cont, layer,  reset) {
             var maxe, mine,
-                habitats = {
-                    1:'Evergreen Needleleaf Forests',
-                    2:'Evergreen Broadleaf Forests',
-                    3:'Deciduous Needleleaf Forests',
-                    4:'Deciduous Broadleaf Forests',
-                    5:'Mixed Forests',
-                    6:'Closed Shrublands',
-                    7:'Open Shrublands',
-                    8:'Woody Savannas',
-                    9:'Savannas',
-                    10:'Grasslands',
-                    11:'Permanent Wetlands',
-                    12:'Cropland',
-                    13:'Urban and Built-up',
-                    14:'Cropland/Natural Vegetation Mosaics',
-                    15:'Snow and Ice Barren',
-                    16:'Barren',
-                    17:'Water Bodies'},
-                selectedHabitats,
+                mode = $(cont).find('.mode').val(),
+                habitats= {
+                    'modis' : {
+                        1:'Evergreen Needleleaf Forests',
+                        2:'Evergreen Broadleaf Forests',
+                        3:'Deciduous Needleleaf Forests',
+                        4:'Deciduous Broadleaf Forests',
+                        5:'Mixed Forests',
+                        6:'Closed Shrublands',
+                        7:'Open Shrublands',
+                        8:'Woody Savannas',
+                        9:'Savannas',
+                        10:'Grasslands',
+                        11:'Permanent Wetlands',
+                        12:'Cropland',
+                        13:'Urban and Built-up',
+                        14:'Cropland/Natural Vegetation Mosaics',
+                        15:'Snow and Ice Barren',
+                        16:'Barren',
+                        17:'Water Bodies'},
+                    'consensus' : {
+                        1: 'Evergreen/deciduous needleleaf trees',
+                        2: 'Evergreen broadleaf trees',
+                        3: 'Deciduous broadleaf trees',
+                        4: 'Mixed/other trees',
+                        5: 'Shrubs',
+                        6: 'Herbaceous vegetation',
+                        7: 'Cultivated and managed vegetation',
+                        8: 'Regularly flooded shrub/herbaceous vegetation',
+                        9: 'Urban/built-up',
+                        10: 'Snow/ice',
+                        11: 'Barren lands/sparse vegetation',
+                        12: 'Open water'
+                    }
+                },
+                selectedHabitats ={
+                    'modis' : [],
+                    'consensus': []
+                },
                 self = this;
 
-                //if no habitat prefs, then select all.
-                if(reset && (layer.habitat == null)) {
-                    selectedHabitats = _.keys(habitats);
-                } else if(reset || layer.selectedHabitats == undefined && layer.habitat != null) {
-                    selectedHabitats = layer.habitat.split(',');
+                //if no modis habitat prefs, then select all.
+                if(reset && (layer.modis_habitats == null)) {
+                    selectedHabitats['modis'] = _.keys(habitats['modis']);
+                } else if(reset || layer.selectedHabitats == undefined && layer.modis_habitats != null) {
+                    selectedHabitats = layer.modis_habitats.split(',');
                 } else if(layer["selectedHabitats"]){
-                    selectedHabitats = layer.selectedHabitats;
+                    selectedHabitats['modis'] = layer.selectedHabitats['modis'];
                 } else {
-                    selectedHabitats = _.keys(habitats);
+                    selectedHabitats['modis'] = _.keys(habitats['modis']);
                 }
+                
+                //if no consensus prefs, then select all.
+                if(reset && (layer.consensus == null)) {
+                    selectedHabitats['consensus'] = _.keys(habitats['consensus']);
+                } else if(reset || layer.selectedHabitats == undefined && layer.consensus_habitats != null) {
+                    selectedHabitats['consensus'] = layer.consensus_habitats.split(',');
+                } else if(layer["selectedConsensus"]){
+                    selectedHabitats['consensus'] =  selectedHabitats['consensus'];
+                } else {
+                    selectedConsensus = _.keys(habitats);
+                }
+                
+                //attach habitat selection to the layer object
                 layer.selectedHabitats = selectedHabitats;
 
                 //if no elev prefs, then select all.
@@ -1035,17 +1092,18 @@ mol.modules.map.layers = function(mol) {
                 }
                 layer.selectedYear = selectedYear;
 
+                
 
                 //add the habitats
                  $(cont).find('.habitats').empty();
                 _.each(
-                    habitats,
+                    habitats[mode],
                     function(habitat, habitat_code) {
                         var html = '' +
                             '<div class="habitat {0}" ' +
                                 'data-habitat="{1}">{2}</div>',
                             display = $(html.format(
-                                (_.indexOf(layer.selectedHabitats,habitat_code)>=0) ?
+                                (_.indexOf(layer.selectedHabitats[mode],habitat_code)>=0) ?
                                     'selected' : '',
                                 habitat_code,
                                 habitat)
@@ -1056,12 +1114,12 @@ mol.modules.map.layers = function(mol) {
                                     $(this).removeClass('selected');
                                     layer.selectedHabitats =
                                         _.without(
-                                            layer.selectedHabitats,
+                                            layer.selectedHabitats[mode],
                                             [$(this).data('habitat').toString()]
                                         );
                                 } else {
                                     $(this).addClass('selected');
-                                    layer.selectedHabitats.push(
+                                    layer.selectedHabitats[mode].push(
                                         $(this).data('habitat').toString()
                                     );
                                 }

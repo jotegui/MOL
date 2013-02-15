@@ -19,8 +19,11 @@ handlers:
 - url: /tiles/.*
   script: tile_handler.application
 
-- url: /ee
-  script: ee_handler.application
+- url: /ee_modis
+  script: ee_modis_handler.application
+  
+- url: /ee_consensus
+  script: ee_consensus_handler.application
   
 - url: /js
   static_dir: js

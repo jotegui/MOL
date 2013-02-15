@@ -52,8 +52,11 @@ mol.modules.map.search = function(mol) {
                     'e.finalmin as mine, ' +
                     'e.finalmax as maxe, ' +
                     'e.habitatprefs as habitat, ' +
+                    'c.consensusprefs as consensus, ' +
                     '(sl.latin is not Null and l.provider = \'jetz\') as inft ' +
                 'FROM layer_metadata l ' +
+                'LEFT JOIN consensus_prefs_join c ON ' +
+                    'l.scientificname = c.binomial ' +
                 'LEFT JOIN elevandhabitat e ON ' +
                     'l.scientificname = e.scientific ' +
                 'LEFT JOIN specieslist sl ON ' +
