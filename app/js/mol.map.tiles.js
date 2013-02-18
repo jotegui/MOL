@@ -370,7 +370,7 @@ mol.modules.map.tiles = function(mol) {
                         )
                     );
                     $.getJSON(
-                        'ee _{0}'.format(layer.filter_mode),
+                        'ee_{0}'.format(layer.filter_mode),
                         {
                             sciname: layer.name,
                             habitats: layer.selectedHabitats[layer.filter_mode].join(','),
@@ -404,7 +404,7 @@ mol.modules.map.tiles = function(mol) {
                         }
                     );
                     $.getJSON(
-                        'ee _{0}'.format(layer.filter_mode),
+                        'ee_{0}'.format(layer.filter_mode),
                         {
                             sciname: layer.name,
                             habitats: layer.selectedHabitats[layer.filter_mode].join(','),
@@ -442,7 +442,7 @@ mol.modules.map.tiles = function(mol) {
                             " km<sup><font size=-2>2</font></sup></div>").dialog({width: 400});
                         }
                     );
-                    
+
                 };
             }
         }

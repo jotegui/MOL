@@ -1743,13 +1743,13 @@ mol.modules.map.layers = function(mol) {
                                     layer: layer
                                 };
                                 params.layer.mode = 'ee';
-                                params.layer.filter_mode =  $(api.elements.content).find('.mode');
+                                params.layer.filter_mode =  $(api.elements.content).find('.mode').val();
                                 self.bus.fireEvent(
                                     new mol.bus.Event('toggle-ee-filter',  params)
                                 );
                             }
                         );
-                        
+
                         $(api.elements.content).find('.mode').change(
                             function(event) {
                                 if($(this).val()=='modis') {
@@ -1843,7 +1843,7 @@ mol.modules.map.layers = function(mol) {
                 } else {
                     selectedHabitats['modis'] = _.keys(habitats['modis']);
                 }
-                
+
                 //if no consensus prefs, then select all.
                 if(reset && (layer.consensus == null)) {
                     selectedHabitats['consensus'] = _.keys(habitats['consensus']);
@@ -1854,7 +1854,7 @@ mol.modules.map.layers = function(mol) {
                 } else {
                     selectedConsensus = _.keys(habitats);
                 }
-                
+
                 //attach habitat selection to the layer object
                 layer.selectedHabitats = selectedHabitats;
 
@@ -1880,7 +1880,7 @@ mol.modules.map.layers = function(mol) {
                 }
                 layer.selectedYear = selectedYear;
 
-                
+
 
                 //add the habitats
                  $(cont).find('.habitats').empty();
@@ -4446,7 +4446,7 @@ mol.modules.map.tiles = function(mol) {
                         }
                     );
                     $.getJSON(
-                        'ee _{0}'.format(layer.filter_mode),
+                        'ee_{0}'.format(layer.filter_mode),
                         {
                             sciname: layer.name,
                             habitats: layer.selectedHabitats[layer.filter_mode].join(','),
@@ -4484,7 +4484,7 @@ mol.modules.map.tiles = function(mol) {
                             " km<sup><font size=-2>2</font></sup></div>").dialog({width: 400});
                         }
                     );
-                    
+
                 };
             }
         }
