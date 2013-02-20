@@ -179,7 +179,8 @@ mol.modules.map.tiles = function(mol) {
                 this.bus.addHandler(
                     'toggle-ee-filter',
                     function(event) {
-                        var layer = event.layer;
+                        var layer = event.layer,
+                            layerAdded = false;
 
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
@@ -206,6 +207,7 @@ mol.modules.map.tiles = function(mol) {
                                                 if(newmaptype.name === layer.id) {
                                                     mt = self.map.overlayMapTypes.removeAt(newindex);
                                                     self.map.overlayMapTypes.insertAt(index, mt);
+                                                    layerAdded = true;
                                                     e = new mol.bus.Event(
                                                         'layer-opacity',
                                                         params
@@ -219,6 +221,9 @@ mol.modules.map.tiles = function(mol) {
                                 }
                             }
                         );
+                        if(!layerAdded) {
+                            self.getTile(layer);
+                        }
 
                     }
                 );

@@ -1044,12 +1044,13 @@ mol.modules.map.layers = function(mol) {
                     'consensus': []
                 },
                 self = this;
-
+                //TODO make this more general ... probably going to have 
+                // many different habitats pref types in future
                 //if no modis habitat prefs, then select all.
                 if(reset && (layer.modis_habitats == null)) {
                     selectedHabitats['modis'] = _.keys(habitats['modis']);
                 } else if(reset || layer.selectedHabitats == undefined && layer.modis_habitats != null) {
-                    selectedHabitats = layer.modis_habitats.split(',');
+                    selectedHabitats['modis'] = layer.modis_habitats.split(',');
                 } else if(layer["selectedHabitats"]){
                     selectedHabitats['modis'] = layer.selectedHabitats['modis'];
                 } else {
@@ -1057,14 +1058,14 @@ mol.modules.map.layers = function(mol) {
                 }
 
                 //if no consensus prefs, then select all.
-                if(reset && (layer.consensus == null)) {
+                if(reset && (layer.consensus_habitats == null)) {
                     selectedHabitats['consensus'] = _.keys(habitats['consensus']);
                 } else if(reset || layer.selectedHabitats == undefined && layer.consensus_habitats != null) {
                     selectedHabitats['consensus'] = layer.consensus_habitats.split(',');
-                } else if(layer["selectedConsensus"]){
-                    selectedHabitats['consensus'] =  selectedHabitats['consensus'];
+                } else if(layer["selectedHabitats"]){
+                    selectedHabitats['consensus'] = layer.selectedHabitats['consensus'];
                 } else {
-                    selectedConsensus = _.keys(habitats);
+                    selectedHabitats['consensus'] = _.keys(habitats['consensus']);
                 }
 
                 //attach habitat selection to the layer object

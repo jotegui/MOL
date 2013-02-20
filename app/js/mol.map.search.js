@@ -51,8 +51,8 @@ mol.modules.map.search = function(mol) {
                     'd.style_table as style_table, ' +
                     'e.finalmin as mine, ' +
                     'e.finalmax as maxe, ' +
-                    'e.habitatprefs as habitat, ' +
-                    'c.consensusprefs as consensus, ' +
+                    'e.habitatprefs as modis_habitats, ' +
+                    'c.consensusprefs as consensus_habitats, ' +
                     '(sl.latin is not Null and l.provider = \'jetz\') as inft ' +
                 'FROM layer_metadata l ' +
                 'LEFT JOIN consensus_prefs_join c ON ' +

@@ -36,17 +36,11 @@ class MainPage(webapp2.RequestHandler):
         habitats = self.request.get('habitats', None)
         elevation = self.request.get('elevation', None)
         year = self.request.get('year', None)
+        get_area = self.request.get('get_area', 'false')
 
-        #Grab geojson
-        #sql = "SELECT ST_AsGeoJson(ST_Transform(the_geom_webmercator,4326)) as geojson FROM jetz_maps where latin='%s'"  % (sciname)
-        #url = 'http://mol.cartodb.com/api/v2/sql?%s' % urllib.urlencode(dict(q=sql))
-        #value = urlfetch.fetch(url, deadline=60).content
+    
 
-
-        #geojson = ee.FeatureCollection(geom["rows"][0]["geojson"])
-        #sql = 'INSERT INTO '
-        #url = ''
-
+      
 
         #Get land cover and elevation layers
         cover = ee.Image('MCD12Q1/MCD12Q1_005_%s_01_01' % (year)).select('Land_Cover_Type_1')
@@ -77,47 +71,52 @@ class MainPage(webapp2.RequestHandler):
 
 
         result = output.mask(output)
+        
+        if(get_area == 'false'):
+            mapid = result.getMapId({
+                'palette': '000000,FF0000',
+                'max': 1,
+                'opacity': 0.5
+            })
+            template_values = {
+                'mapid' : mapid['mapid'],
+                'token' : mapid['token'],
+            }
 
-        mapid = result.getMapId({
-            'palette': '000000,FF0000',
-            'max': 1,
-            'opacity': 0.5
-        })
+            self.render_template('ee_mapid.js', template_values)
+        else:
+            #compute the area
+            area = ee.call("Image.pixelArea")
+            sum_reducer = ee.call("Reducer.sum")
+    
+            total = area.mask(result.mask())
+    
+            geometry = feature.geometry()
+            #compute area on 1km scale
+            total_area = area.reduceRegion(sum_reducer, geometry, 1000)
+            clipped_area = total.reduceRegion(sum_reducer, geometry, 1000)
+    
+            properties = {'total': total_area, 'clipped': clipped_area}
+    
+            feature = feature.map_update(properties)
+    
+            data = ee.data.getValue({"json": feature.serialize()})
+            ta = 0
+            ca = 0
+    
+            for feature in data["features"]:
+               if ("properties" in feature):
+                   if ("total" in feature.get("properties")):
+                       ta=ta+feature.get("properties").get("total").get("area")
+                   if ("clipped" in feature.get("properties")):
+                       ca=ca+feature.get("properties").get("clipped").get("area")
+    
+            template_values = {
+                'total_area' : ta/1000000,
+                'clipped_area': ca/1000000
+            }
 
-        #compute the area
-        area = ee.call("Image.pixelArea")
-        sum_reducer = ee.call("Reducer.sum")
-
-        total = area.mask(result.mask())
-
-        geometry = feature.geometry()
-        #compute area on 1km scale
-        total_area = area.reduceRegion(sum_reducer, geometry, 1000)
-        clipped_area = total.reduceRegion(sum_reducer, geometry, 1000)
-
-        properties = {'total': total_area, 'clipped': clipped_area}
-
-        feature = feature.map_update(properties)
-
-        data = ee.data.getValue({"json": feature.serialize()})
-        ta = 0
-        ca = 0
-
-        for feature in data["features"]:
-           if ("properties" in feature):
-               if ("total" in feature.get("properties")):
-                   ta=ta+feature.get("properties").get("total").get("area")
-               if ("clipped" in feature.get("properties")):
-                   ca=ca+feature.get("properties").get("clipped").get("area")
-
-        template_values = {
-            'mapid' : mapid['mapid'],
-            'token' : mapid['token'],
-            'total_area' : ta/1000000,
-            'clipped_area': ca/1000000
-        }
-
-        self.render_template('ee.js', template_values)
+            self.render_template('ee_area.js', template_values)
 
 application = webapp2.WSGIApplication([ ('/', MainPage), ('/.*', MainPage) ], debug=True)
 

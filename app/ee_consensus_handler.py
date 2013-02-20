@@ -23,21 +23,21 @@ SCOPES = (GEE_SCOPE)
 credentials = AppAssertionCredentials(scope=SCOPES)
 
 consensus = { 
-   1 : 'GME/images/04040405428907908306-09641357241993258296',
-   2 : 'GME/images/04040405428907908306-01230937887359499727',
-   3 : 'GME/images/04040405428907908306-18223429773227125129',
-   4 : 'GME/images/04040405428907908306-09712866254583111520',
-   5 : 'GME/images/04040405428907908306-16806939064387117948',
-   6 : 'GME/images/04040405428907908306-09466105632312189075',
-   7 : 'GME/images/04040405428907908306-01528081379737976643',
-   8 : 'GME/images/04040405428907908306-09307790578092642643',
-   9 : 'GME/images/04040405428907908306-06543039062397146187',
-   10: 'GME/images/04040405428907908306-07718168419459114705',
-   11: 'GME/images/04040405428907908306-00618660600894167786',
-   12: 'GME/images/04040405428907908306-08562313830554070372'
+   '1' : 'GME/images/04040405428907908306-09641357241993258296',
+   '2' : 'GME/images/04040405428907908306-01230937887359499727',
+   '3' : 'GME/images/04040405428907908306-18223429773227125129',
+   '4' : 'GME/images/04040405428907908306-09712866254583111520',
+   '5' : 'GME/images/04040405428907908306-16806939064387117948',
+   '6' : 'GME/images/04040405428907908306-09466105632312189075',
+   '7' : 'GME/images/04040405428907908306-01528081379737976643',
+   '8' : 'GME/images/04040405428907908306-09307790578092642643',
+   '9' : 'GME/images/04040405428907908306-06543039062397146187',
+   '10': 'GME/images/04040405428907908306-07718168419459114705',
+   '11': 'GME/images/04040405428907908306-00618660600894167786',
+   '12': 'GME/images/04040405428907908306-08562313830554070372'
 }
 
-MainPage(webapp2.RequestHandler):
+class MainPage(webapp2.RequestHandler):
     def render_template(self, f, template_args):
         path = os.path.join(os.path.dirname(__file__), "templates", f)
         self.response.out.write(template.render(path, template_args))
@@ -49,8 +49,7 @@ MainPage(webapp2.RequestHandler):
         sciname = self.request.get('sciname', None)
         habitats = self.request.get('habitats', None)
         elevation = self.request.get('elevation', None)
-        year = self.request.get('year', None)
-        get_area = self.request.get('get_area', False)
+        get_area = self.request.get('get_area', 'false')
 
         #Get land cover and elevation layers
         elev = ee.Image('srtm90_v4')
@@ -61,12 +60,7 @@ MainPage(webapp2.RequestHandler):
         #fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
         fc = ee.FeatureCollection('ft:1ugWA45wi7yRdIxKAEbcfd1ks8nhuTcIUyx1Lv18').filter(ee.Filter().eq('Latin',sciname))
         feature = fc.union()
-
-
         species = empty.paint(fc, 2)
-
-        #parse the CDB response
-
 
         min = int(elevation.split(',')[0])
         max = int(elevation.split(',')[1])
@@ -74,20 +68,20 @@ MainPage(webapp2.RequestHandler):
 
 
         output = output.mask(species.neq(2))
-        output = output.mask(output.where(elev.lt(min).And(elev.gt(max))
+        output = output.where(elev.gt(min).And(elev.lt(max)),1)
 
-        for pref in habitat_list:
-            cover = ee.Image(consensus[pref])
+        for pref in consensus:
+	    cover = ee.Image(consensus[pref])
             output = output.add(cover)
 
     
         result = output.mask(output)
         
-        if(not get_area):
+        if(get_area == 'false'):
             mapid = result.getMapId({
-                'palette': 'DDDDDD,000000',
-                'min': 0,
-                'max': 100,
+                'palette': '000000,FF0000',                
+		'min': 1,
+                'max': 101,
                 'opacity': 0.5
             })
             template_values = {
