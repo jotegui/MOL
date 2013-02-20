@@ -71,7 +71,7 @@ class MainPage(webapp2.RequestHandler):
         output = output.where(elev.gt(min).And(elev.lt(max)),1)
 
         for pref in consensus:
-	    cover = ee.Image(consensus[pref])
+            cover = ee.Image(consensus[pref])
             output = output.add(cover)
 
     
@@ -80,7 +80,7 @@ class MainPage(webapp2.RequestHandler):
         if(get_area == 'false'):
             mapid = result.getMapId({
                 'palette': '000000,FF0000',                
-		'min': 1,
+                'min': 1,
                 'max': 101,
                 'opacity': 0.5
             })
