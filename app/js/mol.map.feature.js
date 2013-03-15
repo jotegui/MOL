@@ -221,9 +221,7 @@ mol.modules.map.feature = function(mol) {
                             self.makingRequest = true;
                           
                             if(self.display) {
-                                if(self.display.dialog("isOpen")) {
-                                    self.display.dialog("close");
-                                }
+                                self.display.empty();
                             }   
                             
                             sqlLayers =  _.pluck(_.reject(
@@ -263,23 +261,17 @@ mol.modules.map.feature = function(mol) {
                                         e;
                                         
                                     if(!data.error && data.rows.length != 0) {
-                                        self.mapMarker = new google.maps.Marker(
-                                            {
-                                                map: self.map,
-                                                icon: sym,
-                                                position: mouseevent.latLng,
-                                                clickable: false
-                                            }
-                                        );
+                                        
+                                        /*self.mapMarker.ondraw = function () {
+                                            jsPlumb.connect({
+                                                source: self.display,
+                                                target: this.getDOMElement(),
+                                                anchor:"AutoDefault"
+                                            });
+                                        } */
                                         
                                         self.processResults(data.rows);
-                                                                     
-                                        e = new mol.bus.Event(
-                                                'feature-results', 
-                                                results
-                                            );    
-                                            
-                                        self.bus.fireEvent(e);
+                                        self.showFeatures(results)
                                     }  
                                         
                                     self.makingRequest = false;    
@@ -295,12 +287,7 @@ mol.modules.map.feature = function(mol) {
                 }
             );
             
-            this.bus.addHandler(
-                'feature-results',
-                function(event) {
-                    self.showFeatures(event);
-                }
-            );
+            
         },
         
         processResults: function(rows) {
@@ -387,7 +374,7 @@ mol.modules.map.feature = function(mol) {
 
                 content+='<div>' + entry + '</div>';
                 
-                $(self.display).find('#accordion').append(content);
+                $(self.display).find('.accordion').append(content);
                 
                 $(self.display).find('.source').click(
                     function(event) {
@@ -429,11 +416,18 @@ mol.modules.map.feature = function(mol) {
                 lngHem = (params.latlng.lng() > 0) ? 'E' : 'W';
 
             $(self.display)
-                .find('#accordion')
+                .find('.accordion')
                     .accordion({autoHeight: false, 
-                                clearStyle: true});                 
-                 
-            self.display.dialog({
+                                clearStyle: true,
+                                collapsible: true,
+                                active: false,
+                                event: "click hoverintent",
+                                animate: "bounceslide"
+                    }
+                ); 
+            self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
+                                           
+            /*self.display.dialog({
                 autoOpen: true,
                 width: 350,
                 minHeight: 250,
@@ -447,9 +441,10 @@ mol.modules.map.feature = function(mol) {
                            params.latlng.lng()*1000)/1000) +
                            '&deg;&nbsp;' + lngHem,
                 beforeClose: function(evt, ui) {
-                    self.mapMarker.setMap(null);
+                    self.mapMarker.remove();
                 }
-            });            
+            });*/
+            
         }
     });
     
@@ -457,13 +452,70 @@ mol.modules.map.feature = function(mol) {
         init : function(names) {
             var className = 'mol-Map-FeatureDisplay',
                 html = '' +
-                    '<div class="' + className + '">' +
-                        '<div id="accordion" ></div>' +
+                    '<div><b>X</b>' +
+                        '<div class="' + className + '">' +
+                            '<div class="accordion" ></div>' +
+                        '</div>'+
                     '</div>';
                 //in-line div height     
 
             this._super(html);
         }
     });
+    
+    mol.map.FeatureMarker = function(latlng, map, div) {
+            this.latlng_ = latlng;
+            this.init_ = false;
+            this.div_ = div;
+            this.setMap(map);
+    }
+    mol.map.FeatureMarker.prototype = new google.maps.OverlayView();
+    mol.map.FeatureMarker.prototype.draw = function () {
+        var self = this,
+            div = this.div_;
+            
+        if (!this.init_) {
+          div.style.border = "none";
+          div.style.position = "absolute";
+          div.style.paddingLeft = "0px";
+          div.style.cursor = 'pointer';
+          div.style.width= '350px';
+        
+          //var img = document.createElement("img");
+          //img.src = "http://gmaps-samples.googlecode.com/svn/trunk/markers/circular/bluecirclemarker.png";
+          //div.appendChild(img);
+          google.maps.event.addDomListener(div, "click", function(event) {
+            google.maps.event.trigger(self, "click");
+          });
+        
+          // Then add the overlay to the DOM
+          var panes = this.getPanes();
+          panes.overlayImage.appendChild(div);
+          this.init_ = true;
+        }
+    
+        // Position the overlay 
+        var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
+        if (point) {
+          div.style.left = point.x + 'px';
+          div.style.top = point.y - $(div).height() + 'px';
+        }
+        if(this.ondraw) {
+            this.ondraw();
+        }
+    };
+    mol.map.FeatureMarker.prototype.remove = function() {
+        // Check if the overlay was on the map and needs to be removed.
+        if (this.div_) {
+          this.div_.parentNode.removeChild(this.div_);
+          this.div_ = null;
+        }
+    };
+    mol.map.FeatureMarker.prototype.getPosition = function() {
+       return this.latlng_;
+    };
+    mol.map.FeatureMarker.prototype.getDOMElement = function() {
+       return this.div_;
+    };
+    
 }
-
