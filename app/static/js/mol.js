@@ -961,6 +961,28 @@ mol.modules.map.layers = function(mol) {
                 }
             );
             
+            /*
+             * Toggle Click Handler for Layer Clicking
+             */
+            this.display.layerClickButton.click(
+                function(event) {
+                    var params = {};
+  
+                    if($(self.display.layerClickButton).hasClass('selected')) {
+                        params.disable = true;
+                        $(self.display.layerClickButton).removeClass('selected');
+                        $(self.display.layerClickButton).html("OFF");
+                    } else {
+                        params.disable = false;
+                        $(self.display.layerClickButton).addClass('selected');
+                        $(self.display.layerClickButton).html("ON");
+                    }
+                    
+                    self.bus.fireEvent(
+                        new mol.bus.Event('layer-clicking-toggle', params)); 
+                }
+            );
+            
             this.display.layersToggle.click(
                 function(event) {
                     self.layersToggle(event);
@@ -1039,6 +1061,12 @@ mol.modules.map.layers = function(mol) {
                 'layer-click-toggle',
                 function(event) {                    
                     self.clickDisabled = event.disable;
+                    
+                    //if false, unselect layer query
+                    if(self.clickDisabled) {
+                        $(self.display.layerClickButton).removeClass('selected');
+                        $(self.display.layerClickButton).html("OFF");
+                    }
                 }
             );
         },
@@ -1489,6 +1517,13 @@ mol.modules.map.layers = function(mol) {
                     '<div class="layers widgetTheme">' +
                         '<div class="layersHeader">' +
                             '<button class="layersToggle button">▲</button>' +
+                            '<button id="layerClickButton" ' + 
+                                     'class="toggleBtn" ' +
+                                     'title="Click to activate map layer' + 
+                                         ' querying.">' +
+                                     'OFF' +
+                            '</button>' +
+                            '<span class="title">Identify Layers</span>' +
                             'Layers' +
                         '</div>' +
                         '<div class="layersContainer">' +
@@ -1526,6 +1561,7 @@ mol.modules.map.layers = function(mol) {
             this.layersWrapper = $(this).find(".layers");
             this.layersContainer = $(this).find(".layersContainer");
             this.layersHeader = $(this).find(".layersHeader");
+            this.layerClickButton = $(this).find('#layerClickButton');
             this.expanded = true;
         },
 
@@ -3206,7 +3242,7 @@ mol.modules.map.tiles = function(mol) {
                     mol.services.cartodb.tileApi.tile_cache_key
                 ),
                 urlPattern = '' +
-                    'http://{HOST}/tiles/{STYLE_TABLE}/{Z}/{X}/{Y}.png?'+ 
+                    'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+ 
                     'sql={SQL}'+
                     '&style={TILE_STYLE}',
                 style_table_name = layer.style_table,
@@ -3243,12 +3279,13 @@ mol.modules.map.tiles = function(mol) {
                     }
                     url = urlPattern
                         .replace("{HOST}",mol.services.cartodb.tileApi.host)
-                        .replace("{STYLE_TABLE}",layer.style_table)
+                        .replace("{DATASET_ID}",layer.dataset_id)
                         .replace("{SQL}",sql)
                         .replace("{X}",x)
                         .replace("{Y}",y)
                         .replace("{Z}",zoom)
-                        .replace("{TILE_STYLE}",layer.tile_style);
+                        .replace("{TILE_STYLE}",
+                                 encodeURIComponent(layer.tile_style));
                     
                     pendingurls.push(url);
                     return(url);
@@ -3633,12 +3670,15 @@ mol.modules.map.tiles = function(mol) {
             //TODO add
             this.sql = "SELECT * FROM " + 
                        "get_map_feature_metadata({0},{1},{2},{3},'{4}')";
+            this.mesql = "SELECT {5} as timestamp,* FROM " + 
+                       "get_feature_presence({0},{1},{2},{3},'{4}')";           
             
-            this.clickDisabled = false;
+            this.clickDisabled = true;
             this.makingRequest = false;
             this.mapMarker;
             this.activeLayers = [];
-        },
+            
+            this.lastRequestTime;        },
 
         start : function() {
             this.addEventHandlers();
@@ -3650,7 +3690,20 @@ mol.modules.map.tiles = function(mol) {
             this.bus.addHandler(
                 'layer-click-toggle',
                 function(event) {
-                    self.clickDisabled = event.disable;
+                    if(event.disable) {
+                      self.clickDisabled = event.disable;  
+                        
+                      self.map
+                        .setOptions(
+                          { 
+                            draggableCursor: 
+                            'url(' + 
+                            'http://maps.google.com/mapfiles/' + 
+                            'openhand.cur' + 
+                            '), move' 
+                          }
+                        ); 
+                    } 
                 }
             );
             
@@ -3699,8 +3752,30 @@ mol.modules.map.tiles = function(mol) {
                     });             
                 }
             );
+            
+            this.bus.addHandler(
+                'layer-clicking-toggle',
+                function(event) {
+                    self.clickDisabled = event.disable;
+                    
+                    if(!self.clickDisabled) {
+                      self.map
+                        .setOptions({ draggableCursor: 'pointer' }); 
+                    } else {
+                      self.map
+                        .setOptions(
+                          { 
+                            draggableCursor: 
+                            'url(' + 
+                            'http://maps.google.com/mapfiles/' + 
+                            'openhand.cur' + 
+                            '), move' 
+                          }
+                        ); 
+                    }    
+                }
+            );
                 
-            //may want to wait to add this until ready
             google.maps.event.addListener(
                 self.map,
                 "click",
@@ -3718,9 +3793,7 @@ mol.modules.map.tiles = function(mol) {
                             self.makingRequest = true;
                           
                             if(self.display) {
-                                if(self.display.dialog("isOpen")) {
-                                    self.display.dialog("close");
-                                }
+                                self.display.remove();
                             }   
                             
                             sqlLayers =  _.pluck(_.reject(
@@ -3741,14 +3814,7 @@ mol.modules.map.tiles = function(mol) {
                                 'show-loading-indicator',
                                 {source : 'feature'}));
                                 
-                            sym = {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 6,
-                                    strokeColor: 'black',
-                                    strokeWeight: 3,
-                                    fillColor: 'yellow',
-                                    fillOpacity: 1,
-                                  };     
+                               
                             
                             $.getJSON(
                                 self.url.format(sql),
@@ -3760,23 +3826,8 @@ mol.modules.map.tiles = function(mol) {
                                         e;
                                         
                                     if(!data.error && data.rows.length != 0) {
-                                        self.mapMarker = new google.maps.Marker(
-                                            {
-                                                map: self.map,
-                                                icon: sym,
-                                                position: mouseevent.latLng,
-                                                clickable: false
-                                            }
-                                        );
-                                        
                                         self.processResults(data.rows);
-                                                                     
-                                        e = new mol.bus.Event(
-                                                'feature-results', 
-                                                results
-                                            );    
-                                            
-                                        self.bus.fireEvent(e);
+                                        self.showFeatures(results)
                                     }  
                                         
                                     self.makingRequest = false;    
@@ -3792,12 +3843,7 @@ mol.modules.map.tiles = function(mol) {
                 }
             );
             
-            this.bus.addHandler(
-                'feature-results',
-                function(event) {
-                    self.showFeatures(event);
-                }
-            );
+            
         },
         
         processResults: function(rows) {
@@ -3814,7 +3860,7 @@ mol.modules.map.tiles = function(mol) {
                 inside;
 
             self.display = new mol.map.FeatureDisplay();
-
+            self.featurect = 0;
             _.each(rows, function(row) {
                 var i,
                     j,
@@ -3850,11 +3896,12 @@ mol.modules.map.tiles = function(mol) {
 
                 //TODO try a stage content display
                 myLength = (all.length > 100) ? 100 : all.length; 
+                self.featurect+=(all.length);
                 
                 if(myLength == 1) {
-                    entry = '<div>' + all.length + " record found.";
+                    entry = '<div>{0} record found.'.format(all.length);
                 } else {
-                    entry = '<div>' + all.length + " records found.";
+                    entry = '<div>{0} records found.'.format(all.length);
                 }
                 
                 if(all.length > 100) {
@@ -3869,10 +3916,8 @@ mol.modules.map.tiles = function(mol) {
                       
                     for(i=0;i < _.keys(vs).length; i++) {
                         k = _.keys(vs)[i];
-                        inside+='<div class="itemPair">' + 
-                                '  <div class="featureItem">' + k + ': </div>' + 
-                                '  <div class="featureData">' + vs[k] + '</div>' + 
-                                '</div>';          
+                        inside+='<div class="itemPair"><b>{0}:&nbsp;</b>{1}</div>'
+                            .format(k,vs[k]);
                     }
                      
                     if(j!=0) {
@@ -3882,9 +3927,9 @@ mol.modules.map.tiles = function(mol) {
                     entry+=inside;  
                 }
 
-                content+='<div>' + entry + '</div>';
+                content+='<div>{0}</div>'.format(entry);
                 
-                $(self.display).find('#accordion').append(content);
+                $(self.display).find('.accordion').append(content);
                 
                 $(self.display).find('.source').click(
                     function(event) {
@@ -3923,47 +3968,128 @@ mol.modules.map.tiles = function(mol) {
         showFeatures: function(params) {
             var self = this,
                 latHem = (params.latlng.lat() > 0) ? 'N' : 'S',
-                lngHem = (params.latlng.lng() > 0) ? 'E' : 'W';
-
-            $(self.display)
-                .find('#accordion')
-                    .accordion({autoHeight: false, 
-                                clearStyle: true});                 
-                 
-            self.display.dialog({
-                autoOpen: true,
-                width: 350,
-                minHeight: 250,
-                dialogClass: 'mol-Map-FeatureDialog',
-                modal: false,
-                title: 'Near ' +
-                       Math.abs(Math.round(
-                           params.latlng.lat()*1000)/1000) +
-                           '&deg;&nbsp;' + latHem + '&nbsp;' +
-                       Math.abs(Math.round(
-                           params.latlng.lng()*1000)/1000) +
-                           '&deg;&nbsp;' + lngHem,
-                beforeClose: function(evt, ui) {
-                    self.mapMarker.setMap(null);
+                lngHem = (params.latlng.lng() > 0) ? 'E' : 'W',
+                options = {
+                    autoHeight: false,
+                    collapsible: (params.response.total_rows > 1) ? true: false,
+                    change: function (event, ui) {
+                        self.mapMarker.draw();
+                    },
+                    animated: false
                 }
-            });            
+                msg ='',
+                zoom = self.map.getZoom(),
+                pix = 2;
+            if(params.response.total_rows > 1) { 
+                options.active = false;
+            }
+            
+            var msg = '<span>' + self.featurect + ' features from ' + params.response.total_rows + 
+                ' layer' + ((params.response.total_rows>1) ? 's' : '') + ' found within ' + Math.round((pix*40075000/(256*(2^zoom)))/1000) + ' km' +
+                ' of ' + Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' + 
+                Math.round(params.latlng.lng()*1000)/1000 + '&deg;' + lngHem + '</span>';
+            
+            $(self.display).find('.info').append($(msg));    
+            $(self.display).find('.accordion').accordion(options);
+            
+            self.display.close.click(
+                function(event) {
+                    //self.display.empty();
+                    event.stopPropagation();
+                    self.mapMarker.remove();
+                    
+                }
+            );
+            self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
         }
     });
     
     mol.map.FeatureDisplay = mol.mvp.View.extend({
-        init : function(names) {
+        init : function(d, lat,NS,lng,EW) {
             var className = 'mol-Map-FeatureDisplay',
                 html = '' +
-                    '<div class="' + className + '">' +
-                        '<div id="accordion" ></div>' +
+                    '<div class="cartodb-popup">' +
+                        '<a class="cartodb-popup-close-button close">x</a>' +
+                        '<div class="cartodb-popup-content-wrapper">' +
+                            '<div class="' + className + '">' +
+                                '<div class="info"></div>' +
+                                '<div class="accordion"></div>' +
+                            '</div>'+
+                        '</div>' +
+                        '<div class="cartodb-popup-tip-container"></div>' +
                     '</div>';
-                //in-line div height     
-
             this._super(html);
+            this.close = $(this).find('.close');
         }
     });
-}
+    
+    //
+    //Classes for a google maps info window overlay.
+    //
+    mol.map.FeatureMarker = function(latlng, map, div) {
+            this.latlng_ = latlng;
+            this.init_ = false;
+            if (div) {
+                div.parentNode.innerHTML='';
+            }
+            
+            this.div_ = div;
+            this.setMap(map);
+    }
+    mol.map.FeatureMarker.prototype = new google.maps.OverlayView();
+    mol.map.FeatureMarker.prototype.draw = function () {
+        var self = this,
+            div = this.div_;
 
+        if (!this.init_) {
+            // Then add the overlay to the DOM
+            var panes = this.getPanes();
+            panes.overlayImage.appendChild(div);
+            this.init_ = true;
+             // catch mouse events and stop them propogating to the map
+              google.maps.event.addDomListener(this.div_, 'mousedown', this.stopPropagation_);
+              google.maps.event.addDomListener(this.div_, 'dblclick', this.stopPropagation_);
+              google.maps.event.addDomListener(this.div_, 'DOMMouseScroll', this.stopPropagation_);
+
+        }
+        // Position the overlay 
+        var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
+        if (point && div) {
+          div.style.left = (point.x -28) + 'px';
+          div.style.top = (point.y - $(div).height()-5) + 'px';
+        
+        
+            if($(div).offset().top<0) {
+                this.map.panBy(0,$(div).offset().top-10);
+            }
+        }
+    };
+    mol.map.FeatureMarker.prototype.remove = function() {
+        // Check if the overlay was on the map and needs to be removed.
+        if (this.div_) {
+          this.div_.parentNode.removeChild(this.div_);
+          this.div_ = null;
+        }
+    };
+   
+    mol.map.FeatureMarker.prototype.getPosition = function() {
+       return this.latlng_;
+    };
+    mol.map.FeatureMarker.prototype.getDOMElement = function() {
+       return this.div_;
+    };
+    
+    mol.map.FeatureMarker.prototype.stopPropagation_ = function(e) {
+      if(navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
+        window.event.cancelBubble = true;
+        window.event.returnValue = false;
+      } else {
+        // e.preventDefault(); // optionally prevent default actions
+        e.stopPropagation();
+      }
+    }
+    
+}
 mol.modules.map.query = function(mol) {
 
     mol.map.query = {};
@@ -3988,9 +4114,6 @@ mol.modules.map.query = function(mol) {
         start : function() {
             this.addQueryDisplay();
             this.addEventHandlers();
-            
-            //disable all map clicks
-            this.toggleMapLayerClicks(false);
         },
         
         toggleMapLayerClicks : function(boo) {            
@@ -4106,6 +4229,25 @@ mol.modules.map.query = function(mol) {
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
+            
+            this.bus.addHandler(
+                'layer-clicking-toggle',
+                function(event) {
+                    var params = {};
+                    
+                    if(!event.disable) {
+                        params.visible = false;
+                        
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                'species-list-tool-toggle', 
+                                params
+                            )
+                        );
+                    }
+                }
+            );
+            
             this.bus.addHandler(
                 'dialog-closed-click',
                 function(event) {                  

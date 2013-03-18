@@ -294,6 +294,7 @@ white-space: nowrap;
 
 .mol-LayerControl-Layers .layers .layersHeader .title {
     margin-left: 20px;
+    float: right;
 }
 
 .mol-LayerControl-Layers .layers .layersHeader button.toggleBtn {
@@ -301,6 +302,8 @@ white-space: nowrap;
     height: 22px;
     color: #fff;
     padding: 3px;
+    margin-right:10px;
+    float:right;
 }
 
 .mol-LayerControl-Layers .layers .layersHeader button.selected {
@@ -1571,14 +1574,13 @@ div.cartodb_infowindow div.top p {
  * 
  */
 
-div.mol-Map-FeatureDisplay {
-    width:350px;
-    position:absolute;
-}
 
 div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     padding: 0.5em 0.5em;
+    width:100%;
 }
+
+
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-header {
     background: rgba(29, 43, 82, 0.75);
@@ -1593,6 +1595,8 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     padding: 0.2em 0.2em 0.2em 0.3em;
     color: #FFF;
     padding-left: 1.4em;
+   
+    height:18px;
 }
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-content {
@@ -1600,8 +1604,8 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     font-weight: normal;
     font-style: normal;
     padding: 0.4em 0.4em;
-    overflow-y: scroll;
     max-height: 250px;
+    min-width:178px;
 }
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-content p {
@@ -1643,4 +1647,15 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     width: 16px;
     height: 16px;
 }
+
+.mol-Map-FeatureDisplay .source {
+    float:right;
+}
+.mol-Map-FeatureDisplay .type {
+    float:right;
+}
+.mol-Map-FeatureDisplay .info {
+    font-size: 12px;
+}
+
 

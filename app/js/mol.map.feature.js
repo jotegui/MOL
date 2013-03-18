@@ -117,93 +117,7 @@ mol.modules.map.feature = function(mol) {
                     }    
                 }
             );
-            
-            /* might use later for cursor management
-             * 
-             * Google Maps doesn't make the cursor change until the mouse
-             * moves again, so if you change the cursor programmatically
-             * it isn't reflected on the map until the user moves the mouse
-             * again, making it look like there's a weird jerky lag in cursor
-             * change.
-             */
-            
-            /*
-            this.bus.addHandler(
-                'map-mouse-stop',
-                function(event) {
-                    var d;
-                    
-                    if(!self.clickDisabled && self.activeLayers.length > 0) {
-                        var tolerance = 2,
-                            sqlLayers,
-                            sql;
-                        
-                        sqlLayers =  _.pluck(_.reject(
-                                                self.activeLayers, 
-                                                function(al) {
-                                                    return al.op == 0;
-                                                }), 'id');         
-                              
-                        d = new Date();
-                        
-                        self.lastRequestTime = d.getTime()      
-                                
-                        sql = self.mesql.format(
-                                event.latLng.lng(),
-                                event.latLng.lat(),
-                                tolerance,
-                                self.map.getZoom(),
-                                sqlLayers.toString(),
-                                self.lastRequestTime
-                        );
-                        
-                        $.getJSON(
-                            self.url.format(sql),
-                            function(data, textStatus, jqXHR) {
-                                if(data.rows[0]["timestamp"] == d.getTime()) {
-                                    
-                                }
-                                
-                                if(data.rows[0]["get_feature_presence"]) {
-                                  self.map
-                                    .setOptions({ draggableCursor: 'pointer' }); 
-                                } else {
-                                  self.map
-                                    .setOptions(
-                                      { 
-                                        draggableCursor: 
-                                        'url(' + 
-                                        'http://maps.google.com/mapfiles/' + 
-                                        'openhand.cur' + 
-                                        '), move' 
-                                      }
-                                    ); 
-                                }                                                            
-                            }
-                        );  
-                      
-                    }  
-                }  
-            );
-            */
-            
-            /* might use this later for cursor management
-            google.maps.event.addListener(
-                self.map,
-                'mousemove',
-                function (mouseevent) {
-                    if(!self.clickDisabled && self.activeLayers.length > 0) {
-                       if(self.lastMapMoveEnd) {
-                           if(self.lastMapMoveEnd.readyState == 4) {
-                              self.lastMapMoveEnd.abort();
-                           }
-                       }
-                    }
-                }  
-            );
-            */
                 
-            //may want to wait to add this until ready
             google.maps.event.addListener(
                 self.map,
                 "click",
@@ -221,7 +135,7 @@ mol.modules.map.feature = function(mol) {
                             self.makingRequest = true;
                           
                             if(self.display) {
-                                self.display.empty();
+                                self.display.remove();
                             }   
                             
                             sqlLayers =  _.pluck(_.reject(
@@ -242,14 +156,7 @@ mol.modules.map.feature = function(mol) {
                                 'show-loading-indicator',
                                 {source : 'feature'}));
                                 
-                            sym = {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 6,
-                                    strokeColor: 'black',
-                                    strokeWeight: 3,
-                                    fillColor: 'yellow',
-                                    fillOpacity: 1,
-                                  };     
+                               
                             
                             $.getJSON(
                                 self.url.format(sql),
@@ -261,15 +168,6 @@ mol.modules.map.feature = function(mol) {
                                         e;
                                         
                                     if(!data.error && data.rows.length != 0) {
-                                        
-                                        /*self.mapMarker.ondraw = function () {
-                                            jsPlumb.connect({
-                                                source: self.display,
-                                                target: this.getDOMElement(),
-                                                anchor:"AutoDefault"
-                                            });
-                                        } */
-                                        
                                         self.processResults(data.rows);
                                         self.showFeatures(results)
                                     }  
@@ -304,7 +202,7 @@ mol.modules.map.feature = function(mol) {
                 inside;
 
             self.display = new mol.map.FeatureDisplay();
-
+            self.featurect = 0;
             _.each(rows, function(row) {
                 var i,
                     j,
@@ -340,11 +238,12 @@ mol.modules.map.feature = function(mol) {
 
                 //TODO try a stage content display
                 myLength = (all.length > 100) ? 100 : all.length; 
+                self.featurect+=(all.length);
                 
                 if(myLength == 1) {
-                    entry = '<div>' + all.length + " record found.";
+                    entry = '<div>{0} record found.'.format(all.length);
                 } else {
-                    entry = '<div>' + all.length + " records found.";
+                    entry = '<div>{0} records found.'.format(all.length);
                 }
                 
                 if(all.length > 100) {
@@ -359,10 +258,8 @@ mol.modules.map.feature = function(mol) {
                       
                     for(i=0;i < _.keys(vs).length; i++) {
                         k = _.keys(vs)[i];
-                        inside+='<div class="itemPair">' + 
-                                '  <div class="featureItem">' + k + ': </div>' + 
-                                '  <div class="featureData">' + vs[k] + '</div>' + 
-                                '</div>';          
+                        inside+='<div class="itemPair"><b>{0}:&nbsp;</b>{1}</div>'
+                            .format(k,vs[k]);
                     }
                      
                     if(j!=0) {
@@ -372,7 +269,7 @@ mol.modules.map.feature = function(mol) {
                     entry+=inside;  
                 }
 
-                content+='<div>' + entry + '</div>';
+                content+='<div>{0}</div>'.format(entry);
                 
                 $(self.display).find('.accordion').append(content);
                 
@@ -413,59 +310,71 @@ mol.modules.map.feature = function(mol) {
         showFeatures: function(params) {
             var self = this,
                 latHem = (params.latlng.lat() > 0) ? 'N' : 'S',
-                lngHem = (params.latlng.lng() > 0) ? 'E' : 'W';
-
-            $(self.display)
-                .find('.accordion')
-                    .accordion({autoHeight: false, 
-                                clearStyle: true,
-                                collapsible: true,
-                                active: false,
-                                event: "click hoverintent",
-                                animate: "bounceslide"
-                    }
-                ); 
-            self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
-                                           
-            /*self.display.dialog({
-                autoOpen: true,
-                width: 350,
-                minHeight: 250,
-                dialogClass: 'mol-Map-FeatureDialog',
-                modal: false,
-                title: 'Near ' +
-                       Math.abs(Math.round(
-                           params.latlng.lat()*1000)/1000) +
-                           '&deg;&nbsp;' + latHem + '&nbsp;' +
-                       Math.abs(Math.round(
-                           params.latlng.lng()*1000)/1000) +
-                           '&deg;&nbsp;' + lngHem,
-                beforeClose: function(evt, ui) {
-                    self.mapMarker.remove();
+                lngHem = (params.latlng.lng() > 0) ? 'E' : 'W',
+                options = {
+                    autoHeight: false,
+                    collapsible: (params.response.total_rows > 1) ? true: false,
+                    change: function (event, ui) {
+                        self.mapMarker.draw();
+                    },
+                    animated: false
                 }
-            });*/
+                msg ='',
+                zoom = self.map.getZoom(),
+                pix = 2;
+            if(params.response.total_rows > 1) { 
+                options.active = false;
+            }
             
+            var msg = '<span>' + self.featurect + ' features from ' + params.response.total_rows + 
+                ' layer' + ((params.response.total_rows>1) ? 's' : '') + ' found within ' + Math.round((pix*40075000/(256*(2^zoom)))/1000) + ' km' +
+                ' of ' + Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' + 
+                Math.round(params.latlng.lng()*1000)/1000 + '&deg;' + lngHem + '</span>';
+            
+            $(self.display).find('.info').append($(msg));    
+            $(self.display).find('.accordion').accordion(options);
+            
+            self.display.close.click(
+                function(event) {
+                    //self.display.empty();
+                    event.stopPropagation();
+                    self.mapMarker.remove();
+                    
+                }
+            );
+            self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
         }
     });
     
     mol.map.FeatureDisplay = mol.mvp.View.extend({
-        init : function(names) {
+        init : function(d, lat,NS,lng,EW) {
             var className = 'mol-Map-FeatureDisplay',
                 html = '' +
-                    '<div><b>X</b>' +
-                        '<div class="' + className + '">' +
-                            '<div class="accordion" ></div>' +
-                        '</div>'+
+                    '<div class="cartodb-popup">' +
+                        '<a class="cartodb-popup-close-button close">x</a>' +
+                        '<div class="cartodb-popup-content-wrapper">' +
+                            '<div class="' + className + '">' +
+                                '<div class="info"></div>' +
+                                '<div class="accordion"></div>' +
+                            '</div>'+
+                        '</div>' +
+                        '<div class="cartodb-popup-tip-container"></div>' +
                     '</div>';
-                //in-line div height     
-
             this._super(html);
+            this.close = $(this).find('.close');
         }
     });
     
+    //
+    //Classes for a google maps info window overlay.
+    //
     mol.map.FeatureMarker = function(latlng, map, div) {
             this.latlng_ = latlng;
             this.init_ = false;
+            if (div) {
+                div.parentNode.innerHTML='';
+            }
+            
             this.div_ = div;
             this.setMap(map);
     }
@@ -473,35 +382,28 @@ mol.modules.map.feature = function(mol) {
     mol.map.FeatureMarker.prototype.draw = function () {
         var self = this,
             div = this.div_;
-            
+
         if (!this.init_) {
-          div.style.border = "none";
-          div.style.position = "absolute";
-          div.style.paddingLeft = "0px";
-          div.style.cursor = 'pointer';
-          div.style.width= '350px';
-        
-          //var img = document.createElement("img");
-          //img.src = "http://gmaps-samples.googlecode.com/svn/trunk/markers/circular/bluecirclemarker.png";
-          //div.appendChild(img);
-          google.maps.event.addDomListener(div, "click", function(event) {
-            google.maps.event.trigger(self, "click");
-          });
-        
-          // Then add the overlay to the DOM
-          var panes = this.getPanes();
-          panes.overlayImage.appendChild(div);
-          this.init_ = true;
+            // Then add the overlay to the DOM
+            var panes = this.getPanes();
+            panes.overlayImage.appendChild(div);
+            this.init_ = true;
+             // catch mouse events and stop them propogating to the map
+              google.maps.event.addDomListener(this.div_, 'mousedown', this.stopPropagation_);
+              google.maps.event.addDomListener(this.div_, 'dblclick', this.stopPropagation_);
+              google.maps.event.addDomListener(this.div_, 'DOMMouseScroll', this.stopPropagation_);
+
         }
-    
         // Position the overlay 
         var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
-        if (point) {
-          div.style.left = point.x + 'px';
-          div.style.top = point.y - $(div).height() + 'px';
-        }
-        if(this.ondraw) {
-            this.ondraw();
+        if (point && div) {
+          div.style.left = (point.x -28) + 'px';
+          div.style.top = (point.y - $(div).height()-5) + 'px';
+        
+        
+            if($(div).offset().top<0) {
+                this.map.panBy(0,$(div).offset().top-10);
+            }
         }
     };
     mol.map.FeatureMarker.prototype.remove = function() {
@@ -511,11 +413,22 @@ mol.modules.map.feature = function(mol) {
           this.div_ = null;
         }
     };
+   
     mol.map.FeatureMarker.prototype.getPosition = function() {
        return this.latlng_;
     };
     mol.map.FeatureMarker.prototype.getDOMElement = function() {
        return this.div_;
     };
+    
+    mol.map.FeatureMarker.prototype.stopPropagation_ = function(e) {
+      if(navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
+        window.event.cancelBubble = true;
+        window.event.returnValue = false;
+      } else {
+        // e.preventDefault(); // optionally prevent default actions
+        e.stopPropagation();
+      }
+    }
     
 }
