@@ -3979,22 +3979,33 @@ mol.modules.map.tiles = function(mol) {
                         self.mapMarker.draw();
                     },
                     animated: false
-                }
-                msg ='',
+                },
                 zoom = parseInt(self.map.getZoom()),
                 tolerance = 3,
-                radius = Math.round(tolerance*40075000/(256*1000*Math.pow(2,zoom)));
+                radius = Math.round(tolerance*40075000/(256*1000*Math.pow(2,zoom))),
+                infoHtml = '' +
+                    '<span>' +
+                        '{0} feature{1} from {2} layer{3} found within<br>' +
+                        '{4} km of {5}&deg;{6}, {7}&deg;{8}' +
+                    '</span>';
 
             if(params.response.total_rows > 1) {
                 options.active = false;
             }
 
-            var msg = '<span>' + self.featurect + ' feature' + ((self.featurect>1) ? 's' : '') + ' from ' + params.response.total_rows +
-                ' layer' + ((params.response.total_rows>1) ? 's' : '') + '<br>found within ' + radius + ' km of<br>' +
-                Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' +
-                Math.round(params.latlng.lng()*1000)/1000 + '&deg;' + lngHem + '</span>';
+            info = $(infoHtml.format(
+                        self.featurect,
+                        ((self.featurect>1) ? 's' : ''),
+                        params.response.total_rows,
+                        ((params.response.total_rows>1) ? 's' : ''),
+                        radius,
+                        Math.round(params.latlng.lat()*1000)/1000,
+                        latHem,
+                        Math.round(params.latlng.lng()*1000)/1000,
+                        lngHem
+            ));
 
-            $(self.display).find('.info').append($(msg));
+            $(self.display).find('.info').append(info);
             $(self.display).find('.accordion').accordion(options);
 
             self.display.close.click(

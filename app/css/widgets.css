@@ -614,7 +614,7 @@ white-space: nowrap;
     font-style: italic;
     font-size: 1.2em;
     height: 24px;
-    pointer-events: false;
+    pointer-events: none;
 }
 
 /*! Light tooltip style */
@@ -1575,7 +1575,13 @@ div.cartodb_infowindow div.top p {
  *
  */
 
-
+.mol-Map-FeatureDisplay {
+    position: relative;
+    width: 210px;
+    padding: 7px 8px 7px 8px;
+    overflow-x: hidden;
+    background: url('/static/light.png') repeat-y -452px 0;
+}
 div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     padding: 0.5em 0.5em;
     width:100%;
@@ -1615,7 +1621,8 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-content div.itemPair {
     margin-top: 1px;
-    maring-bottom: 1px;
+    margin-bottom: 1px;
+    text-indent:-0.2em;
 }
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-content div.featureItem {

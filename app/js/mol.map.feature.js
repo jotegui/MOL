@@ -206,35 +206,39 @@ mol.modules.map.feature = function(mol) {
             _.each(rows, function(row) {
                 var i,
                     j,
-                    k;
+                    k,
+                    contentHtml = '' +
+                        '<h3>' +
+                            '<a href="javascript:">' +
+                                '<span class="name">{0}</span>' +
+                                '<button ' +
+                                    'class="source" ' +
+                                    'title="Layer Source: {1}">' +
+                                    '<img src="/static/maps/search/{2}.png">' +
+                                '</button>' +
+                                '<button ' +
+                                    'class="type" ' +
+                                    'title="Layer Type: {3}">' +
+                                    '<img src="/static/maps/search/{4}.png">' +
+                                '</button>' +
+                            '</a>' +
+                        '</h3>';
 
                 o = JSON.parse(row.layer_features);
                 all = _.values(o)[0];
                 allobj = all[0];
 
-
                 head = _.keys(o)[0].split("--");
                 sp = head[1].replace("_", " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
-                content = '' +
-                    '<h3>' +
-                        '<a href="javascript:">' +
-                            '<span class="name">' +sp + '</span>' +
-                            '<button ' +
-                                'class="source" ' +
-                                'title="Layer Source: '
-                                + allobj["Source"] + '">' +
-                                '<img src="/static/maps/search/' + head[3] + '.png">' +
-                            '</button>' +
-                            '<button ' +
-                                'class="type" ' +
-                                'title="Layer Type: '
-                                + allobj["Type"] + '">' +
-                                '<img src="/static/maps/search/' + head[2] + '.png">' +
-                            '</button>' +
-                        '</a>' +
-                    '</h3>';
+                content = contentHtml.format(
+                    sp,
+                    allobj["Source"],
+                    head[3],
+                    allobj["Type"],
+                    head[2]
+                );
 
                 //TODO try a stage content display
                 myLength = (all.length > 100) ? 100 : all.length;
@@ -247,7 +251,9 @@ mol.modules.map.feature = function(mol) {
                 }
 
                 if(all.length > 100) {
-                    entry+=' Displaying first 100 records. Please zoom in before querying again to reduce the number of records found.</div>';
+                    entry+=' Displaying first 100 records. Please zoom in '+
+                        'before querying again to reduce the number of ' +
+                        'records found.</div>';
                 } else {
                     entry+='</div>';
                 }
@@ -321,22 +327,35 @@ mol.modules.map.feature = function(mol) {
                         self.mapMarker.draw();
                     },
                     animated: false
-                }
-                msg ='',
+                },
                 zoom = parseInt(self.map.getZoom()),
                 tolerance = 3,
-                radius = Math.round(tolerance*40075000/(256*1000*Math.pow(2,zoom)));
+                radius = Math.round(
+                    tolerance*40075000/(256*1000*Math.pow(2,zoom))
+                ),
+                infoHtml = '' +
+                    '<span>' +
+                        '{0} feature{1} from {2} layer{3} found within<br>' +
+                        '{4} km of {5}&deg;{6}, {7}&deg;{8}' +
+                    '</span>';
 
             if(params.response.total_rows > 1) {
                 options.active = false;
             }
 
-            var msg = '<span>' + self.featurect + ' feature' + ((self.featurect>1) ? 's' : '') + ' from ' + params.response.total_rows +
-                ' layer' + ((params.response.total_rows>1) ? 's' : '') + '<br>found within ' + radius + ' km of<br>' +
-                Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' +
-                Math.round(params.latlng.lng()*1000)/1000 + '&deg;' + lngHem + '</span>';
+            info = $(infoHtml.format(
+                        self.featurect,
+                        ((self.featurect>1) ? 's' : ''),
+                        params.response.total_rows,
+                        ((params.response.total_rows>1) ? 's' : ''),
+                        radius,
+                        Math.round(params.latlng.lat()*1000)/1000,
+                        latHem,
+                        Math.round(params.latlng.lng()*1000)/1000,
+                        lngHem
+            ));
 
-            $(self.display).find('.info').append($(msg));
+            $(self.display).find('.info').append(info);
             $(self.display).find('.accordion').accordion(options);
 
             self.display.close.click(
@@ -347,7 +366,11 @@ mol.modules.map.feature = function(mol) {
 
                 }
             );
-            self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
+            self.mapMarker = new mol.map.FeatureMarker(
+                params.latlng,
+                self.map,
+                self.display[0]
+            );
         }
     });
 
@@ -357,8 +380,8 @@ mol.modules.map.feature = function(mol) {
                 html = '' +
                     '<div class="cartodb-popup">' +
                         '<a class="cartodb-popup-close-button close">x</a>' +
-                        '<div class="cartodb-popup-content-wrapper">' +
-                            '<div class="' + className + '">' +
+                        '<div class="mol-Map-FeatureDisplay ">' +
+                            '<div class="contents">' +
                                 '<div class="info"></div>' +
                                 '<div class="accordion"></div>' +
                             '</div>'+
@@ -376,64 +399,75 @@ mol.modules.map.feature = function(mol) {
     mol.map.FeatureMarker = function(latlng, map, div) {
             this.latlng_ = latlng;
             this.init_ = false;
-            if (div) {
-                div.parentNode.innerHTML='';
-            }
-
             this.div_ = div;
             this.setMap(map);
     }
     mol.map.FeatureMarker.prototype = new google.maps.OverlayView();
     mol.map.FeatureMarker.prototype.draw = function () {
         var self = this,
-            div = this.div_;
+            div = this.div_,
+            panes,
+            point;
 
         if (!this.init_) {
             // Then add the overlay to the DOM
-            var panes = this.getPanes();
+            panes = this.getPanes();
             panes.overlayImage.appendChild(div);
             this.init_ = true;
-             // catch mouse events and stop them propogating to the map
-              google.maps.event.addDomListener(this.div_, 'mousedown', this.stopPropagation_);
-              google.maps.event.addDomListener(this.div_, 'dblclick', this.stopPropagation_);
-              google.maps.event.addDomListener(this.div_, 'DOMMouseScroll', this.stopPropagation_);
+            // catch mouse events and stop them propogating to the map
+            google.maps.event.addDomListener(
+                this.div_,
+                'mousedown',
+                this.stopPropagation_
+            );
+            google.maps.event.addDomListener(
+                this.div_,
+                'dblclick',
+                this.stopPropagation_
+            );
 
+            google.maps.event.addDomListener(
+                this.div_,
+                'DOMMouseScroll',
+                this.stopPropagation_
+            );
+            google.maps.event.addDomListener(
+                this.div_,
+                'click',
+                function(e) {
+                    google.maps.event.trigger(self, 'click')
+                    self.stopPropagation_(e);
+            });
         }
         // Position the overlay
-        var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
+        point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
         if (point && div) {
-          div.style.left = (point.x -28) + 'px';
-          div.style.top = (point.y - $(div).height()-5) + 'px';
-
-
+            div.style.left = (point.x -28) + 'px';
+            div.style.top = (point.y - $(div).height()-5) + 'px';
             if($(div).offset().top<0) {
                 this.map.panBy(0,$(div).offset().top-10);
             }
         }
     };
     mol.map.FeatureMarker.prototype.remove = function() {
-        // Check if the overlay was on the map and needs to be removed.
         if (this.div_) {
           this.div_.parentNode.removeChild(this.div_);
           this.div_ = null;
         }
     };
-
     mol.map.FeatureMarker.prototype.getPosition = function() {
        return this.latlng_;
     };
     mol.map.FeatureMarker.prototype.getDOMElement = function() {
        return this.div_;
     };
-
     mol.map.FeatureMarker.prototype.stopPropagation_ = function(e) {
-      if(navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
+      if(navigator.userAgent.toLowerCase().indexOf('msie') != -1 &&
+        document.all) {
         window.event.cancelBubble = true;
         window.event.returnValue = false;
       } else {
-        // e.preventDefault(); // optionally prevent default actions
         e.stopPropagation();
       }
     }
-
 }
