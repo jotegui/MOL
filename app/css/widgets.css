@@ -465,7 +465,7 @@ white-space: nowrap;
     padding-top: 2px;
 }
 
-.mol-LayerControl-Layers .layer .type, 
+.mol-LayerControl-Layers .layer .type,
 .mol-LayerControl-Layers .layer .source {
     float: left;
     text-align: center;
@@ -614,6 +614,7 @@ white-space: nowrap;
     font-style: italic;
     font-size: 1.2em;
     height: 24px;
+    pointer-events: false;
 }
 
 /*! Light tooltip style */
@@ -697,7 +698,7 @@ white-space: nowrap;
 }
 
 
-.mol-LayerControl-Styler .sliderLabel, 
+.mol-LayerControl-Styler .sliderLabel,
 .mol-LayerControl-Styler .opacityLabel {
     float:left;
     width:48px;
@@ -1388,7 +1389,7 @@ div.mol-Dashboard-TableWindow {
 
 .mol-Map-ListDialogContent li.ui-state-default {
     background: #1D2B52;
-    opacity: 0.75; 
+    opacity: 0.75;
 }
 
 .mol-Map-ListDialogContent li.ui-state-default a {
@@ -1571,7 +1572,7 @@ div.cartodb_infowindow div.top p {
 
 /*
  * New Feature Metadata
- * 
+ *
  */
 
 
@@ -1595,7 +1596,7 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     padding: 0.2em 0.2em 0.2em 0.3em;
     color: #FFF;
     padding-left: 1.4em;
-   
+
     height:18px;
 }
 
@@ -1656,6 +1657,10 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
 }
 .mol-Map-FeatureDisplay .info {
     font-size: 12px;
+}
+.mol-Map-FeatureDisplay .name {
+    float: left;
+    padding-top:2px;
 }
 
 

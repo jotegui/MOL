@@ -847,14 +847,14 @@ mol.modules.map.layers = function(mol) {
         layersToggle: function(event) {
             var self = this,
                 visible = event.visible;
-            
+
             if (visible == this.display.expanded) {
                 return;
             }
             if(this.display.expanded == true || visible == false) {
                 $(self.display.styleAll).prop('disabled', false);
                 $(self.display.styleAll).qtip('destroy');
-                
+
                 this.display.layersWrapper.animate(
                     {height: this.display.layersHeader.height()+18},
                     1000,
@@ -873,7 +873,7 @@ mol.modules.map.layers = function(mol) {
                     function() {
                         self.display.layersToggle.text('▲');
                         self.display.expanded = true;
-                        
+
                         $(self.display.layersWrapper).css({'height':''});
                     }
                 );
@@ -883,21 +883,21 @@ mol.modules.map.layers = function(mol) {
 
         addEventHandlers: function() {
             var self = this;
-            
+
             this.display.removeAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     $(self.display).find(".close").trigger("click");
                 }
             );
-            
+
             this.display.toggleAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     _.each(
                         $(self.display).find(".toggle"),
                         function(checkbox){
@@ -906,19 +906,19 @@ mol.modules.map.layers = function(mol) {
                     );
                 }
             );
-            
+
             this.display.resetAll.click (
                 function(event) {
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
-                    
+
                     _.each(
                         self.display.layers,
                         function(layer) {
                             var l;
-                                
-                            l = self.display.getLayer(layer);                                
-                            
+
+                            l = self.display.getLayer(layer);
+
                             self.bus.fireEvent(
                                 new mol.bus.Event(
                                     'reset-layer-style',
@@ -933,21 +933,21 @@ mol.modules.map.layers = function(mol) {
                     );
                 }
             );
-            
+
             this.display.styleAll.click (
                 function(event) {
                     _.each(
                         self.display.layers,
                         function(layer) {
-                            var l, 
+                            var l,
                                 b;
-                            
+
                             l = self.display.getLayer(layer);
                             b = $(l).find('.styler');
                             $(b).qtip('destroy');
                         }
                     );
-                    
+
                     self.bus.fireEvent(
                         new mol.bus.Event(
                             'style-all-layers',
@@ -960,14 +960,14 @@ mol.modules.map.layers = function(mol) {
                     );
                 }
             );
-            
+
             /*
              * Toggle Click Handler for Layer Clicking
              */
             this.display.layerClickButton.click(
                 function(event) {
                     var params = {};
-  
+
                     if($(self.display.layerClickButton).hasClass('selected')) {
                         params.disable = true;
                         $(self.display.layerClickButton).removeClass('selected');
@@ -977,12 +977,12 @@ mol.modules.map.layers = function(mol) {
                         $(self.display.layerClickButton).addClass('selected');
                         $(self.display.layerClickButton).html("ON");
                     }
-                    
+
                     self.bus.fireEvent(
-                        new mol.bus.Event('layer-clicking-toggle', params)); 
+                        new mol.bus.Event('layer-clicking-toggle', params));
                 }
             );
-            
+
             this.display.layersToggle.click(
                 function(event) {
                     self.layersToggle(event);
@@ -1021,7 +1021,7 @@ mol.modules.map.layers = function(mol) {
                                 } else {
                                     bounds.union(layer_bounds)
                                 }
-                                
+
                             }
                             catch(e) {
                                 //invalid extent
@@ -1034,7 +1034,7 @@ mol.modules.map.layers = function(mol) {
                     }
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-display-toggle',
                 function(event) {
@@ -1049,19 +1049,19 @@ mol.modules.map.layers = function(mol) {
                     }
                 }
             );
-            
+
             this.bus.addHandler(
                 'layers-toggle',
                 function(event) {
                     self.layersToggle(event);
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-click-toggle',
-                function(event) {                    
+                function(event) {
                     self.clickDisabled = event.disable;
-                    
+
                     //if false, unselect layer query
                     if(self.clickDisabled) {
                         $(self.display.layerClickButton).removeClass('selected');
@@ -1129,11 +1129,11 @@ mol.modules.map.layers = function(mol) {
                     self.bus.fireEvent(
                         new mol.bus.Event('show-layer-display-toggle')
                     );
-                    
-                    //Hack so that at the end 
+
+                    //Hack so that at the end
                     //we can fire opacity event with all layers
                     all.push({layer:layer, l:l, opacity:opacity});
-                    
+
                     //style legends initially
                     self.bus.fireEvent(
                         new mol.bus.Event(
@@ -1145,7 +1145,7 @@ mol.modules.map.layers = function(mol) {
                         )
                     );
 
-                    //Close handler for x button 
+                    //Close handler for x button
                     //fires a 'remove-layers' event.
                     l.close.click(
                         function(event) {
@@ -1156,18 +1156,18 @@ mol.modules.map.layers = function(mol) {
 
                             self.bus.fireEvent(e);
                             l.remove();
-                            
-                            //Hide the layer widget toggle in the main menu 
+
+                            //Hide the layer widget toggle in the main menu
                             //if no layers exist
                             if(self.map.overlayMapTypes.length == 0) {
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
                                         'hide-layer-display-toggle'));
-                                        
+
                                 $(self.display.styleAll)
                                     .prop('disabled', false);
                                 $(self.display.styleAll).qtip('destroy');
-                                        
+
                                 self.display.toggle(false);
                             }
                             event.stopPropagation();
@@ -1175,7 +1175,7 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
 
-                    //Click handler for zoom button 
+                    //Click handler for zoom button
                     //fires 'layer-zoom-extent'
                     //and 'show-loading-indicator' events.
                     l.zoom.click(
@@ -1187,38 +1187,38 @@ mol.modules.map.layers = function(mol) {
                                 extent = eval('({0})'.format(layer.extent)),
                                 bounds = new google.maps.LatLngBounds(
                                             new google.maps.LatLng(
-                                                extent.sw.lat, 
-                                                extent.sw.lng), 
+                                                extent.sw.lat,
+                                                extent.sw.lng),
                                             new google.maps.LatLng(
-                                                extent.ne.lat, 
+                                                extent.ne.lat,
                                                 extent.ne.lng));
-                                                
-                            if(!$(l.layer).hasClass('selected')){
-                                l.layer.click();
-                            }
+
+                            //if(!$(l.layer).hasClass('selected')){
+                            //    l.layer.click();
+                            //}
                             self.map.fitBounds(bounds);
 
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
                     );
-                    
-                    // Click handler for style toggle 
+
+                    // Click handler for style toggle
                     l.styler.click(
                         function(event) {
                             _.each(
                                 self.display.layers,
                                 function(layer) {
-                                    var l, 
+                                    var l,
                                         b;
-                                    
+
                                     l = self.display.getLayer(layer);
                                     b = $(l).find('.styler');
                                     $(b).prop('disabled', false);
                                     $(b).qtip('destroy');
                                 }
                             );
-                            
+
                             self.bus.fireEvent(
                                 new mol.bus.Event(
                                     'show-styler',
@@ -1228,29 +1228,29 @@ mol.modules.map.layers = function(mol) {
                                     }}
                                 )
                             );
-                            
+
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
                     );
-                    
+
                     l.layer.click(
                         function(event) {
                             var boo = false,
                                 isSelected = false;
 
                             $(l.layer).focus();
-                            
+
                             if($(this).hasClass('selected')) {
                                 $(this).removeClass('selected');
-                                
+
                                 //unstyle previous layer
                                 boo = false;
                             } else {
-                                
+
                                 if($(self.display)
-                                        .find('.selected').length > 0) {       
-                                                                                 
+                                        .find('.layer.selected').length > 0) {
+
                                     //toggle layer highlight
                                     self.bus.fireEvent(
                                         new mol.bus.Event(
@@ -1259,30 +1259,30 @@ mol.modules.map.layers = function(mol) {
                                                 layer: self.display
                                                          .getLayerById(
                                                            $(self.display)
-                                                             .find('.selected')
+                                                             .find('.layer.selected')
                                                                .parent()
                                                                  .attr('id')),
                                                 visible: false,
                                                 selected: false
                                             }}
                                         )
-                                    );                        
+                                    );
                                 }
-                                
-                                $(self.display).find('.selected')
+
+                                $(self.display).find('.layer.selected')
                                     .removeClass('selected');
-                                    
+
                                 $(this).addClass('selected');
-                                
+
                                 //style selected layer
                                 boo = true;
                                 isSelected = true;
                             }
-                            
+
                             if(self.clickDisabled) {
                                 isSelected = false;
                             }
-                            
+
                             //toggle layer highlight
                             self.bus.fireEvent(
                                 new mol.bus.Event(
@@ -1294,7 +1294,7 @@ mol.modules.map.layers = function(mol) {
                                     }}
                                 )
                             );
-                            
+
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
@@ -1359,10 +1359,10 @@ mol.modules.map.layers = function(mol) {
                     return layer.id;
                 },
                 this);
-                
+
             this.bus.fireEvent(
                 new mol.bus.Event(
-                    'reorder-layers', 
+                    'reorder-layers',
                     {layers:layerIds}
                 )
             );
@@ -1372,14 +1372,14 @@ mol.modules.map.layers = function(mol) {
                 //select it
                 this.display.list.find('.layer')
                     [this.display.list.find('.layer').length-1].click();
-            } 
-            
+            }
+
             //done making widgets, toggle on if we have layers.
             if(layerIds.length>0) {
                 this.layersToggle({visible:true});
             }
         },
-            
+
         /**
         * Add sorting capability to LayerListDisplay, when a result is
         * drag-n-drop, and the order of the result list is changed,
@@ -1387,13 +1387,13 @@ mol.modules.map.layers = function(mol) {
         **/
 
         initSortable: function() {
-            var self = this, 
+            var self = this,
                 display = this.display;
 
             display.list.sortable({
                 update : function(event, ui) {
-                    var layers = [], 
-                        params = {}, 
+                    var layers = [],
+                        params = {},
                         e = null;
 
                     $(display.list)
@@ -1416,7 +1416,7 @@ mol.modules.map.layers = function(mol) {
                 '<div class="layerContainer">' +
                 '  <div class="layer">' +
                 '    <button title="Click to edit layer style." ' +
-                            'class="styler">' + 
+                            'class="styler">' +
                 '      <div class="legend-point"></div> ' +
                 '      <div class="legend-polygon"></div> ' +
                 '      <div class="legend-seasonal">' +
@@ -1437,8 +1437,8 @@ mol.modules.map.layers = function(mol) {
                 '      <div title="{2}" class="layerNomial">{2}</div>' +
                 '      <div title="{3}" class="layerEnglishName">{3}</div>'+
                 '    </div>' +
-                '    <button title="Remove layer." class="close">' + 
-                       'x' + 
+                '    <button title="Remove layer." class="close">' +
+                       'x' +
                 '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
                        'z' +
@@ -1446,7 +1446,7 @@ mol.modules.map.layers = function(mol) {
                 '    <label class="buttonContainer">' +
                 '       <input class="toggle" type="checkbox">' +
                 '       <span title="Toggle layer visibility." ' +
-                        'class="customCheck"></span>' + 
+                        'class="customCheck"></span>' +
                 '    </label>' +
                 '   </div>' +
                 '   <div class="break"></div>' +
@@ -1465,7 +1465,7 @@ mol.modules.map.layers = function(mol) {
                     layer.type_title
                 )
             );
-            
+
             this.attr('id', layer.id);
             this.toggle = $(this).find('.toggle').button();
             this.styler = $(this).find('.styler');
@@ -1479,30 +1479,30 @@ mol.modules.map.layers = function(mol) {
             this.source = $(this).find('.source');
             this.layer = $(this).find('.layer');
             this.layerObj = layer;
-            
+
             //legend items
             this.pointLegend = $(this).find('.legend-point');
             this.polygonLegend = $(this).find('.legend-polygon');
             this.seasonalLegend = $(this).find('.legend-seasonal');
             this.s4 = $(this).find('.s4');
-            
+
             if(layer.style_table == "points_style") {
                 this.polygonLegend.hide();
                 this.seasonalLegend.hide();
             } else {
                 this.pointLegend.hide();
-                
-                //TODO issue #175 replace iucn ref    
+
+                //TODO issue #175 replace iucn ref
                 if(layer.type == "range") {
                     if(layer.source == "jetz" || layer.source == "iucn") {
                        this.polygonLegend.hide();
-                       
+
                        if(layer.source == 'jetz') {
                             this.s4.hide();
-                       }    
+                       }
                     } else {
                         this.seasonalLegend.hide();
-                    }          
+                    }
                 } else {
                     this.seasonalLegend.hide();
                 }
@@ -1517,9 +1517,9 @@ mol.modules.map.layers = function(mol) {
                     '<div class="layers widgetTheme">' +
                         '<div class="layersHeader">' +
                             '<button class="layersToggle button">▲</button>' +
-                            '<button id="layerClickButton" ' + 
+                            '<button id="layerClickButton" ' +
                                      'class="toggleBtn" ' +
-                                     'title="Click to activate map layer' + 
+                                     'title="Click to activate map layer' +
                                          ' querying.">' +
                                      'OFF' +
                             '</button>' +
@@ -1570,7 +1570,7 @@ mol.modules.map.layers = function(mol) {
         },
 
         getLayerById: function(id) {
-            return _.find(this.layers, function(layer){ 
+            return _.find(this.layers, function(layer){
                             return layer.id === id; });
         },
 
@@ -3657,9 +3657,9 @@ mol.modules.map.tiles = function(mol) {
 
 
 };mol.modules.map.feature = function(mol) {
-    
+
     mol.map.feature = {};
-    
+
     mol.map.feature.FeatureEngine = mol.mvp.Engine.extend({
         init : function(proxy, bus, map) {
             this.proxy = proxy;
@@ -3668,140 +3668,140 @@ mol.modules.map.tiles = function(mol) {
             //TODO add
             this.url = 'http://mol.cartodb.com/api/v2/sql?callback=?&q={0}';
             //TODO add
-            this.sql = "SELECT * FROM " + 
+            this.sql = "SELECT * FROM " +
                        "get_map_feature_metadata({0},{1},{2},{3},'{4}')";
-            this.mesql = "SELECT {5} as timestamp,* FROM " + 
-                       "get_feature_presence({0},{1},{2},{3},'{4}')";           
-            
+            this.mesql = "SELECT {5} as timestamp,* FROM " +
+                       "get_feature_presence({0},{1},{2},{3},'{4}')";
+
             this.clickDisabled = true;
             this.makingRequest = false;
             this.mapMarker;
             this.activeLayers = [];
-            
+
             this.lastRequestTime;        },
 
         start : function() {
             this.addEventHandlers();
         },
-        
+
         addEventHandlers : function () {
             var self = this;
-            
+
             this.bus.addHandler(
                 'layer-click-toggle',
                 function(event) {
                     if(event.disable) {
-                      self.clickDisabled = event.disable;  
-                        
+                      self.clickDisabled = event.disable;
+
                       self.map
                         .setOptions(
-                          { 
-                            draggableCursor: 
-                            'url(' + 
-                            'http://maps.google.com/mapfiles/' + 
-                            'openhand.cur' + 
-                            '), move' 
+                          {
+                            draggableCursor:
+                            'url(' +
+                            'http://maps.google.com/mapfiles/' +
+                            'openhand.cur' +
+                            '), move'
                           }
-                        ); 
-                    } 
+                        );
+                    }
                 }
             );
-            
+
             this.bus.addHandler(
                 'add-layers',
                 function(event) {
-                    var newLays = _.map(event.layers, 
-                                        function(l) { 
+                    var newLays = _.map(event.layers,
+                                        function(l) {
                                           var o = {id:l.id, op:l.opacity};
-                                          
+
                                           return o });
-                    
+
                     self.activeLayers = _.compact(
                                             _.union(
-                                                newLays, 
-                                                self.activeLayers));                              
+                                                newLays,
+                                                self.activeLayers));
                 }
             );
-            
+
             this.bus.addHandler(
                 'remove-layers',
                 function(event) {
-                    var oldLays = _.map(event.layers, 
-                                        function(l) { 
+                    var oldLays = _.map(event.layers,
+                                        function(l) {
                                             var o = {id:l.id, op:l.opacity};
                                             return o;
-                                        });                       
-                                                
+                                        });
+
                     _.each(oldLays, function(e) {
                         self.activeLayers = _.reject(
-                                                self.activeLayers, 
+                                                self.activeLayers,
                                                 function(ol) {
                                                     return ol.id == e.id;
                                                 });
-                    });                                                                      
+                    });
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-toggle',
                 function(event) {
                     _.each(self.activeLayers, function(al) {
                         if(al.id == event.layer.id) {
                             al.op = event.showing ? 1 : 0;
-                        }  
-                    });             
+                        }
+                    });
                 }
             );
-            
+
             this.bus.addHandler(
                 'layer-clicking-toggle',
                 function(event) {
                     self.clickDisabled = event.disable;
-                    
+
                     if(!self.clickDisabled) {
                       self.map
-                        .setOptions({ draggableCursor: 'pointer' }); 
+                        .setOptions({ draggableCursor: 'pointer' });
                     } else {
                       self.map
                         .setOptions(
-                          { 
-                            draggableCursor: 
-                            'url(' + 
-                            'http://maps.google.com/mapfiles/' + 
-                            'openhand.cur' + 
-                            '), move' 
+                          {
+                            draggableCursor:
+                            'url(' +
+                            'http://maps.google.com/mapfiles/' +
+                            'openhand.cur' +
+                            '), move'
                           }
-                        ); 
-                    }    
+                        );
+                    }
                 }
             );
-                
+
             google.maps.event.addListener(
                 self.map,
                 "click",
                 function (mouseevent) {
-                    var tolerance = 2,
+                    var tolerance = 3,
                         sqlLayers,
                         sql,
                         sym;
-                        
+
                     if(!self.clickDisabled && self.activeLayers.length > 0) {
                         if(self.makingRequest) {
-                            alert('Please wait for your feature metadata ' + 
+                            alert('Please wait for your feature metadata ' +
                               'request to complete before starting another.');
                         } else {
                             self.makingRequest = true;
-                          
+
                             if(self.display) {
                                 self.display.remove();
-                            }   
-                            
+                            }
+
                             sqlLayers =  _.pluck(_.reject(
-                                            self.activeLayers, 
+                                            self.activeLayers,
                                             function(al) {
                                                 return al.op == 0;
-                                            }), 'id');         
-                            
+                                            }), 'id');
+
                             sql = self.sql.format(
                                     mouseevent.latLng.lng(),
                                     mouseevent.latLng.lat(),
@@ -3809,13 +3809,13 @@ mol.modules.map.tiles = function(mol) {
                                     self.map.getZoom(),
                                     sqlLayers.toString()
                             );
-                            
+
                             self.bus.fireEvent(new mol.bus.Event(
                                 'show-loading-indicator',
                                 {source : 'feature'}));
-                                
-                               
-                            
+
+
+
                             $.getJSON(
                                 self.url.format(sql),
                                 function(data, textStatus, jqXHR) {
@@ -3824,28 +3824,28 @@ mol.modules.map.tiles = function(mol) {
                                             response: data
                                         },
                                         e;
-                                        
+
                                     if(!data.error && data.rows.length != 0) {
                                         self.processResults(data.rows);
                                         self.showFeatures(results)
-                                    }  
-                                        
-                                    self.makingRequest = false;    
-                                    
+                                    }
+
+                                    self.makingRequest = false;
+
                                     self.bus.fireEvent(
                                         new mol.bus.Event(
                                           'hide-loading-indicator',
-                                          {source : 'feature'})); 
+                                          {source : 'feature'}));
                                 }
                             );
-                        }  
+                        }
                     }
                 }
             );
-            
-            
+
+
         },
-        
+
         processResults: function(rows) {
             var self = this,
                 o,
@@ -3865,72 +3865,75 @@ mol.modules.map.tiles = function(mol) {
                 var i,
                     j,
                     k;
-                    
+
                 o = JSON.parse(row.layer_features);
                 all = _.values(o)[0];
                 allobj = all[0];
-                                
-                
+
+
                 head = _.keys(o)[0].split("--");
                 sp = head[1].replace("_", " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
-                
-                content = '' + 
-                        '<h3>' + 
-                        '  <a href="#">' + 
-                             sp +
-                        '    <button ' + 
-                                'class="source" ' + 
-                                'title="Layer Source: ' 
+
+                content = '' +
+                    '<h3>' +
+                        '<a href="javascript:">' +
+                            '<span class="name">' +sp + '</span>' +
+                            '<button ' +
+                                'class="source" ' +
+                                'title="Layer Source: '
                                 + allobj["Source"] + '">' +
-                        '      <img src="/static/maps/search/' + head[3] + '.png">' +
-                        '    </button>' +
-                        '    <button ' + 
-                                'class="type" ' + 
-                                'title="Layer Type: ' 
-                                + allobj["Type"] + '">' + 
-                        '      <img src="/static/maps/search/' + head[2] + '.png">' +  
-                        '    </button>' + 
-                        '  </a>' + 
-                        '</h3>';
+                                '<img src="/static/maps/search/' + head[3] + '.png">' +
+                            '</button>' +
+                            '<button ' +
+                                'class="type" ' +
+                                'title="Layer Type: '
+                                + allobj["Type"] + '">' +
+                                '<img src="/static/maps/search/' + head[2] + '.png">' +
+                            '</button>' +
+                        '</a>' +
+                    '</h3>';
 
                 //TODO try a stage content display
-                myLength = (all.length > 100) ? 100 : all.length; 
+                myLength = (all.length > 100) ? 100 : all.length;
                 self.featurect+=(all.length);
-                
+
                 if(myLength == 1) {
                     entry = '<div>{0} record found.'.format(all.length);
                 } else {
                     entry = '<div>{0} records found.'.format(all.length);
                 }
-                
+
                 if(all.length > 100) {
-                    entry+=' Displaying first 100 records. Please zoom in before querying again to reduce the number of records found.</div>';  
+                    entry+=' Displaying first 100 records. Please zoom in before querying again to reduce the number of records found.</div>';
                 } else {
                     entry+='</div>';
-                }    
-                
+                }
+
                 for(j=0;j<myLength;j++) {
                     vs = all[j];
-                    inside = ''; 
-                      
+                    inside = '';
+
                     for(i=0;i < _.keys(vs).length; i++) {
                         k = _.keys(vs)[i];
-                        inside+='<div class="itemPair"><b>{0}:&nbsp;</b>{1}</div>'
-                            .format(k,vs[k]);
+                        if(k!=null && vs[k] != null && k!='' && vs[k] != '') {
+                            inside+='<div class="itemPair">' +
+                                '<b>{0}:&nbsp;</b>{1}</div>'
+                                    .format(k,vs[k]);
+                        }
                     }
-                     
+
                     if(j!=0) {
-                        entry+="<div>&nbsp</div>";  
+                        entry+="<div>&nbsp</div>";
                     }
-                     
-                    entry+=inside;  
+
+                    entry+=inside;
                 }
 
                 content+='<div>{0}</div>'.format(entry);
-                
+
                 $(self.display).find('.accordion').append(content);
-                
+
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(
@@ -3946,7 +3949,7 @@ mol.modules.map.tiles = function(mol) {
                           event.cancelBubble = true;
                       }
                 );
-                
+
                 $(self.display).find('.type').click(
                     function(event) {
                           self.bus.fireEvent(
@@ -3964,7 +3967,7 @@ mol.modules.map.tiles = function(mol) {
                 );
             });
         },
-        
+
         showFeatures: function(params) {
             var self = this,
                 latHem = (params.latlng.lat() > 0) ? 'N' : 'S',
@@ -3978,32 +3981,34 @@ mol.modules.map.tiles = function(mol) {
                     animated: false
                 }
                 msg ='',
-                zoom = self.map.getZoom(),
-                pix = 2;
-            if(params.response.total_rows > 1) { 
+                zoom = parseInt(self.map.getZoom()),
+                tolerance = 3,
+                radius = Math.round(tolerance*40075000/(256*1000*Math.pow(2,zoom)));
+
+            if(params.response.total_rows > 1) {
                 options.active = false;
             }
-            
-            var msg = '<span>' + self.featurect + ' features from ' + params.response.total_rows + 
-                ' layer' + ((params.response.total_rows>1) ? 's' : '') + ' found within ' + Math.round((pix*40075000/(256*(2^zoom)))/1000) + ' km' +
-                ' of ' + Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' + 
+
+            var msg = '<span>' + self.featurect + ' feature' + ((self.featurect>1) ? 's' : '') + ' from ' + params.response.total_rows +
+                ' layer' + ((params.response.total_rows>1) ? 's' : '') + '<br>found within ' + radius + ' km of<br>' +
+                Math.round(params.latlng.lat()*1000)/1000 + '&deg;' + latHem + ', ' +
                 Math.round(params.latlng.lng()*1000)/1000 + '&deg;' + lngHem + '</span>';
-            
-            $(self.display).find('.info').append($(msg));    
+
+            $(self.display).find('.info').append($(msg));
             $(self.display).find('.accordion').accordion(options);
-            
+
             self.display.close.click(
                 function(event) {
                     //self.display.empty();
                     event.stopPropagation();
                     self.mapMarker.remove();
-                    
+
                 }
             );
             self.mapMarker = new mol.map.FeatureMarker(params.latlng, self.map, self.display[0]);
         }
     });
-    
+
     mol.map.FeatureDisplay = mol.mvp.View.extend({
         init : function(d, lat,NS,lng,EW) {
             var className = 'mol-Map-FeatureDisplay',
@@ -4022,7 +4027,7 @@ mol.modules.map.tiles = function(mol) {
             this.close = $(this).find('.close');
         }
     });
-    
+
     //
     //Classes for a google maps info window overlay.
     //
@@ -4032,7 +4037,7 @@ mol.modules.map.tiles = function(mol) {
             if (div) {
                 div.parentNode.innerHTML='';
             }
-            
+
             this.div_ = div;
             this.setMap(map);
     }
@@ -4052,13 +4057,13 @@ mol.modules.map.tiles = function(mol) {
               google.maps.event.addDomListener(this.div_, 'DOMMouseScroll', this.stopPropagation_);
 
         }
-        // Position the overlay 
+        // Position the overlay
         var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
         if (point && div) {
           div.style.left = (point.x -28) + 'px';
           div.style.top = (point.y - $(div).height()-5) + 'px';
-        
-        
+
+
             if($(div).offset().top<0) {
                 this.map.panBy(0,$(div).offset().top-10);
             }
@@ -4071,14 +4076,14 @@ mol.modules.map.tiles = function(mol) {
           this.div_ = null;
         }
     };
-   
+
     mol.map.FeatureMarker.prototype.getPosition = function() {
        return this.latlng_;
     };
     mol.map.FeatureMarker.prototype.getDOMElement = function() {
        return this.div_;
     };
-    
+
     mol.map.FeatureMarker.prototype.stopPropagation_ = function(e) {
       if(navigator.userAgent.toLowerCase().indexOf('msie') != -1 && document.all) {
         window.event.cancelBubble = true;
@@ -4088,7 +4093,7 @@ mol.modules.map.tiles = function(mol) {
         e.stopPropagation();
       }
     }
-    
+
 }
 mol.modules.map.query = function(mol) {
 
