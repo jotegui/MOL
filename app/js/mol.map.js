@@ -285,11 +285,11 @@ mol.modules.map = function(mol) {
                     minLat: -85,
                     maxLat: 85,
                     mapTypeControl: false,
-                    panControl: false,
+                    panControl: true,
                     zoomControl: true,
                     streetViewControl: false,
                     mapTypeId: google.maps.MapTypeId.ROADMAP,
-                    styles:[ 
+                    styles:[
                         {
                             "stylers" : [{
                                 "saturation" : -65

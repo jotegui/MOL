@@ -370,15 +370,16 @@ mol.modules.map.search = function(mol) {
     mol.map.search.SearchDisplay = mol.mvp.View.extend({
         init: function() {
             var html = '' +
-                '<div class="mol-LayerControl-Search widgetTheme">' +
-                '    <div class="title">Search</div>' +
-                '    <div class="searchDisplay">' +
-                '       <input class="value ui-autocomplete-input" type="text" ' +
-                            'placeholder="Search by species name">' +
-                '       <button class="execute">Go</button>' +
-                '   </div>'+
-                '   <button class="toggle">◀</button>' +
-                '</div>';
+                '<span class="mol-LayerControl-Search widgetTheme">' +
+                    '<span class="title">Search</span>' +
+                    '<span class="searchDisplay">' +
+                        '<input class="value ui-autocomplete-input" ' +
+                            ' type="text" placeholder=' +
+                            '"Search by species name">' +
+                        '<button class="execute">Go</button>' +
+                    '</span>'+
+                    '<button class="toggle">◀</button>' +
+                '</span>';
 
             this._super(html);
             this.goButton = $(this).find('.execute');
