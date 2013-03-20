@@ -614,7 +614,6 @@ white-space: nowrap;
     font-style: italic;
     font-size: 1.2em;
     height: 24px;
-    pointer-events: none;
 }
 
 /*! Light tooltip style */
@@ -778,7 +777,7 @@ white-space: nowrap;
  */
 
 .mol-LayerControl-Search {
-
+    display:inline;
     margin-bottom: 5px;
     margin-right: 5px;
     padding: 4px 5px 4px 5px;

@@ -2583,7 +2583,7 @@ mol.modules.map.search = function(mol) {
          */
         start: function() {
             this.display = new mol.map.search.SearchDisplay();
-            this.display.toggle(true);
+            //this.display.toggle(true);
             this.initAutocomplete();
             this.addEventHandlers();
             this.fireEvents();
@@ -2705,23 +2705,7 @@ mol.modules.map.search = function(mol) {
              *
              * @param event mol.bus.Event
              */
-            this.bus.addHandler(
-                'search-display-toggle',
-                function(event) {
-                    var params = {},
-                        e = null;
-
-                    if (event.visible === undefined) {
-                        self.display.toggle();
-                        params = {visible: self.display.is(':visible')};
-                    } else {
-                        self.display.toggle(event.visible);
-                    }
-
-                    e = new mol.bus.Event('results-display-toggle', params);
-                    self.bus.fireEvent(e);
-                }
-            );
+            
 
             this.bus.addHandler(
                 'close-autocomplete',
@@ -2734,17 +2718,7 @@ mol.modules.map.search = function(mol) {
                 'search',
                 function(event) {
                     if (event.term != undefined) {
-                        if (!self.display.is(':visible')) {
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                    'search-display-toggle',
-                                    {visible : true}
-                                )
-                            );
-                        }
-
                         self.search(event.term);
-
                         if (self.display.searchBox.val()=='') {
                             self.display.searchBox.val(event.term);
                         }
@@ -2769,14 +2743,13 @@ mol.modules.map.search = function(mol) {
                 function(event) {
                     var params = {
                         visible: false
-                    }, that = this;
+                    };
 
                     if(self.display.searchDisplay.is(':visible')) {
                         self.display.searchDisplay.hide();
                         $(this).text('▶');
                         params.visible = false;
                     } else {
-
                         self.display.searchDisplay.show();
                         $(this).text('◀');
                         params.visible = true;
@@ -2882,7 +2855,7 @@ mol.modules.map.search = function(mol) {
     mol.map.search.SearchDisplay = mol.mvp.View.extend({
         init: function() {
             var html = '' +
-                '<span class="mol-LayerControl-Search widgetTheme">' +
+                '<div class="mol-LayerControl-Search widgetTheme">' +
                     '<span class="title">Search</span>' +
                     '<span class="searchDisplay">' +
                         '<input class="value ui-autocomplete-input" ' +
@@ -2891,7 +2864,7 @@ mol.modules.map.search = function(mol) {
                         '<button class="execute">Go</button>' +
                     '</span>'+
                     '<button class="toggle">◀</button>' +
-                '</span>';
+                '</div>';
 
             this._super(html);
             this.goButton = $(this).find('.execute');

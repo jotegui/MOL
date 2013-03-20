@@ -44,13 +44,6 @@ body { height: 100%; margin: 0px; padding: 0px; overflow: hidden;
 .mol-Map-TopLeftControl .MIDDLE { position: relative; float: left; width: 100%; height: auto; margin-bottom: 5px; }
 .mol-Map-TopLeftControl .BOTTOM { position: relative; float: left; width: 100%; height: auto; margin-bottom: 5px; }
 
-
-.mol-WidgetContainer {
-    margin-top: -11px;
-	width: 290px;
-    float: right;
-}
-
 /* Footer images (see splash page) */
 
 div#footer_imgs {
