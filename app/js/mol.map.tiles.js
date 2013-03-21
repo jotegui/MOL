@@ -22,7 +22,7 @@ mol.modules.map.tiles = function(mol) {
             this.gmap_events = [];
             this.addEventHandlers();
         },
-
+        
         addEventHandlers: function() {
             var self = this;
             this.bus.addHandler(
@@ -263,6 +263,78 @@ mol.modules.map.tiles = function(mol) {
                 },
                 self
             );
+            this.updateWax();
+        },
+        updateWax: function() {
+            var sql =  "" + //c is in case cache key starts with a number
+                "SELECT g.*, 1 as cartodb_id " +
+                "FROM ({0}) g",
+                layersql = '' +
+                    "SELECT the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
+                    "get_tile('{0}','{1}','{2}','{3}')",
+                gridUrlPattern = '' +
+                    'http://mol.cartodb.com/' +
+                    'tiles/polygons_style/{z}/{x}/{y}.grid.json?'+ 
+                    'sql={0}',
+                tileUrlPattern = '' +
+                    'http://mol.cartodb.com/' +
+                    'tiles/polygons_style/{z}/{x}/{y}.png?'+ 
+                    'sql={0}',
+                self = this,
+                tilejson = {
+                  "version": "1.0.0",
+                  "scheme": "zxy",
+                  "grids" : [],
+                  "tiles" : []
+                };
+                
+            tilejson.grids.push(
+                gridUrlPattern.format(
+                    sql.format(
+                        $.map(
+                            this.map.overlayMapTypes.getArray(),
+                            function(mt) {
+                                return layersql.format(
+                                    mt.layer.source, 
+                                    mt.layer.type, 
+                                    mt.layer.name, 
+                                    mt.layer.dataset_id
+                                );
+                            }
+                        ).join(' UNION ')
+                    )
+                )
+            );
+            tilejson.tiles.push(
+                tileUrlPattern.format(
+                    sql.format(
+                        $.map(
+                            this.map.overlayMapTypes.getArray(),
+                            function(mt) {
+                                return layersql.format(
+                                    mt.layer.source, 
+                                    mt.layer.type, 
+                                    mt.layer.name, 
+                                    mt.layer.dataset_id
+                                );
+                            }
+                        ).join(' UNION ')
+                    )
+                )
+            );
+            
+            //this.map.mapTypes.set('mb', new wax.g.connector(tilejson));
+            //this.map.setMapTypeId('mb');
+            wax.g.interaction().map(this.map).tilejson(tilejson).on({
+                on:function(e){
+                    //console.log('on')
+                },
+                off:function(e){
+                    //console.log('off')
+                },}
+                
+            );
+            
         },
         /**
          * Returns an array of layer objects that are not already on the 
@@ -414,8 +486,18 @@ mol.modules.map.tiles = function(mol) {
                         self.onafterload();
                     }
                 });
+                $("img", node).mousemove(
+                    function(event) {
+                        console.log("{0},{1}".format(
+                            event.offsetX,
+                            event.offsetY
+                        ));
+                    }
+                );
+                
                 return node;
             };
         }
     });
+    
 };

@@ -777,7 +777,7 @@ white-space: nowrap;
  */
 
 .mol-LayerControl-Search {
-    display:inline;
+    display:inline-block;
     margin-bottom: 5px;
     margin-right: 5px;
     padding: 4px 5px 4px 5px;
