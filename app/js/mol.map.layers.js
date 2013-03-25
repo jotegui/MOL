@@ -143,17 +143,17 @@ mol.modules.map.layers = function(mol) {
                     var params = {};
 
                     if($(self.display.layerClickButton).hasClass('selected')) {
-                        params.disable = true;
+                        params.action = '';
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     } else {
-                        params.disable = false;
+                        params.action = 'info';
                         $(self.display.layerClickButton).addClass('selected');
                         $(self.display.layerClickButton).html("ON");
                     }
 
                     self.bus.fireEvent(
-                        new mol.bus.Event('layer-clicking-toggle', params));
+                        new mol.bus.Event('layer-click-action', params));
                 }
             );
 
@@ -235,12 +235,14 @@ mol.modules.map.layers = function(mol) {
                 'layer-click-toggle',
                 function(event) {
                     self.clickDisabled = event.disable;
-
+                    
                     //if false, unselect layer query
                     if(self.clickDisabled) {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     }
+                    
+                    
                 }
             );
         },

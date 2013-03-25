@@ -190,24 +190,7 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
-                this.bus.addHandler(
-                    'register-list-click',
-                    function(event) {
-                            google.maps.event.addListener(
-                            self.display.map,
-                            "click",
-                            function(event) {
-                                var params = {
-                                    gmaps_event : event,
-                                    map : self.display.map}
-                                self.bus.fireEvent(
-                                    new mol.bus.Event(
-                                        'species-list-query-click',
-                                        params));
-                            }
-                        );
-                    }
-                );
+                
                 /*
                  *  Turn on the loading indicator display when zooming
                  */

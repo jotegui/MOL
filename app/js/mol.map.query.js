@@ -24,10 +24,14 @@ mol.modules.map.query = function(mol) {
             this.addEventHandlers();
         },
         
-        toggleMapLayerClicks : function(boo) {            
-            //true to disable
+        toggleMapClicks : function(toggle) {            
+            var action = (toggle==true) ? 'list' : '';
             this.bus.fireEvent(
-                new mol.bus.Event('layer-click-toggle', {disable: boo}));          
+                new mol.bus.Event(
+                    'layer-click-action', 
+                    {action: action}
+                )
+            );
         },
         
         /*
@@ -137,24 +141,7 @@ mol.modules.map.query = function(mol) {
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
-            
-            this.bus.addHandler(
-                'layer-clicking-toggle',
-                function(event) {
-                    var params = {};
-                    
-                    if(!event.disable) {
-                        params.visible = false;
-                        
-                        self.bus.fireEvent(
-                            new mol.bus.Event(
-                                'species-list-tool-toggle', 
-                                params
-                            )
-                        );
-                    }
-                }
-            );
+           
             
             this.bus.addHandler(
                 'dialog-closed-click',
@@ -331,7 +318,7 @@ mol.modules.map.query = function(mol) {
                         
                         $(self.display.queryButton).addClass('selected');
                         $(self.display.queryButton).html("ON");
-                        self.toggleMapLayerClicks(true);
+                        self.toggleMapClicks(true);
                     } else {
                         _.each(
                             self.features,
@@ -345,7 +332,7 @@ mol.modules.map.query = function(mol) {
                         
                         $(self.display.queryButton).removeClass('selected');
                         $(self.display.queryButton).html("OFF");
-                        self.toggleMapLayerClicks(false);
+                        self.toggleMapClicks(false);
                     }
                 }
             );

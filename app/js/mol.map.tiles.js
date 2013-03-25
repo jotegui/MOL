@@ -18,7 +18,7 @@ mol.modules.map.tiles = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.clickAction = 'info';
+            this.clickAction = '';
             this.gmap_events = [];
             this.addEventHandlers();
         },
@@ -26,11 +26,15 @@ mol.modules.map.tiles = function(mol) {
         addEventHandlers: function() {
             var self = this;
             this.bus.addHandler(
-                'layer-click-toggle',
+                'layer-click-action',
                 function(event) {
-                    if(event.disable) {
-                        self.clickAction = 'list';
+                    self.clickAction = event.action;
+                    if (self.clickAction == 'info'){
+                        self.updateGrid(true);
+                    } else {
+                        self.updateGrid(false);
                     }
+                    
                 }
             );
             /**
@@ -263,12 +267,27 @@ mol.modules.map.tiles = function(mol) {
                 },
                 self
             );
-            this.updateWax();
+            if(this.clickAction == 'info') {
+                this.updateGrid(true);
+            } else {
+                this.updateGrid(false);
+            }
         },
-        updateWax: function() {
-
-
-
+        updateGrid: function(toggle) {
+             var gridmt;
+             
+             this.map.overlayMapTypes.forEach(
+                 function (mt, i) {
+                     if(mt.name=='grid') {
+                        self.map.overlayMapTypes.removeAt(i);
+                    }
+                  }
+             );
+             
+             if(toggle==true) {
+                gridmt = new mol.map.tiles.GridTile(this.map);
+                this.map.overlayMapTypes.insertAt(0,gridmt.layer);
+             }
         },
         /**
          * Returns an array of layer objects that are not already on the
@@ -338,8 +357,7 @@ mol.modules.map.tiles = function(mol) {
             );
 
             this.map.overlayMapTypes.insertAt(0,maptype.layer);
-            gridmaptype = new mol.map.tiles.GridTile(this.map);
-            this.map.overlayMapTypes.insertAt(0,gridmaptype.layer);
+           
         }
     });
 
@@ -363,6 +381,10 @@ mol.modules.map.tiles = function(mol) {
                 options,
                 self = this;
 
+            if(layer == null || layer == undefined) {
+                return;
+            }
+            
             if(layer.tile_style == undefined) {
                 layer.tile_style = "#{0}{1}"
                     .format(layer.dataset_id,layer.css);
@@ -432,14 +454,6 @@ mol.modules.map.tiles = function(mol) {
                         self.onafterload();
                     }
                 });
-                $("img", node).mousemove(
-                    function(event) {
-                        console.log("{0},{1}".format(
-                            event.offsetX,
-                            event.offsetY
-                        ));
-                    }
-                );
 
                 return node;
             };
@@ -451,22 +465,37 @@ mol.modules.map.tiles = function(mol) {
             var options = {
                     // Just a blank image
                     getTileUrl: function(tile, zoom) {
-                        return ('/static/blank_tile.png');
+                        var y = tile.y,
+                            x = tile.x,
+                            tileRange = 1 << zoom,
+                            url;
+                        if (y < 0 || y >= tileRange) {
+                            return null;
+                        }
+                        if (x < 0 || x >= tileRange) {
+                            x = (x % tileRange + tileRange) % tileRange;
+                        }
+                        
+                        
+                        return ('/static/blank_tile.png?z={0}&x={1}&y={2}&'
+                            .format(
+                                 zoom, x, y
+                            ));
                     },
                     tileSize: new google.maps.Size(256, 256),
                     maxZoom: 9,
                     minZoom: 0,
                     opacity: 0
-                },
+            },
                 sql =  "" + //c is in case cache key starts with a number
                     "SELECT g.*, 1 as cartodb_id " +
                     "FROM ({0}) g",
                 layersql = '' +
-                    "SELECT the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
+                    "SELECT the_geom_webmercator as the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
                     "get_tile('{0}','{1}','{2}','{3}')",
                 gridUrlPattern = '' +
                     'http://mol.cartodb.com/' +
-                    'tiles/polygons_style/{z}/{x}/{y}.grid.json?'+
+                    'tiles/generic_style/{z}/{x}/{y}.grid.json?'+
                     'sql={0}',
                 gridUrl = gridUrlPattern.format(
                     sql.format(
@@ -493,10 +522,24 @@ mol.modules.map.tiles = function(mol) {
             this.baseGetTile = this.layer.getTile;
             this.layer.getTile = function(tileCoord, zoom, ownerDocument) {
                 var node = self.baseGetTile(tileCoord, zoom, ownerDocument),
+                    y = tileCoord.y,
+                    x = tileCoord.x,
+                    tileRange = 1 << zoom,
+                    url;
+                    
+                    if (y < 0 || y >= tileRange) {
+                        return null;
+                    }
+                    if (x < 0 || x >= tileRange) {
+                        x = (x % tileRange + tileRange) % tileRange;
+                    }
+                    
                     url = gridUrl
-                        .replace('{x}',tileCoord.x)
-                        .replace('{y}',tileCoord.y)
+                        .replace('{x}',x)
+                        .replace('{y}',y)
                         .replace('{z}',zoom);
+                   
+                    
                 $.getJSON(
                     url,
                     function(result) {
@@ -514,21 +557,21 @@ mol.modules.map.tiles = function(mol) {
                         var x = Math.round(event.offsetX*(64/256)),
                             y = Math.round(event.offsetY*(64/256)),
                             grid = $(this).data('grid');
-                        if(grid) if(grid.url)
-                            console.log(grid.url);
+                        
                         if(grid) {
                             if(grid.grid[y]!=undefined) {
                                 if(grid.grid[y][x] != undefined) {
                                     if(grid.grid[y][x] == ' ') {
-                                        map.setOptions({ draggableCursor: 'pointer' });
-                                    } else {
-                                        console.log('got it!');
                                         map.setOptions({
                                             draggableCursor:
                                             'url(' +
                                             'http://maps.google.com/mapfiles/' +
                                             'openhand.cur' +
                                             '), move'
+                                        });
+                                    } else {
+                                        map.setOptions({
+                                            draggableCursor: 'pointer' 
                                         });
                                     }
                                 }

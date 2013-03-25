@@ -30,26 +30,6 @@ mol.modules.map.feature = function(mol) {
             var self = this;
 
             this.bus.addHandler(
-                'layer-click-toggle',
-                function(event) {
-                    if(event.disable) {
-                      self.clickDisabled = event.disable;
-
-                      self.map
-                        .setOptions(
-                          {
-                            draggableCursor:
-                            'url(' +
-                            'http://maps.google.com/mapfiles/' +
-                            'openhand.cur' +
-                            '), move'
-                          }
-                        );
-                    }
-                }
-            );
-
-            this.bus.addHandler(
                 'add-layers',
                 function(event) {
                     var newLays = _.map(event.layers,
@@ -96,98 +76,95 @@ mol.modules.map.feature = function(mol) {
             );
 
             this.bus.addHandler(
-                'layer-clicking-toggle',
+                'layer-click-toggle',
                 function(event) {
+                    var action = (event.disable ==false) ? 'info' : '';
+                    
                     self.clickDisabled = event.disable;
-
+                    
+                    google.maps.event.clearListeners(self.map,'click');
+                    
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'layer-click-action', 
+                            {action: action}
+                        )
+                    );
+                    
+                    self.map.setOptions({ draggableCursor: 'pointer' });
+                        
                     if(!self.clickDisabled) {
-                      self.map
-                        .setOptions({ draggableCursor: 'pointer' });
-                    } else {
-                      self.map
-                        .setOptions(
-                          {
-                            draggableCursor:
-                            'url(' +
-                            'http://maps.google.com/mapfiles/' +
-                            'openhand.cur' +
-                            '), move'
-                          }
+                        google.maps.event.addListener(
+                            self.map,
+                            "click",
+                            self.featureclick
                         );
-                    }
+                   }
                 }
             );
+        },
+        featureclick : function (mouseevent) {
+            var tolerance = 3,
+                sqlLayers,
+                sql,
+                sym;
 
-            google.maps.event.addListener(
-                self.map,
-                "click",
-                function (mouseevent) {
-                    var tolerance = 3,
-                        sqlLayers,
-                        sql,
-                        sym;
+            if(!self.clickDisabled && self.activeLayers.length > 0) {
+                if(self.makingRequest) {
+                    alert('Please wait for your feature metadata ' +
+                      'request to complete before starting another.');
+                } else {
+                    self.makingRequest = true;
 
-                    if(!self.clickDisabled && self.activeLayers.length > 0) {
-                        if(self.makingRequest) {
-                            alert('Please wait for your feature metadata ' +
-                              'request to complete before starting another.');
-                        } else {
-                            self.makingRequest = true;
+                    if(self.display) {
+                        self.display.remove();
+                    }
 
-                            if(self.display) {
-                                self.display.remove();
+                    sqlLayers =  _.pluck(_.reject(
+                                    self.activeLayers,
+                                    function(al) {
+                                        return al.op == 0;
+                                    }), 'id');
+
+                    sql = self.sql.format(
+                            mouseevent.latLng.lng(),
+                            mouseevent.latLng.lat(),
+                            tolerance,
+                            self.map.getZoom(),
+                            sqlLayers.toString()
+                    );
+
+                    self.bus.fireEvent(new mol.bus.Event(
+                        'show-loading-indicator',
+                        {source : 'feature'}));
+
+
+
+                    $.getJSON(
+                        self.url.format(sql),
+                        function(data, textStatus, jqXHR) {
+                            var results = {
+                                    latlng: mouseevent.latLng,
+                                    response: data
+                                },
+                                e;
+
+                            if(!data.error && data.rows.length != 0) {
+                                self.processResults(data.rows);
+                                self.showFeatures(results)
                             }
 
-                            sqlLayers =  _.pluck(_.reject(
-                                            self.activeLayers,
-                                            function(al) {
-                                                return al.op == 0;
-                                            }), 'id');
+                            self.makingRequest = false;
 
-                            sql = self.sql.format(
-                                    mouseevent.latLng.lng(),
-                                    mouseevent.latLng.lat(),
-                                    tolerance,
-                                    self.map.getZoom(),
-                                    sqlLayers.toString()
-                            );
-
-                            self.bus.fireEvent(new mol.bus.Event(
-                                'show-loading-indicator',
-                                {source : 'feature'}));
-
-
-
-                            $.getJSON(
-                                self.url.format(sql),
-                                function(data, textStatus, jqXHR) {
-                                    var results = {
-                                            latlng: mouseevent.latLng,
-                                            response: data
-                                        },
-                                        e;
-
-                                    if(!data.error && data.rows.length != 0) {
-                                        self.processResults(data.rows);
-                                        self.showFeatures(results)
-                                    }
-
-                                    self.makingRequest = false;
-
-                                    self.bus.fireEvent(
-                                        new mol.bus.Event(
-                                          'hide-loading-indicator',
-                                          {source : 'feature'}));
-                                }
-                            );
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                  'hide-loading-indicator',
+                                  {source : 'feature'}));
                         }
-                    }
+                    );
                 }
-            );
-
-
+            }
         },
-
         processResults: function(rows) {
             var self = this,
                 o,
