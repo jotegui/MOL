@@ -518,6 +518,8 @@ mol.modules.map.tiles = function(mol) {
 
             this.layer = new google.maps.ImageMapType(options);
             this.name = 'grid';
+            this.layer.layer = {};
+            this.layer.layer.name = 'grid';
             //Wrap the stock getTile to add grid events.
             this.baseGetTile = this.layer.getTile;
             this.layer.getTile = function(tileCoord, zoom, ownerDocument) {
