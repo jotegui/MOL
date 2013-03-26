@@ -76,28 +76,29 @@ mol.modules.map.feature = function(mol) {
             );
 
             this.bus.addHandler(
-                'layer-click-toggle',
+                'layer-click-action',
                 function(event) {
-                    var action = (event.disable ==false) ? 'info' : '';
+                    var action = event.action;
                     
-                    self.clickDisabled = event.disable;
+                    self.clickDisabled = (action == 'info') ? false: true;
                     
                     google.maps.event.clearListeners(self.map,'click');
                     
-                    self.bus.fireEvent(
-                        new mol.bus.Event(
-                            'layer-click-action', 
-                            {action: action}
-                        )
-                    );
+                   
                     
-                    self.map.setOptions({ draggableCursor: 'pointer' });
+                    self.map.setOptions({
+                        draggableCursor:
+                        'url(' +
+                        'http://maps.google.com/mapfiles/' +
+                        'openhand.cur' +
+                        '), move'
+                    });
                         
                     if(!self.clickDisabled) {
                         google.maps.event.addListener(
                             self.map,
                             "click",
-                            self.featureclick
+                            self.featureclick.bind(self)
                         );
                    }
                 }
@@ -107,41 +108,42 @@ mol.modules.map.feature = function(mol) {
             var tolerance = 3,
                 sqlLayers,
                 sql,
-                sym;
+                sym,
+                self = this;
 
-            if(!self.clickDisabled && self.activeLayers.length > 0) {
-                if(self.makingRequest) {
+            if(!this.clickDisabled && this.activeLayers.length > 0) {
+                if(this.makingRequest) {
                     alert('Please wait for your feature metadata ' +
                       'request to complete before starting another.');
                 } else {
-                    self.makingRequest = true;
+                    this.makingRequest = true;
 
-                    if(self.display) {
-                        self.display.remove();
+                    if(this.display) {
+                        this.display.remove();
                     }
 
                     sqlLayers =  _.pluck(_.reject(
-                                    self.activeLayers,
+                                    this.activeLayers,
                                     function(al) {
                                         return al.op == 0;
                                     }), 'id');
 
-                    sql = self.sql.format(
+                    sql = this.sql.format(
                             mouseevent.latLng.lng(),
                             mouseevent.latLng.lat(),
                             tolerance,
-                            self.map.getZoom(),
+                            this.map.getZoom(),
                             sqlLayers.toString()
                     );
 
-                    self.bus.fireEvent(new mol.bus.Event(
+                    this.bus.fireEvent(new mol.bus.Event(
                         'show-loading-indicator',
                         {source : 'feature'}));
 
 
 
                     $.getJSON(
-                        self.url.format(sql),
+                        this.url.format(sql),
                         function(data, textStatus, jqXHR) {
                             var results = {
                                     latlng: mouseevent.latLng,

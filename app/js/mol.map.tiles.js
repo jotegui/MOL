@@ -134,12 +134,18 @@ mol.modules.map.tiles = function(mol) {
                     'apply-layer-style',
                     function(event) {
                         var layer = event.layer,
+                            gridmt;
                             style = event.style;
                             sel = event.isSelected;
 
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
+                                if(maptype.name = 'grid') {
+                                    gridmt = maptype; 
+                                    self.map.overlayMapTypes.removeAt(index);
+                                }
+                                
                                 if (maptype.name === layer.id) {
                                     //remove it from the map
                                     self.map.overlayMapTypes.removeAt(index);
@@ -177,6 +183,9 @@ mol.modules.map.tiles = function(mol) {
                                 }
                             }
                         );
+                        if(self.clickAction == 'info') {
+                            self.updateGrid(true);
+                        }
 
 
 
@@ -274,19 +283,22 @@ mol.modules.map.tiles = function(mol) {
             }
         },
         updateGrid: function(toggle) {
-             var gridmt;
+             var gridmt,
+                self = this;
              
              this.map.overlayMapTypes.forEach(
                  function (mt, i) {
-                     if(mt.name=='grid') {
-                        self.map.overlayMapTypes.removeAt(i);
-                    }
+                     if(mt) {
+                         if(mt.name=='grid') {
+                            self.map.overlayMapTypes.removeAt(i);
+                         }
+                     }
                   }
              );
              
              if(toggle==true) {
                 gridmt = new mol.map.tiles.GridTile(this.map);
-                this.map.overlayMapTypes.insertAt(0,gridmt.layer);
+                this.map.overlayMapTypes.insertAt(this.map.overlayMapTypes.length,gridmt.layer);
              }
         },
         /**
@@ -325,11 +337,11 @@ mol.modules.map.tiles = function(mol) {
          */
         getTile: function(layer) {
             var self = this,
-            maptype = new mol.map.tiles.CartoDbTile(
-                        layer,
-                        this.map
-                    ),
-            grid_maptype;
+                maptype = new mol.map.tiles.CartoDbTile(
+                            layer,
+                            this.map
+                        ),
+                gridmt;
             maptype.onbeforeload = function (){
                 self.bus.fireEvent(
                     new mol.bus.Event(
@@ -351,12 +363,18 @@ mol.modules.map.tiles = function(mol) {
             this.map.overlayMapTypes.forEach(
                 function(mt, i) {
                     if(mt.name == 'grid') {
-                        this.map.overlayMapTypes.removeAt(i);
+                        self.map.overlayMapTypes.removeAt(i);
                     }
                 }
             );
 
             this.map.overlayMapTypes.insertAt(0,maptype.layer);
+            
+            if(this.clickAction == 'info') {
+                this.updateGrid(true);
+            } else {
+                this.updateGrid(false);
+            }
            
         }
     });
@@ -517,7 +535,7 @@ mol.modules.map.tiles = function(mol) {
                 self = this;
 
             this.layer = new google.maps.ImageMapType(options);
-            this.name = 'grid';
+            this.layer.name = 'grid';
             this.layer.layer = {};
             this.layer.layer.name = 'grid';
             //Wrap the stock getTile to add grid events.

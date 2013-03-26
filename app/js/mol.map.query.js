@@ -141,8 +141,19 @@ mol.modules.map.query = function(mol) {
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
-           
-            
+            this.bus.addHandler(
+                'layer-click-action',
+                function(event) {
+                    if(event.action != 'list') {
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                'species-list-tool-toggle', 
+                                {visible: false}
+                            )
+                        );
+                    }        
+                }
+            );
             this.bus.addHandler(
                 'dialog-closed-click',
                 function(event) {                  
