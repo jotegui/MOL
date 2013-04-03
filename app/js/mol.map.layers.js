@@ -60,10 +60,21 @@ mol.modules.map.layers = function(mol) {
 
             this.display.removeAll.click (
                 function(event) {
+                    
+                    self.map.overlayMapTypes.clear();
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
 
                     $(self.display).find(".close").trigger("click");
+                    self.bus.fireEvent(
+                                    new mol.bus.Event(
+                                        'hide-layer-display-toggle'));
+
+                    $(self.display.styleAll)
+                        .prop('disabled', false);
+                    $(self.display.styleAll).qtip('destroy');
+
+                    self.display.toggle(false);
                 }
             );
 
@@ -245,6 +256,19 @@ mol.modules.map.layers = function(mol) {
                     
                 }
             );
+            this.bus.addHandler(
+                'layer-click-action',
+                function(event) {
+                    
+                    if(event.action != 'info') {
+                        $(self.display.layerClickButton).removeClass('selected');
+                        $(self.display.layerClickButton).html("OFF");
+                    } else {
+                        $(self.display.layerClickButton).addClass('selected');
+                        $(self.display.layerClickButton).html("ON");
+                    }
+                }
+            )
         },
 
         /**

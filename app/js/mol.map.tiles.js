@@ -228,6 +228,11 @@ mol.modules.map.tiles = function(mol) {
                                 );
                             }
                         );
+                        if(self.clickAction == 'info') {
+                            self.updateGrid(true);
+                        } else {
+                            self.updateGrid(false);
+                        }
                     }
                 );
                 /**
@@ -255,6 +260,16 @@ mol.modules.map.tiles = function(mol) {
                                     );
                                }
                           );
+                     }
+                );
+                this.bus.addHandler(
+                     'update-grid',
+                     function(event) {
+                         if(event.toggle == true) {
+                             self.updateGrid(true);
+                         } else {
+                             self.updateGrid(false);
+                         }
                      }
                 );
         },
@@ -583,11 +598,7 @@ mol.modules.map.tiles = function(mol) {
                                 if(grid.grid[y][x] != undefined) {
                                     if(grid.grid[y][x] == ' ') {
                                         map.setOptions({
-                                            draggableCursor:
-                                            'url(' +
-                                            'http://maps.google.com/mapfiles/' +
-                                            'openhand.cur' +
-                                            '), move'
+                                            draggableCursor: 'auto'
                                         });
                                     } else {
                                         map.setOptions({

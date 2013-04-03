@@ -39,17 +39,37 @@ mol.modules.map.query = function(mol) {
          */
         addQueryDisplay : function() {
             var params = {
-                display: null,
-                slot: mol.map.ControlDisplay.Slot.TOP,
-                position: google.maps.ControlPosition.TOP_RIGHT
-            };
+                    display: null,
+                    slot: mol.map.ControlDisplay.Slot.TOP,
+                    position: google.maps.ControlPosition.TOP_RIGHT
+                },
+                self = this;
             
-            this.bus.fireEvent(new mol.bus.Event('register-list-click'));
+            
             this.enabled=true;
             this.features={};
             this.display = new mol.map.QueryDisplay();
             params.display = this.display;
             this.bus.fireEvent(new mol.bus.Event('add-map-control', params));
+        },
+        registerClick : function () {
+            var self = this;
+            
+            this.map.setOptions({draggableCursor: 'pointer'});
+            
+            google.maps.event.addListener(
+                this.map,
+                "click",
+                function(event) {
+                    var params = {
+                            gmaps_event : event,
+                            map : self.map
+                        }
+                    self.bus.fireEvent(
+                        new mol.bus.Event('species-list-query-click',params)
+                    );
+                }
+            );
         },
         /*
          *  Method to build and submit an AJAX call that retrieves species
@@ -144,13 +164,20 @@ mol.modules.map.query = function(mol) {
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
-                    if(event.action != 'list') {
-                        self.bus.fireEvent(
-                            new mol.bus.Event(
-                                'species-list-tool-toggle', 
-                                {visible: false}
-                            )
-                        );
+                    if(event.action == 'list') {
+                        self.enabled = true;
+                        $(self.display.queryButton).addClass('selected');
+                        $(self.display.queryButton).html("ON");
+                    } else {
+                        self.enabled = false;
+                        $(self.display.queryButton).removeClass('selected');
+                        $(self.display.queryButton).html("OFF");
+                    }
+                    
+                    if(self.enabled == false) {
+                        self.display.speciesDisplay.hide();
+                    } else {
+                        self.display.speciesDisplay.show();
                     }        
                 }
             );
@@ -319,6 +346,7 @@ mol.modules.map.query = function(mol) {
                     }
                     
                     if (self.enabled == true) {
+                        self.registerClick();
                         _.each(
                             self.features,
                             function(feature) {

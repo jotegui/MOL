@@ -82,25 +82,22 @@ mol.modules.map.feature = function(mol) {
                     
                     self.clickDisabled = (action == 'info') ? false: true;
                     
-                    google.maps.event.clearListeners(self.map,'click');
                     
-                   
-                    
-                    self.map.setOptions({
-                        draggableCursor:
-                        'url(' +
-                        'http://maps.google.com/mapfiles/' +
-                        'openhand.cur' +
-                        '), move'
-                    });
                         
                     if(!self.clickDisabled) {
+                        google.maps.event.clearListeners(self.map,'click');
+                        self.map.setOptions({
+                            draggableCursor: 'auto'
+                        });
                         google.maps.event.addListener(
                             self.map,
                             "click",
                             self.featureclick.bind(self)
                         );
-                   }
+                       
+                        self.bus.fireEvent(
+                            new mol.bus.Event('update-grid',{toggle: true})); 
+                    }
                 }
             );
         },
