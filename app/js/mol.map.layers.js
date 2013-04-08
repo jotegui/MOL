@@ -660,7 +660,7 @@ mol.modules.map.layers = function(mol) {
                     layer.name,
                     layer.names,
                     (layer.feature_count != null) ?
-                        '{0} features'.format(layer.feature_count) : '',
+                        '{0}'.format(layer.feature_count) : '',
                     layer.source_title,
                     layer.type_title
                 )

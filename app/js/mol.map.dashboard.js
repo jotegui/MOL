@@ -9,10 +9,10 @@ mol.modules.map.dashboard = function(mol) {
                 this.bus = bus;
                 this.summary_sql = '' +
                     'SELECT DISTINCT * ' +
-                    'FROM get_dashboard_summary()';
+                    'FROM get_dashboard_summary_beta()';
                 this.dashboard_sql = '' +
                     'SELECT DISTINCT * ' +
-                    'FROM dash_cache ' +
+                    'FROM dashboard_metadata_mar_8_2013 ' +
                     'ORDER BY dataset_title asc';
                 this.summary = null;
                 this.types = {};
@@ -107,7 +107,7 @@ mol.modules.map.dashboard = function(mol) {
                 var self = this;
 
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.jsonp_url.format(this.dashboard_sql),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary
@@ -143,7 +143,7 @@ mol.modules.map.dashboard = function(mol) {
                 );
 
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.jsonp_url.format(this.summary_sql),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.summary_sql),
                     function(response) {
                         self.summary = response.rows[0];
                         if(self.display) {

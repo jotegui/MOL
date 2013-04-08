@@ -200,7 +200,7 @@ mol.modules.map.feature = function(mol) {
                             '</a>' +
                         '</h3>';
 
-                o = JSON.parse(row.layer_features);
+                o = JSON.parse(row.get_map_feature_metadata);
                 all = _.values(o)[0];
                 allobj = all[0];
 
@@ -447,3 +447,4 @@ mol.modules.map.feature = function(mol) {
       }
     }
 }
+

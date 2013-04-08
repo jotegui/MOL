@@ -1469,7 +1469,7 @@ mol.modules.map.layers = function(mol) {
                     layer.name,
                     layer.names,
                     (layer.feature_count != null) ?
-                        '{0} features'.format(layer.feature_count) : '',
+                        '{0}'.format(layer.feature_count) : '',
                     layer.source_title,
                     layer.type_title
                 )
@@ -2448,7 +2448,7 @@ mol.modules.map.results = function(mol) {
                         layer.type, 
                         layer.names, 
                         (layer.feature_count != null) ? 
-                            '{0} features'.format(layer.feature_count) : '', 
+                            '{0}'.format(layer.feature_count) : '', 
                         layer.type_title, 
                         layer.source_title
                     )
@@ -2538,13 +2538,13 @@ mol.modules.map.search = function(mol) {
                     '<span class="eng">{1}</span>' +
                 '</div>';
             this.ac_sql = "" +
-                "SELECT n,v FROM ac WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
+                "SELECT n,v FROM ac_mar_8_2013 WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " +
-                        'THEN t.carto_css_point ' +
-                        "WHEN 'polygons_style' " +
+                    "CASE d.style_table WHEN 'points_style' " + 
+                        'THEN t.carto_css_point ' + 
+                        "WHEN 'polygons_style' " + 
                         'THEN t.carto_css_poly END as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
@@ -2552,25 +2552,35 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +
-                    'l.feature_count as feature_count, '+
+                    's.title as source_type_title, ' +   
+                    "CASE WHEN d.type = 'taxogeooccchecklist' " +
+                        'THEN ' +
+                            "CONCAT("+
+                                "to_char(l.occ_count,'999,999,999'),"+
+                                "' records<br>'," +
+                                "to_char(l.feature_count, '999,999,999'),"+
+                                "' locations'"+
+			    ") " +
+                        'ELSE ' +
+                            "CONCAT(to_char(l.feature_count,'999,999,999'),' features') "+
+                    'END as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
                     'CONCAT(\'{' +
                         '"sw":{' +
-                            '"lng":\',ST_XMin(l.extent),\', '+
-                            '"lat":\',ST_YMin(l.extent),\' '+
+                            '"lng":\',ST_XMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', '+
+                            '"lat":\',ST_YMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' '+
                         '}, '+
                         '"ne":{' +
-                        '"lng":\',ST_XMax(l.extent),\', ' +
-                        '"lat":\',ST_YMax(l.extent),\' ' +
+                        '"lng":\',ST_XMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', ' +
+                        '"lat":\',ST_YMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' ' +
                         '}}\') ' +
                     'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
-                    'd.dataset_title as dataset_title, ' +
+                    'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
-
-                'FROM layer_metadata l ' +
+                    
+                'FROM layer_metadata_mar_8_2013 l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -2579,7 +2589,7 @@ mol.modules.map.search = function(mol) {
                     'l.provider = p.provider ' +
                 'LEFT JOIN source_types s ON ' +
                     'p.source_type = s.source_type ' +
-                'LEFT JOIN ac n ON ' +
+                'LEFT JOIN ac_mar_8_2013 n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
@@ -2592,7 +2602,7 @@ mol.modules.map.search = function(mol) {
          */
         start: function() {
             this.display = new mol.map.search.SearchDisplay();
-            //this.display.toggle(true);
+            this.display.toggle(true);
             this.initAutocomplete();
             this.addEventHandlers();
             this.fireEvents();
@@ -2609,7 +2619,7 @@ mol.modules.map.search = function(mol) {
                 item.label = item.label.replace(
                     new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
                        $.ui.autocomplete.escapeRegex(this.term) +
-                       ")(?![^<>]*>)(?![^&;]+;)", "gi"),
+                       ")(?![^<>]*>)(?![^&;]+;)", "gi"), 
                     "<strong>$1</strong>"
                 );
                 return $("<li></li>")
@@ -2626,10 +2636,10 @@ mol.modules.map.search = function(mol) {
             var self = this;
             $(this.display.searchBox).autocomplete(
                 {
-                    minLength: 3,
+                    minLength: 3, 
                     source: function(request, response) {
                         $.getJSON(
-                            mol.services.cartodb.sqlApi.json_url.format(
+                            'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
                                     self.ac_sql.format(
                                         $.trim(request.term)
                                             .replace(/ /g, ' ')
@@ -2643,8 +2653,8 @@ mol.modules.map.search = function(mol) {
                                         var sci, eng;
                                         if(row.n != undefined){
                                             sci = row.n;
-                                            eng = (row.v == null ||
-                                                row.v == '') ?
+                                            eng = (row.v == null || 
+                                                row.v == '') ? 
                                                     '' :
                                                     ', {0}'.format(
                                                         row.v.replace(
@@ -2653,7 +2663,7 @@ mol.modules.map.search = function(mol) {
                                                     );
                                             names.push({
                                                 label:self.ac_label_html
-                                                    .format(sci, eng),
+                                                    .format(sci, eng), 
                                                 value:sci
                                             });
                                             scinames.push(sci);
@@ -2666,11 +2676,12 @@ mol.modules.map.search = function(mol) {
                                 response(names);
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
-                                        'hide-loading-indicator',
+                                        'hide-loading-indicator', 
                                         {source : "autocomplete"}
                                     )
                                 );
-                             }
+                             },
+                             'json'
                         );
                     },
                     select: function(event, ui) {
@@ -2686,7 +2697,7 @@ mol.modules.map.search = function(mol) {
                         self.names=[];
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'show-loading-indicator',
+                                'show-loading-indicator', 
                                 {source : "autocomplete"}
                             )
                         );
@@ -2695,7 +2706,7 @@ mol.modules.map.search = function(mol) {
                         self.searching[$(this).val()] = false;
                         self.bus.fireEvent(
                              new mol.bus.Event(
-                                'hide-loading-indicator',
+                                'hide-loading-indicator', 
                                 {source : "autocomplete"}
                             )
                         );
@@ -2714,7 +2725,23 @@ mol.modules.map.search = function(mol) {
              *
              * @param event mol.bus.Event
              */
-            
+            this.bus.addHandler(
+                'search-display-toggle',
+                function(event) {
+                    var params = {},
+                        e = null;
+
+                    if (event.visible === undefined) {
+                        self.display.toggle();
+                        params = {visible: self.display.is(':visible')};
+                    } else {
+                        self.display.toggle(event.visible);
+                    }
+
+                    e = new mol.bus.Event('results-display-toggle', params);
+                    self.bus.fireEvent(e);
+                }
+            );
 
             this.bus.addHandler(
                 'close-autocomplete',
@@ -2727,7 +2754,17 @@ mol.modules.map.search = function(mol) {
                 'search',
                 function(event) {
                     if (event.term != undefined) {
+                        if (!self.display.is(':visible')) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'search-display-toggle',
+                                    {visible : true}
+                                )
+                            );
+                        }
+
                         self.search(event.term);
+
                         if (self.display.searchBox.val()=='') {
                             self.display.searchBox.val(event.term);
                         }
@@ -2752,18 +2789,19 @@ mol.modules.map.search = function(mol) {
                 function(event) {
                     var params = {
                         visible: false
-                    };
-
+                    }, that = this;
+                    
                     if(self.display.searchDisplay.is(':visible')) {
                         self.display.searchDisplay.hide();
                         $(this).text('▶');
                         params.visible = false;
                     } else {
+                        
                         self.display.searchDisplay.show();
                         $(this).text('◀');
                         params.visible = true;
                     }
-
+                    
                     self.bus.fireEvent(
                         new mol.bus.Event('results-display-toggle', params));
                 }
@@ -2778,7 +2816,7 @@ mol.modules.map.search = function(mol) {
                         $(this).autocomplete("close");
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'hide-loading-indicator',
+                                'hide-loading-indicator', 
                                 {source : "autocomplete"}
                             )
                         );
@@ -2805,18 +2843,18 @@ mol.modules.map.search = function(mol) {
 
         /**
          * Searches CartoDB using a term from the search box. Fires
-         * a search event on the bus. The success callback fires a
+         * a search event on the bus. The success callback fires a 
          * search-results event on the bus.
          *
          * @param term the search term (scientific name)
          */
         search: function(term) {
             var self = this;
-
-
+                
+                
                 $(self.display.searchBox).autocomplete('disable');
                 $(self.display.searchBox).autocomplete('close');
-
+                
                 if(term.length<3) {
                     if ($.trim(term).length==0) {
                         self.bus.fireEvent(new mol.bus.Event('clear-results'));
@@ -2829,27 +2867,29 @@ mol.modules.map.search = function(mol) {
                 } else {
                     self.bus.fireEvent(
                         new mol.bus.Event(
-                            'show-loading-indicator',
+                            'show-loading-indicator', 
                             {source : "search-{0}".format(term)}
                         )
                     );
                     $(self.display.searchBox).val(term);
-                    term = $.trim(term).replace(/ /g, ' ');
                     $.getJSON(
-                        mol.services.cartodb.sqlApi.json_url.format(
-                            this.search_sql.format(term)
+                        'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
+                            this.search_sql.format(
+                                $.trim(term)
+                                .replace(/ /g, ' ')
+                            )
                         ),
                         function (response) {
                             var results = {term:term, response:response};
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'hide-loading-indicator',
+                                    'hide-loading-indicator', 
                                     {source : "search-{0}".format(term)}
                                 )
                             );
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'search-results',
+                                    'search-results', 
                                     results
                                 )
                             );
@@ -2864,15 +2904,14 @@ mol.modules.map.search = function(mol) {
     mol.map.search.SearchDisplay = mol.mvp.View.extend({
         init: function() {
             var html = '' +
-                '<div class="mol-LayerControl-Search widgetTheme">' +
-                    '<span class="title">Search</span>' +
-                    '<span class="searchDisplay">' +
-                        '<input class="value ui-autocomplete-input" ' +
-                            ' type="text" placeholder=' +
-                            '"Search by species name">' +
-                        '<button class="execute">Go</button>' +
-                    '</span>'+
-                    '<button class="toggle">◀</button>' +
+                '<div class="mol-LayerControl-Search widgetTheme" style="display: inline-block">' +
+                '    <div class="title">Search</div>' +
+                '    <div class="searchDisplay">' +
+                '       <input class="value ui-autocomplete-input" type="text" ' +
+                            'placeholder="Search by species name">' +
+                '       <button class="execute">Go</button>' +
+                '   </div>'+
+                '   <button class="toggle">◀</button>' +
                 '</div>';
 
             this._super(html);
@@ -2886,7 +2925,8 @@ mol.modules.map.search = function(mol) {
             this.searchBox.html('');
         }
     });
-};/**
+};
+/**
  * This module handles add-layers events and layer-toggle events. tI basically
  * proxies the CartoDB JavaScript API for adding and removing CartoDB layers
  * to and from the map.
@@ -3408,17 +3448,24 @@ mol.modules.map.tiles = function(mol) {
                     minZoom: 0,
                     opacity: 0
             },
-                sql =  "" + //c is in case cache key starts with a number
+                sql =  "" + //wrap unioned tile requests
                     "SELECT g.*, 1 as cartodb_id " +
                     "FROM ({0}) g",
                 layersql = '' +
-                    "SELECT the_geom_webmercator as the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
-                    "get_tile('{0}','{1}','{2}','{3}')",
+                    "SELECT " +
+                        "the_geom_webmercator as the_geom_webmercator, " +
+                        "seasonality, '{1}' as  type, " +
+                        "'{0}' as provider, " +
+                        "'{3}' as dataset_id, " +
+                        "'{2}' as scientificname " +
+                    "FROM " +
+                        "get_tile('{0}','{1}','{2}','{3}')",
                 gridUrlPattern = '' +
-                    'http://mol.cartodb.com/' +
+                    'http://{0}/' +
                     'tiles/generic_style/{z}/{x}/{y}.grid.json?'+
-                    'interactivity=cartodb_id&sql={0}',
+                    'interactivity=cartodb_id&sql={1}',
                 gridUrl = gridUrlPattern.format(
+                    mol.services.cartodb.tileApi.host,
                     sql.format(
                         $.map(
                             map.overlayMapTypes.getArray(),
@@ -3513,10 +3560,10 @@ mol.modules.map.tiles = function(mol) {
                 this.bus = bus;
                 this.summary_sql = '' +
                     'SELECT DISTINCT * ' +
-                    'FROM get_dashboard_summary()';
+                    'FROM get_dashboard_summary_beta()';
                 this.dashboard_sql = '' +
                     'SELECT DISTINCT * ' +
-                    'FROM dash_cache ' +
+                    'FROM dashboard_metadata_mar_8_2013 ' +
                     'ORDER BY dataset_title asc';
                 this.summary = null;
                 this.types = {};
@@ -3611,7 +3658,7 @@ mol.modules.map.tiles = function(mol) {
                 var self = this;
 
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.jsonp_url.format(this.dashboard_sql),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary
@@ -3647,7 +3694,7 @@ mol.modules.map.tiles = function(mol) {
                 );
 
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.jsonp_url.format(this.summary_sql),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.summary_sql),
                     function(response) {
                         self.summary = response.rows[0];
                         if(self.display) {
@@ -3835,7 +3882,8 @@ mol.modules.map.tiles = function(mol) {
 
 
 
-};mol.modules.map.feature = function(mol) {
+};
+mol.modules.map.feature = function(mol) {
 
     mol.map.feature = {};
 
@@ -4037,7 +4085,7 @@ mol.modules.map.tiles = function(mol) {
                             '</a>' +
                         '</h3>';
 
-                o = JSON.parse(row.layer_features);
+                o = JSON.parse(row.get_map_feature_metadata);
                 all = _.values(o)[0];
                 allobj = all[0];
 
@@ -4284,6 +4332,7 @@ mol.modules.map.tiles = function(mol) {
       }
     }
 }
+
 mol.modules.map.query = function(mol) {
 
     mol.map.query = {};
@@ -7758,19 +7807,19 @@ mol.modules.map.boot = function(mol) {
                     'CASE WHEN l.extent is null THEN null ELSE ' +
                     'CONCAT(\'{' +
                         '"sw":{' +
-                            '"lng":\',ST_XMin(l.extent),\', '+
-                            '"lat":\',ST_YMin(l.extent),\' '+
+                            '"lng":\',ST_XMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', '+
+                            '"lat":\',ST_YMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' '+
                         '}, '+
                         '"ne":{' +
-                        '"lng":\',ST_XMax(l.extent),\', ' +
-                        '"lat":\',ST_YMax(l.extent),\' ' +
+                        '"lng":\',ST_XMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', ' +
+                        '"lat":\',ST_YMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' ' +
                         '}}\') ' +
-                    'END as extent, ' +
+		    'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
                     
-                'FROM layer_metadata l ' +
+                'FROM layer_metadata_mar_8_2013 l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -7779,7 +7828,7 @@ mol.modules.map.boot = function(mol) {
                     'l.provider = p.provider ' +
                 'LEFT JOIN source_types s ON ' +
                     'p.source_type = s.source_type ' +
-                'LEFT JOIN ac n ON ' +
+                'LEFT JOIN ac_mar_8_2013 n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
@@ -7809,7 +7858,7 @@ mol.modules.map.boot = function(mol) {
             } else {
                 // Otherwise, try and get a result using term
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.jsonp_url.format(this.sql.format(self.term)),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.sql.format(self.term)),
                     function(response) {
                         var results = response.rows;
                         if (results.length == 0) {
