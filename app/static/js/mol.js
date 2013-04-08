@@ -505,24 +505,7 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
-                this.bus.addHandler(
-                    'register-list-click',
-                    function(event) {
-                            google.maps.event.addListener(
-                            self.display.map,
-                            "click",
-                            function(event) {
-                                var params = {
-                                    gmaps_event : event,
-                                    map : self.display.map}
-                                self.bus.fireEvent(
-                                    new mol.bus.Event(
-                                        'species-list-query-click',
-                                        params));
-                            }
-                        );
-                    }
-                );
+                
                 /*
                  *  Turn on the loading indicator display when zooming
                  */
@@ -886,10 +869,21 @@ mol.modules.map.layers = function(mol) {
 
             this.display.removeAll.click (
                 function(event) {
+                    
+                    self.map.overlayMapTypes.clear();
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
 
                     $(self.display).find(".close").trigger("click");
+                    self.bus.fireEvent(
+                                    new mol.bus.Event(
+                                        'hide-layer-display-toggle'));
+
+                    $(self.display.styleAll)
+                        .prop('disabled', false);
+                    $(self.display.styleAll).qtip('destroy');
+
+                    self.display.toggle(false);
                 }
             );
 
@@ -969,17 +963,17 @@ mol.modules.map.layers = function(mol) {
                     var params = {};
 
                     if($(self.display.layerClickButton).hasClass('selected')) {
-                        params.disable = true;
+                        params.action = '';
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     } else {
-                        params.disable = false;
+                        params.action = 'info';
                         $(self.display.layerClickButton).addClass('selected');
                         $(self.display.layerClickButton).html("ON");
                     }
 
                     self.bus.fireEvent(
-                        new mol.bus.Event('layer-clicking-toggle', params));
+                        new mol.bus.Event('layer-click-action', params));
                 }
             );
 
@@ -1061,14 +1055,29 @@ mol.modules.map.layers = function(mol) {
                 'layer-click-toggle',
                 function(event) {
                     self.clickDisabled = event.disable;
-
+                    
                     //if false, unselect layer query
                     if(self.clickDisabled) {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     }
+                    
+                    
                 }
             );
+            this.bus.addHandler(
+                'layer-click-action',
+                function(event) {
+                    
+                    if(event.action != 'info') {
+                        $(self.display.layerClickButton).removeClass('selected');
+                        $(self.display.layerClickButton).html("OFF");
+                    } else {
+                        $(self.display.layerClickButton).addClass('selected');
+                        $(self.display.layerClickButton).html("ON");
+                    }
+                }
+            )
         },
 
         /**
@@ -2897,7 +2906,7 @@ mol.modules.map.tiles = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.clickAction = 'info';
+            this.clickAction = '';
             this.gmap_events = [];
             this.addEventHandlers();
         },
@@ -2905,11 +2914,15 @@ mol.modules.map.tiles = function(mol) {
         addEventHandlers: function() {
             var self = this;
             this.bus.addHandler(
-                'layer-click-toggle',
+                'layer-click-action',
                 function(event) {
-                    if(event.disable) {
-                        self.clickAction = 'list';
+                    self.clickAction = event.action;
+                    if (self.clickAction == 'info'){
+                        self.updateGrid(true);
+                    } else {
+                        self.updateGrid(false);
                     }
+                    
                 }
             );
             /**
@@ -2929,18 +2942,18 @@ mol.modules.map.tiles = function(mol) {
                         if (showing) {
                             self.map.overlayMapTypes.forEach(
                                 function(mt, index) {
-                                    if (mt != undefined && 
+                                    if (mt != undefined &&
                                         mt.name == layer.id) {
                                         params = {
                                             layer: layer,
                                             opacity: 1,
                                             style_opacity: layer.style_opacity
                                         };
-                                        
+
                                         layer.opacity = 1;
 
                                         e = new mol.bus.Event(
-                                            'layer-opacity', 
+                                            'layer-opacity',
                                             params);
                                         self.bus.fireEvent(e);
                                         return;
@@ -2951,18 +2964,18 @@ mol.modules.map.tiles = function(mol) {
                         } else { // Remove layer from map.
                             self.map.overlayMapTypes.forEach(
                                 function(mt, index) {
-                                    if (mt != undefined && 
+                                    if (mt != undefined &&
                                         mt.name == layer.id) {
                                         params = {
                                             layer: layer,
                                             opacity: 0,
                                             style_opacity: layer.style_opacity
                                         };
-                                        
+
                                         layer.opacity = 0;
-                                        
+
                                         e = new mol.bus.Event(
-                                            'layer-opacity', 
+                                            'layer-opacity',
                                             params
                                         );
                                         self.bus.fireEvent(e);
@@ -2983,7 +2996,7 @@ mol.modules.map.tiles = function(mol) {
                         var layer = event.layer,
                             opacity = event.opacity,
                             style_opacity = event.style_opacity;
-                            
+
                         if (opacity === undefined) {
                             return;
                         }
@@ -3001,7 +3014,7 @@ mol.modules.map.tiles = function(mol) {
                         );
                     }
                 );
-                
+
                 /**
                  * Handler for applying cartocss style to a layer.
                  */
@@ -3009,12 +3022,18 @@ mol.modules.map.tiles = function(mol) {
                     'apply-layer-style',
                     function(event) {
                         var layer = event.layer,
+                            gridmt;
                             style = event.style;
                             sel = event.isSelected;
- 
+
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
+                                if(maptype.name = 'grid') {
+                                    gridmt = maptype; 
+                                    self.map.overlayMapTypes.removeAt(index);
+                                }
+                                
                                 if (maptype.name === layer.id) {
                                     //remove it from the map
                                     self.map.overlayMapTypes.removeAt(index);
@@ -3030,18 +3049,18 @@ mol.modules.map.tiles = function(mol) {
                                                 params = {
                                                     layer: layer,
                                                     opacity: layer.opacity,
-                                                    style_opacity: 
+                                                    style_opacity:
                                                         layer.style_opacity
                                                 };
-                                                
+
                                             if(newmaptype.name === layer.id) {
                                                 mt = self.map.overlayMapTypes
                                                         .removeAt(newindex);
                                                 self.map.overlayMapTypes
                                                         .insertAt(index, mt);
-                                                
+
                                                 e = new mol.bus.Event(
-                                                    'layer-opacity', 
+                                                    'layer-opacity',
                                                     params
                                                 );
                                                 self.bus.fireEvent(e);
@@ -3052,9 +3071,12 @@ mol.modules.map.tiles = function(mol) {
                                 }
                             }
                         );
-                        
-                        
-                        
+                        if(self.clickAction == 'info') {
+                            self.updateGrid(true);
+                        }
+
+
+
                     }
                 );
 
@@ -3086,7 +3108,7 @@ mol.modules.map.tiles = function(mol) {
                             function(layer) { // "lid" is short for layer id.
                                 var lid = layer.id;
                                 mapTypes.forEach(
-                                    function(mt, index) { 
+                                    function(mt, index) {
                                         if (mt != undefined && mt.name === lid) {
                                             mapTypes.removeAt(index);
                                         }
@@ -3094,11 +3116,16 @@ mol.modules.map.tiles = function(mol) {
                                 );
                             }
                         );
+                        if(self.clickAction == 'info') {
+                            self.updateGrid(true);
+                        } else {
+                            self.updateGrid(false);
+                        }
                     }
                 );
                 /**
-                 * Handler for when the reorder-layers event is fired. This 
-                 * renders the layers according to the list of layers 
+                 * Handler for when the reorder-layers event is fired. This
+                 * renders the layers according to the list of layers
                  * provided
                  */
                 this.bus.addHandler(
@@ -3111,8 +3138,8 @@ mol.modules.map.tiles = function(mol) {
                                layers,
                                function(lid) { // "lid" is short for layerId.
                                     mapTypes.forEach(
-                                         function(mt, index) { 
-                                              if ((mt != undefined) && 
+                                         function(mt, index) {
+                                              if ((mt != undefined) &&
                                                   (mt.name === lid)) {
                                                   mapTypes.removeAt(index);
                                                   mapTypes.insertAt(0, mt);
@@ -3121,6 +3148,16 @@ mol.modules.map.tiles = function(mol) {
                                     );
                                }
                           );
+                     }
+                );
+                this.bus.addHandler(
+                     'update-grid',
+                     function(event) {
+                         if(event.toggle == true) {
+                             self.updateGrid(true);
+                         } else {
+                             self.updateGrid(false);
+                         }
                      }
                 );
         },
@@ -3142,9 +3179,33 @@ mol.modules.map.tiles = function(mol) {
                 },
                 self
             );
+            if(this.clickAction == 'info') {
+                this.updateGrid(true);
+            } else {
+                this.updateGrid(false);
+            }
+        },
+        updateGrid: function(toggle) {
+             var gridmt,
+                self = this;
+             
+             this.map.overlayMapTypes.forEach(
+                 function (mt, i) {
+                     if(mt) {
+                         if(mt.name=='grid') {
+                            self.map.overlayMapTypes.removeAt(i);
+                         }
+                     }
+                  }
+             );
+             
+             if(toggle==true && this.map.overlayMapTypes.length>0) {
+                gridmt = new mol.map.tiles.GridTile(this.map);
+                this.map.overlayMapTypes.insertAt(this.map.overlayMapTypes.length,gridmt.layer);
+             }
         },
         /**
-         * Returns an array of layer objects that are not already on the 
+         * Returns an array of layer objects that are not already on the
          * map.
          *
          * @param layers an array of layer object {id, name, type, source}.
@@ -3179,10 +3240,11 @@ mol.modules.map.tiles = function(mol) {
          */
         getTile: function(layer) {
             var self = this,
-            maptype = new mol.map.tiles.CartoDbTile(
-                        layer, 
-                        this.map
-                    );
+                maptype = new mol.map.tiles.CartoDbTile(
+                            layer,
+                            this.map
+                        ),
+                gridmt;
             maptype.onbeforeload = function (){
                 self.bus.fireEvent(
                     new mol.bus.Event(
@@ -3191,7 +3253,7 @@ mol.modules.map.tiles = function(mol) {
                     )
                 )
             };
-            
+
             maptype.onafterload = function (){
                 self.bus.fireEvent(
                     new mol.bus.Event(
@@ -3200,7 +3262,23 @@ mol.modules.map.tiles = function(mol) {
                     )
                 )
             };
+
+            this.map.overlayMapTypes.forEach(
+                function(mt, i) {
+                    if(mt.name == 'grid') {
+                        self.map.overlayMapTypes.removeAt(i);
+                    }
+                }
+            );
+
             this.map.overlayMapTypes.insertAt(0,maptype.layer);
+            
+            if(this.clickAction == 'info') {
+                this.updateGrid(true);
+            } else {
+                this.updateGrid(false);
+            }
+           
         }
     });
 
@@ -3209,20 +3287,24 @@ mol.modules.map.tiles = function(mol) {
             var sql =  "" + //c is in case cache key starts with a number
                 "SELECT c{4}.* FROM get_tile('{0}','{1}','{2}','{3}') c{4}"
                 .format(
-                    layer.source, 
-                    layer.type, 
-                    layer.name, 
+                    layer.source,
+                    layer.type,
+                    layer.name,
                     layer.dataset_id,
                     mol.services.cartodb.tileApi.tile_cache_key
                 ),
                 urlPattern = '' +
-                    'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+ 
+                    'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+
                     'sql={SQL}'+
                     '&style={TILE_STYLE}',
                 style_table_name = layer.style_table,
                 pendingurls = [],
                 options,
                 self = this;
+
+            if(layer == null || layer == undefined) {
+                return;
+            }
             
             if(layer.tile_style == undefined) {
                 layer.tile_style = "#{0}{1}"
@@ -3235,7 +3317,7 @@ mol.modules.map.tiles = function(mol) {
             }
 
             options = {
-                // Makes a cartoDb Tile URL and keeps track of it for 
+                // Makes a cartoDb Tile URL and keeps track of it for
                 // layer load/unload events
                 getTileUrl: function(tile, zoom) {
                     var y = tile.y,
@@ -3260,7 +3342,7 @@ mol.modules.map.tiles = function(mol) {
                         .replace("{Z}",zoom)
                         .replace("{TILE_STYLE}",
                                  encodeURIComponent(layer.tile_style));
-                    
+
                     pendingurls.push(url);
                     return(url);
                 },
@@ -3269,20 +3351,20 @@ mol.modules.map.tiles = function(mol) {
                 minZoom: 0,
                 opacity: layer.orig_opacity
             };
-            
+
             this.layer = new google.maps.ImageMapType(options);
             this.layer.layer = layer;
             this.layer.name = layer.id;
-            
+
             //Wrap the stock getTile to add in before/after load events.
             this.baseGetTile = this.layer.getTile;
             this.layer.getTile = function(tileCoord, zoom, ownerDocument) {
                 var node = self.baseGetTile(tileCoord, zoom, ownerDocument);
-                
+
                 $("img", node).one("load", function() {
                    var index = $.inArray(this.__src__, pendingurls);
                     pendingurls.splice(index, 1);
-                    if (pendingurls.length === 0 && 
+                    if (pendingurls.length === 0 &&
                         self.onafterload != undefined) {
                             self.onafterload();
                     }
@@ -3293,11 +3375,134 @@ mol.modules.map.tiles = function(mol) {
                         self.onafterload();
                     }
                 });
+
                 return node;
             };
         }
     });
-};mol.modules.map.dashboard = function(mol) {
+
+    mol.map.tiles.GridTile = Class.extend({
+        init: function(map) {
+            var options = {
+                    // Just a blank image
+                    getTileUrl: function(tile, zoom) {
+                        var y = tile.y,
+                            x = tile.x,
+                            tileRange = 1 << zoom,
+                            url;
+                        if (y < 0 || y >= tileRange) {
+                            return null;
+                        }
+                        if (x < 0 || x >= tileRange) {
+                            x = (x % tileRange + tileRange) % tileRange;
+                        }
+                        
+                        
+                        return ('/static/blank_tile.png?z={0}&x={1}&y={2}&'
+                            .format(
+                                 zoom, x, y
+                            ));
+                    },
+                    tileSize: new google.maps.Size(256, 256),
+                    maxZoom: 9,
+                    minZoom: 0,
+                    opacity: 0
+            },
+                sql =  "" + //c is in case cache key starts with a number
+                    "SELECT g.*, 1 as cartodb_id " +
+                    "FROM ({0}) g",
+                layersql = '' +
+                    "SELECT the_geom_webmercator as the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
+                    "get_tile('{0}','{1}','{2}','{3}')",
+                gridUrlPattern = '' +
+                    'http://mol.cartodb.com/' +
+                    'tiles/generic_style/{z}/{x}/{y}.grid.json?'+
+                    'interactivity=cartodb_id&sql={0}',
+                gridUrl = gridUrlPattern.format(
+                    sql.format(
+                        $.map(
+                            map.overlayMapTypes.getArray(),
+                            function(mt) {
+                                if(mt.name != 'grid' && mt.name != undefined) {
+                                    return layersql.format(
+                                        mt.layer.source,
+                                        mt.layer.type,
+                                        mt.layer.name,
+                                        mt.layer.dataset_id
+                                    );
+                                }
+                            }
+                        ).join(' UNION ')
+                    )
+                ),
+                self = this;
+
+            this.layer = new google.maps.ImageMapType(options);
+            this.layer.name = 'grid';
+            this.layer.layer = {};
+            this.layer.layer.name = 'grid';
+            //Wrap the stock getTile to add grid events.
+            this.baseGetTile = this.layer.getTile;
+            this.layer.getTile = function(tileCoord, zoom, ownerDocument) {
+                var node = self.baseGetTile(tileCoord, zoom, ownerDocument),
+                    y = tileCoord.y,
+                    x = tileCoord.x,
+                    tileRange = 1 << zoom,
+                    url;
+                    
+                    if (y < 0 || y >= tileRange) {
+                        return null;
+                    }
+                    if (x < 0 || x >= tileRange) {
+                        x = (x % tileRange + tileRange) % tileRange;
+                    }
+                    
+                    url = gridUrl
+                        .replace('{x}',x)
+                        .replace('{y}',y)
+                        .replace('{z}',zoom);
+                   
+                    
+                $.getJSON(
+                    url,
+                    function(result) {
+                        result.url = url;
+                        if(!result.error) {
+                            $('img',node).data('grid',result);
+                        }
+                    }
+                ).error(
+                    function(result) {
+                        //oh well
+                });
+                $("img", node).mousemove(
+                    function(event) {
+                        var x = Math.round(event.offsetX*(64/256)),
+                            y = Math.round(event.offsetY*(64/256)),
+                            grid = $(this).data('grid');
+                        
+                        if(grid) {
+                            if(grid.grid[y]!=undefined) {
+                                if(grid.grid[y][x] != undefined) {
+                                    if(grid.grid[y][x] == ' ') {
+                                        map.setOptions({
+                                            draggableCursor: 'auto'
+                                        });
+                                    } else {
+                                        map.setOptions({
+                                            draggableCursor: 'pointer' 
+                                        });
+                                    }
+                                }
+                             }
+                        }
+                    }
+                );
+                return node;
+            }
+        }
+    });
+}mol.modules.map.dashboard = function(mol) {
 
     mol.map.dashboard = {};
 
@@ -3662,26 +3867,6 @@ mol.modules.map.tiles = function(mol) {
             var self = this;
 
             this.bus.addHandler(
-                'layer-click-toggle',
-                function(event) {
-                    if(event.disable) {
-                      self.clickDisabled = event.disable;
-
-                      self.map
-                        .setOptions(
-                          {
-                            draggableCursor:
-                            'url(' +
-                            'http://maps.google.com/mapfiles/' +
-                            'openhand.cur' +
-                            '), move'
-                          }
-                        );
-                    }
-                }
-            );
-
-            this.bus.addHandler(
                 'add-layers',
                 function(event) {
                     var newLays = _.map(event.layers,
@@ -3728,98 +3913,94 @@ mol.modules.map.tiles = function(mol) {
             );
 
             this.bus.addHandler(
-                'layer-clicking-toggle',
+                'layer-click-action',
                 function(event) {
-                    self.clickDisabled = event.disable;
-
+                    var action = event.action;
+                    
+                    self.clickDisabled = (action == 'info') ? false: true;
+                    
+                    
+                        
                     if(!self.clickDisabled) {
-                      self.map
-                        .setOptions({ draggableCursor: 'pointer' });
-                    } else {
-                      self.map
-                        .setOptions(
-                          {
-                            draggableCursor:
-                            'url(' +
-                            'http://maps.google.com/mapfiles/' +
-                            'openhand.cur' +
-                            '), move'
-                          }
+                        google.maps.event.clearListeners(self.map,'click');
+                        self.map.setOptions({
+                            draggableCursor: 'auto'
+                        });
+                        google.maps.event.addListener(
+                            self.map,
+                            "click",
+                            self.featureclick.bind(self)
                         );
+                       
+                        self.bus.fireEvent(
+                            new mol.bus.Event('update-grid',{toggle: true})); 
                     }
                 }
             );
+        },
+        featureclick : function (mouseevent) {
+            var tolerance = 3,
+                sqlLayers,
+                sql,
+                sym,
+                self = this;
 
-            google.maps.event.addListener(
-                self.map,
-                "click",
-                function (mouseevent) {
-                    var tolerance = 3,
-                        sqlLayers,
-                        sql,
-                        sym;
+            if(!this.clickDisabled && this.activeLayers.length > 0) {
+                if(this.makingRequest) {
+                    alert('Please wait for your feature metadata ' +
+                      'request to complete before starting another.');
+                } else {
+                    this.makingRequest = true;
 
-                    if(!self.clickDisabled && self.activeLayers.length > 0) {
-                        if(self.makingRequest) {
-                            alert('Please wait for your feature metadata ' +
-                              'request to complete before starting another.');
-                        } else {
-                            self.makingRequest = true;
+                    if(this.display) {
+                        this.display.remove();
+                    }
 
-                            if(self.display) {
-                                self.display.remove();
+                    sqlLayers =  _.pluck(_.reject(
+                                    this.activeLayers,
+                                    function(al) {
+                                        return al.op == 0;
+                                    }), 'id');
+
+                    sql = this.sql.format(
+                            mouseevent.latLng.lng(),
+                            mouseevent.latLng.lat(),
+                            tolerance,
+                            this.map.getZoom(),
+                            sqlLayers.toString()
+                    );
+
+                    this.bus.fireEvent(new mol.bus.Event(
+                        'show-loading-indicator',
+                        {source : 'feature'}));
+
+
+
+                    $.getJSON(
+                        this.url.format(sql),
+                        function(data, textStatus, jqXHR) {
+                            var results = {
+                                    latlng: mouseevent.latLng,
+                                    response: data
+                                },
+                                e;
+
+                            if(!data.error && data.rows.length != 0) {
+                                self.processResults(data.rows);
+                                self.showFeatures(results)
                             }
 
-                            sqlLayers =  _.pluck(_.reject(
-                                            self.activeLayers,
-                                            function(al) {
-                                                return al.op == 0;
-                                            }), 'id');
+                            self.makingRequest = false;
 
-                            sql = self.sql.format(
-                                    mouseevent.latLng.lng(),
-                                    mouseevent.latLng.lat(),
-                                    tolerance,
-                                    self.map.getZoom(),
-                                    sqlLayers.toString()
-                            );
-
-                            self.bus.fireEvent(new mol.bus.Event(
-                                'show-loading-indicator',
-                                {source : 'feature'}));
-
-
-
-                            $.getJSON(
-                                self.url.format(sql),
-                                function(data, textStatus, jqXHR) {
-                                    var results = {
-                                            latlng: mouseevent.latLng,
-                                            response: data
-                                        },
-                                        e;
-
-                                    if(!data.error && data.rows.length != 0) {
-                                        self.processResults(data.rows);
-                                        self.showFeatures(results)
-                                    }
-
-                                    self.makingRequest = false;
-
-                                    self.bus.fireEvent(
-                                        new mol.bus.Event(
-                                          'hide-loading-indicator',
-                                          {source : 'feature'}));
-                                }
-                            );
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                  'hide-loading-indicator',
+                                  {source : 'feature'}));
                         }
-                    }
+                    );
                 }
-            );
-
-
+            }
         },
-
         processResults: function(rows) {
             var self = this,
                 o,
@@ -4129,10 +4310,14 @@ mol.modules.map.query = function(mol) {
             this.addEventHandlers();
         },
         
-        toggleMapLayerClicks : function(boo) {            
-            //true to disable
+        toggleMapClicks : function(toggle) {            
+            var action = (toggle==true) ? 'list' : '';
             this.bus.fireEvent(
-                new mol.bus.Event('layer-click-toggle', {disable: boo}));          
+                new mol.bus.Event(
+                    'layer-click-action', 
+                    {action: action}
+                )
+            );
         },
         
         /*
@@ -4140,17 +4325,37 @@ mol.modules.map.query = function(mol) {
          */
         addQueryDisplay : function() {
             var params = {
-                display: null,
-                slot: mol.map.ControlDisplay.Slot.TOP,
-                position: google.maps.ControlPosition.TOP_RIGHT
-            };
+                    display: null,
+                    slot: mol.map.ControlDisplay.Slot.TOP,
+                    position: google.maps.ControlPosition.TOP_RIGHT
+                },
+                self = this;
             
-            this.bus.fireEvent(new mol.bus.Event('register-list-click'));
+            
             this.enabled=true;
             this.features={};
             this.display = new mol.map.QueryDisplay();
             params.display = this.display;
             this.bus.fireEvent(new mol.bus.Event('add-map-control', params));
+        },
+        registerClick : function () {
+            var self = this;
+            
+            this.map.setOptions({draggableCursor: 'pointer'});
+            
+            google.maps.event.addListener(
+                this.map,
+                "click",
+                function(event) {
+                    var params = {
+                            gmaps_event : event,
+                            map : self.map
+                        }
+                    self.bus.fireEvent(
+                        new mol.bus.Event('species-list-query-click',params)
+                    );
+                }
+            );
         },
         /*
          *  Method to build and submit an AJAX call that retrieves species
@@ -4242,25 +4447,26 @@ mol.modules.map.query = function(mol) {
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
-            
             this.bus.addHandler(
-                'layer-clicking-toggle',
+                'layer-click-action',
                 function(event) {
-                    var params = {};
-                    
-                    if(!event.disable) {
-                        params.visible = false;
-                        
-                        self.bus.fireEvent(
-                            new mol.bus.Event(
-                                'species-list-tool-toggle', 
-                                params
-                            )
-                        );
+                    if(event.action == 'list') {
+                        self.enabled = true;
+                        $(self.display.queryButton).addClass('selected');
+                        $(self.display.queryButton).html("ON");
+                    } else {
+                        self.enabled = false;
+                        $(self.display.queryButton).removeClass('selected');
+                        $(self.display.queryButton).html("OFF");
                     }
+                    
+                    if(self.enabled == false) {
+                        self.display.speciesDisplay.hide();
+                    } else {
+                        self.display.speciesDisplay.show();
+                    }        
                 }
             );
-            
             this.bus.addHandler(
                 'dialog-closed-click',
                 function(event) {                  
@@ -4426,6 +4632,7 @@ mol.modules.map.query = function(mol) {
                     }
                     
                     if (self.enabled == true) {
+                        self.registerClick();
                         _.each(
                             self.features,
                             function(feature) {
@@ -4436,8 +4643,10 @@ mol.modules.map.query = function(mol) {
                         
                         $(self.display.queryButton).addClass('selected');
                         $(self.display.queryButton).html("ON");
-                        self.toggleMapLayerClicks(true);
+                        self.toggleMapClicks(true);
                     } else {
+                         self.map.setOptions({draggableCursor: 'auto'});
+            
                         _.each(
                             self.features,
                             function(feature) {
@@ -4450,7 +4659,7 @@ mol.modules.map.query = function(mol) {
                         
                         $(self.display.queryButton).removeClass('selected');
                         $(self.display.queryButton).html("OFF");
-                        self.toggleMapLayerClicks(false);
+                        self.toggleMapClicks(false);
                     }
                 }
             );

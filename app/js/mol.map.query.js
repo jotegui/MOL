@@ -359,6 +359,8 @@ mol.modules.map.query = function(mol) {
                         $(self.display.queryButton).html("ON");
                         self.toggleMapClicks(true);
                     } else {
+                         self.map.setOptions({draggableCursor: 'auto'});
+            
                         _.each(
                             self.features,
                             function(feature) {

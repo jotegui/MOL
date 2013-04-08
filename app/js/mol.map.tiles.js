@@ -311,7 +311,7 @@ mol.modules.map.tiles = function(mol) {
                   }
              );
              
-             if(toggle==true) {
+             if(toggle==true && this.map.overlayMapTypes.length>0) {
                 gridmt = new mol.map.tiles.GridTile(this.map);
                 this.map.overlayMapTypes.insertAt(this.map.overlayMapTypes.length,gridmt.layer);
              }
@@ -520,17 +520,24 @@ mol.modules.map.tiles = function(mol) {
                     minZoom: 0,
                     opacity: 0
             },
-                sql =  "" + //c is in case cache key starts with a number
+                sql =  "" + //wrap unioned tile requests
                     "SELECT g.*, 1 as cartodb_id " +
                     "FROM ({0}) g",
                 layersql = '' +
-                    "SELECT the_geom_webmercator as the_geom_webmercator, seasonality, '{1}' as  type, '{0}' as provider, '{3}' as dataset_id, '{2}' as scientificname FROM " +
-                    "get_tile('{0}','{1}','{2}','{3}')",
+                    "SELECT " +
+                        "the_geom_webmercator as the_geom_webmercator, " +
+                        "seasonality, '{1}' as  type, " +
+                        "'{0}' as provider, " +
+                        "'{3}' as dataset_id, " +
+                        "'{2}' as scientificname " +
+                    "FROM " +
+                        "get_tile('{0}','{1}','{2}','{3}')",
                 gridUrlPattern = '' +
-                    'http://mol.cartodb.com/' +
+                    'http://{0}/' +
                     'tiles/generic_style/{z}/{x}/{y}.grid.json?'+
-                    'sql={0}',
+                    'interactivity=cartodb_id&sql={1}',
                 gridUrl = gridUrlPattern.format(
+                    mol.services.cartodb.tileApi.host,
                     sql.format(
                         $.map(
                             map.overlayMapTypes.getArray(),
