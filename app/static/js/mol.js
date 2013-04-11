@@ -4081,6 +4081,18 @@ mol.modules.map.feature = function(mol) {
                 inside;
 
             self.display = new mol.map.FeatureDisplay();
+            self.display.mousemove(
+                function(event) {
+                    self.map.setOptions({scrollwheel:false})
+                }
+            );
+            self.display.mouseout(
+                function(event) {
+                    self.map.setOptions({scrollwheel:true})
+                }
+            );
+            
+            
             self.featurect = 0;
             _.each(rows, function(row) {
                 var i,

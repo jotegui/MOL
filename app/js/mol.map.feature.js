@@ -348,10 +348,9 @@ mol.modules.map.feature = function(mol) {
 
             self.display.close.click(
                 function(event) {
-                    //self.display.empty();
                     event.stopPropagation();
                     self.mapMarker.remove();
-
+                    self.map.setOptions({scrollwheel:true});
                 }
             );
             self.mapMarker = new mol.map.FeatureMarker(
