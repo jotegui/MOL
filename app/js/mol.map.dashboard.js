@@ -107,7 +107,7 @@ mol.modules.map.dashboard = function(mol) {
                 var self = this;
 
                 $.getJSON(
-                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
+                    mol.services.cartodb.sqlApi.json_url.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary

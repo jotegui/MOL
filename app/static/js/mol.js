@@ -83,9 +83,10 @@ mol.modules.core = function(mol) {
         var name = $.trim(layer.name.toLowerCase()).replace(/ /g, "_"),
             type = $.trim(layer.type.toLowerCase()).replace(/ /g, "_"),
             source = $.trim(layer.source.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
+            source_type = $.trim(layer.source_type.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
             dataset_id = $.trim(layer.dataset_id).replace(/,/g, "").replace(/ /g, "_");
 
-        return 'layer--{0}--{1}--{2}--{3}'.format(name, type, source, dataset_id);
+        return 'layer--{0}--{1}--{2}--{3}--{4}'.format(name, type, source, dataset_id, source_type);
     };
 }
 mol.modules.bus = function(mol) {
@@ -291,12 +292,14 @@ mol.modules.services.cartodb = function(mol) {
             init: function() {
                 this.jsonp_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
-                    'api/v2/sql?callback=?&q={0}';
+//                    'http://mol.cartodb.com/' +
+                    'api/v2/sql?mol_cache=041120131333&callback=?&q={0}';
                 this.json_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
-                    'api/v2/sql?q={0}';
+//                    'http://mol.cartodb.com/' +
+                    'api/v2/sql?mol_cache=041120131333&q={0}';
                 //cache key is mmddyyyyhhmm
-                this.sql_cache_key = '120420121435';
+                this.sql_cache_key = '041120131333';
             }
         }
     );
@@ -304,9 +307,10 @@ mol.modules.services.cartodb = function(mol) {
         {
             init: function() {
                 this.host = '' +
+//                    'mol.cartodb.com';
                     'd3dvrpov25vfw0.cloudfront.net';
                 //cache key is mmddyyyyhhmm of cache start
-                this.tile_cache_key = '121220121553';
+                this.tile_cache_key = '041120131313';
             }
         }
     );
@@ -608,9 +612,19 @@ mol.modules.map = function(mol) {
                                 "visibility" : "off"
                             }]
                         }, {
-                            "featureType" : "administrative.locality",
+                                "featureType" : "administrative",
                             "stylers" : [{
                                 "visibility" : "off"
+                            }]
+                        }, {
+                            "featureType" : "administrative.country",
+                            "stylers" : [{
+                                "visibility" : "on"
+                            }]
+                        }, {
+                            "featureType" : "administrative.province",
+                            "stylers" : [{
+                                "visibility" : "on"
                             }]
                         }, {
                             "featureType" : "road",
@@ -3069,7 +3083,7 @@ mol.modules.map.tiles = function(mol) {
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
-                                if(maptype.name = 'grid') {
+                                if(maptype.name == 'grid') {
                                     gridmt = maptype; 
                                     self.map.overlayMapTypes.removeAt(index);
                                 }
@@ -3325,7 +3339,7 @@ mol.modules.map.tiles = function(mol) {
     mol.map.tiles.CartoDbTile = Class.extend({
         init: function(layer, map) {
             var sql =  "" + //c is in case cache key starts with a number
-                "SELECT c{4}.* FROM get_tile('{0}','{1}','{2}','{3}') c{4}"
+                "SELECT * FROM get_tile('{0}','{1}','{2}','{3}')"
                 .format(
                     layer.source,
                     layer.type,
@@ -3336,7 +3350,8 @@ mol.modules.map.tiles = function(mol) {
                 urlPattern = '' +
                     'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+
                     'sql={SQL}'+
-                    '&style={TILE_STYLE}',
+                    '&style={TILE_STYLE}' +
+                    '&cache_key={CACHE_KEY}',
                 style_table_name = layer.style_table,
                 pendingurls = [],
                 options,
@@ -3381,7 +3396,9 @@ mol.modules.map.tiles = function(mol) {
                         .replace("{Y}",y)
                         .replace("{Z}",zoom)
                         .replace("{TILE_STYLE}",
-                                 encodeURIComponent(layer.tile_style));
+                             encodeURIComponent(layer.tile_style))
+                        .replace("{HOST}",
+                            mol.services.cartodb.tileApi.tile_cache_key);
 
                     pendingurls.push(url);
                     return(url);
@@ -3549,7 +3566,8 @@ mol.modules.map.tiles = function(mol) {
             }
         }
     });
-}mol.modules.map.dashboard = function(mol) {
+}
+mol.modules.map.dashboard = function(mol) {
 
     mol.map.dashboard = {};
 
@@ -3658,7 +3676,7 @@ mol.modules.map.tiles = function(mol) {
                 var self = this;
 
                 $.getJSON(
-                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
+                    mol.services.cartodb.sqlApi.json_url.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary
@@ -3987,19 +4005,19 @@ mol.modules.map.feature = function(mol) {
             );
         },
         featureclick : function (mouseevent) {
-            var tolerance = 3,
+            var tolerance = 4,
                 sqlLayers,
                 sql,
                 sym,
                 self = this;
 
             if(!this.clickDisabled && this.activeLayers.length > 0) {
-                if(this.makingRequest) {
+                /*if(this.makingRequest) {
                     alert('Please wait for your feature metadata ' +
                       'request to complete before starting another.');
                 } else {
                     this.makingRequest = true;
-
+                */
                     if(this.display) {
                         this.display.remove();
                     }
@@ -4046,7 +4064,7 @@ mol.modules.map.feature = function(mol) {
                                   {source : 'feature'}));
                         }
                     );
-                }
+               //}
             }
         },
         processResults: function(rows) {
@@ -4090,13 +4108,13 @@ mol.modules.map.feature = function(mol) {
                 allobj = all[0];
 
                 head = _.keys(o)[0].split("--");
-                sp = head[1].replace("_", " ");
+                sp = head[1].replace(/_/g, " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
                 content = contentHtml.format(
                     sp,
                     allobj["Source"],
-                    head[3],
+                    head[5],
                     allobj["Type"],
                     head[2]
                 );
@@ -5697,11 +5715,21 @@ mol.modules.map.basemap = function(mol) {
                                     "visibility" : "off"
                                 }]
                             }, {
-                                "featureType" : "administrative.locality",
+                                "featureType" : "administrative",
                                 "stylers" : [{
                                     "visibility" : "off"
                                 }]
                             }, {
+                                "featureType" : "administrative.country",
+                                "stylers" : [{
+                                    "visibility" : "on"
+                                }]
+                            }, {
+                                "featureType" : "administrative.province",
+                                "stylers" : [{
+                                    "visibility" : "on"
+                                }]
+                            },{
                                 "featureType" : "road",
                                 "stylers" : [{
                                     "visibility" : "simplified"
@@ -5931,7 +5959,6 @@ mol.modules.map.metadata = function(mol) {
         init: function(proxy, bus) {
             this.proxy = proxy;
             this.bus = bus;
-            this.url = 'http://mol.cartodb.com/api/v2/sql?q={0}&callback=?';
             this.sql = {
                 dashboard: '' +
                     'SELECT Coverage as "Coverage", Taxon as "Taxon", ' +
@@ -7858,7 +7885,7 @@ mol.modules.map.boot = function(mol) {
             } else {
                 // Otherwise, try and get a result using term
                 $.getJSON(
-                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.sql.format(self.term)),
+                    mol.services.cartodb.sqlApi.json_url.format(this.sql.format(self.term)),
                     function(response) {
                         var results = response.rows;
                         if (results.length == 0) {

@@ -12,8 +12,9 @@ mol.modules.core = function(mol) {
         var name = $.trim(layer.name.toLowerCase()).replace(/ /g, "_"),
             type = $.trim(layer.type.toLowerCase()).replace(/ /g, "_"),
             source = $.trim(layer.source.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
+            source_type = $.trim(layer.source_type.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
             dataset_id = $.trim(layer.dataset_id).replace(/,/g, "").replace(/ /g, "_");
 
-        return 'layer--{0}--{1}--{2}--{3}'.format(name, type, source, dataset_id);
+        return 'layer--{0}--{1}--{2}--{3}--{4}'.format(name, type, source, dataset_id, source_type);
     };
 }

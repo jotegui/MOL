@@ -79,7 +79,7 @@ mol.modules.map.boot = function(mol) {
             } else {
                 // Otherwise, try and get a result using term
                 $.getJSON(
-                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.sql.format(self.term)),
+                    mol.services.cartodb.sqlApi.json_url.format(this.sql.format(self.term)),
                     function(response) {
                         var results = response.rows;
                         if (results.length == 0) {

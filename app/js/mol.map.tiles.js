@@ -141,7 +141,7 @@ mol.modules.map.tiles = function(mol) {
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
-                                if(maptype.name = 'grid') {
+                                if(maptype.name == 'grid') {
                                     gridmt = maptype; 
                                     self.map.overlayMapTypes.removeAt(index);
                                 }
@@ -397,7 +397,7 @@ mol.modules.map.tiles = function(mol) {
     mol.map.tiles.CartoDbTile = Class.extend({
         init: function(layer, map) {
             var sql =  "" + //c is in case cache key starts with a number
-                "SELECT c{4}.* FROM get_tile('{0}','{1}','{2}','{3}') c{4}"
+                "SELECT * FROM get_tile('{0}','{1}','{2}','{3}')"
                 .format(
                     layer.source,
                     layer.type,
@@ -408,7 +408,8 @@ mol.modules.map.tiles = function(mol) {
                 urlPattern = '' +
                     'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+
                     'sql={SQL}'+
-                    '&style={TILE_STYLE}',
+                    '&style={TILE_STYLE}' +
+                    '&cache_key={CACHE_KEY}',
                 style_table_name = layer.style_table,
                 pendingurls = [],
                 options,
@@ -453,7 +454,9 @@ mol.modules.map.tiles = function(mol) {
                         .replace("{Y}",y)
                         .replace("{Z}",zoom)
                         .replace("{TILE_STYLE}",
-                                 encodeURIComponent(layer.tile_style));
+                             encodeURIComponent(layer.tile_style))
+                        .replace("{HOST}",
+                            mol.services.cartodb.tileApi.tile_cache_key);
 
                     pendingurls.push(url);
                     return(url);

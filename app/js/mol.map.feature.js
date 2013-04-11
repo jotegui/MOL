@@ -102,19 +102,19 @@ mol.modules.map.feature = function(mol) {
             );
         },
         featureclick : function (mouseevent) {
-            var tolerance = 3,
+            var tolerance = 4,
                 sqlLayers,
                 sql,
                 sym,
                 self = this;
 
             if(!this.clickDisabled && this.activeLayers.length > 0) {
-                if(this.makingRequest) {
+                /*if(this.makingRequest) {
                     alert('Please wait for your feature metadata ' +
                       'request to complete before starting another.');
                 } else {
                     this.makingRequest = true;
-
+                */
                     if(this.display) {
                         this.display.remove();
                     }
@@ -161,7 +161,7 @@ mol.modules.map.feature = function(mol) {
                                   {source : 'feature'}));
                         }
                     );
-                }
+               //}
             }
         },
         processResults: function(rows) {
@@ -205,13 +205,13 @@ mol.modules.map.feature = function(mol) {
                 allobj = all[0];
 
                 head = _.keys(o)[0].split("--");
-                sp = head[1].replace("_", " ");
+                sp = head[1].replace(/_/g, " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
                 content = contentHtml.format(
                     sp,
                     allobj["Source"],
-                    head[3],
+                    head[5],
                     allobj["Type"],
                     head[2]
                 );
