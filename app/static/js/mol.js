@@ -1832,12 +1832,13 @@ mol.modules.map.layers = function(mol) {
                     'consensus': []
                 },
                 self = this;
-
+                //TODO make this more general ... probably going to have 
+                // many different habitats pref types in future
                 //if no modis habitat prefs, then select all.
                 if(reset && (layer.modis_habitats == null)) {
                     selectedHabitats['modis'] = _.keys(habitats['modis']);
                 } else if(reset || layer.selectedHabitats == undefined && layer.modis_habitats != null) {
-                    selectedHabitats = layer.modis_habitats.split(',');
+                    selectedHabitats['modis'] = layer.modis_habitats.split(',');
                 } else if(layer["selectedHabitats"]){
                     selectedHabitats['modis'] = layer.selectedHabitats['modis'];
                 } else {
@@ -1845,14 +1846,14 @@ mol.modules.map.layers = function(mol) {
                 }
 
                 //if no consensus prefs, then select all.
-                if(reset && (layer.consensus == null)) {
+                if(reset && (layer.consensus_habitats == null)) {
                     selectedHabitats['consensus'] = _.keys(habitats['consensus']);
                 } else if(reset || layer.selectedHabitats == undefined && layer.consensus_habitats != null) {
                     selectedHabitats['consensus'] = layer.consensus_habitats.split(',');
-                } else if(layer["selectedConsensus"]){
-                    selectedHabitats['consensus'] =  selectedHabitats['consensus'];
+                } else if(layer["selectedHabitats"]){
+                    selectedHabitats['consensus'] = layer.selectedHabitats['consensus'];
                 } else {
-                    selectedConsensus = _.keys(habitats);
+                    selectedHabitats['consensus'] = _.keys(habitats['consensus']);
                 }
 
                 //attach habitat selection to the layer object
@@ -3683,8 +3684,8 @@ mol.modules.map.search = function(mol) {
                     'd.style_table as style_table, ' +
                     'e.finalmin as mine, ' +
                     'e.finalmax as maxe, ' +
-                    'e.habitatprefs as habitat, ' +
-                    'c.consensusprefs as consensus, ' +
+                    'e.habitatprefs as modis_habitats, ' +
+                    'c.consensusprefs as consensus_habitats, ' +
                     '(sl.latin is not Null and l.provider = \'jetz\') as inft ' +
                 'FROM layer_metadata l ' +
                 'LEFT JOIN consensus_prefs_join c ON ' +
@@ -4221,7 +4222,8 @@ mol.modules.map.tiles = function(mol) {
                 this.bus.addHandler(
                     'toggle-ee-filter',
                     function(event) {
-                        var layer = event.layer;
+                        var layer = event.layer,
+                            layerAdded = false;
 
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
@@ -4248,6 +4250,7 @@ mol.modules.map.tiles = function(mol) {
                                                 if(newmaptype.name === layer.id) {
                                                     mt = self.map.overlayMapTypes.removeAt(newindex);
                                                     self.map.overlayMapTypes.insertAt(index, mt);
+                                                    layerAdded = true;
                                                     e = new mol.bus.Event(
                                                         'layer-opacity',
                                                         params
@@ -4261,6 +4264,9 @@ mol.modules.map.tiles = function(mol) {
                                 }
                             }
                         );
+                        if(!layerAdded) {
+                            self.getTile(layer);
+                        }
 
                     }
                 );
@@ -4412,7 +4418,7 @@ mol.modules.map.tiles = function(mol) {
                         )
                     );
                     $.getJSON(
-                        'ee _{0}'.format(layer.filter_mode),
+                        'ee_{0}'.format(layer.filter_mode),
                         {
                             sciname: layer.name,
                             habitats: layer.selectedHabitats[layer.filter_mode].join(','),

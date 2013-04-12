@@ -17,10 +17,11 @@ from oauth2client.appengine import AppAssertionCredentials
 EE_URL = 'https://earthengine.googleapis.com'
 CDB_URL = 'http://mol.cartodb.com/api/v2/sql'
 
-# The OAuth scope URL for the Google Earth Engine API.
-GEE_SCOPE = 'https://www.googleapis.com/auth/earthengine.readonly'
-SCOPES = (GEE_SCOPE)
+SCOPES = ('https://www.googleapis.com/auth/earthengine.readonly', 'https://www.googleapis.com/auth/earthbuilder.readonly')
+SCOPES = ' '.join(SCOPES)
 credentials = AppAssertionCredentials(scope=SCOPES)
+
+ee.Initialize(credentials, 'https://earthengine.googleapis.com')
 
 consensus = { 
    '1' : 'GME/images/04040405428907908306-09641357241993258296',
