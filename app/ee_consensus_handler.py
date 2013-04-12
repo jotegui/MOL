@@ -23,7 +23,7 @@ credentials = AppAssertionCredentials(scope=SCOPES)
 
 ee.Initialize(credentials, 'https://earthengine.googleapis.com')
 
-consensus = { 
+consensus = {
    '1' : 'GME/images/04040405428907908306-09641357241993258296',
    '2' : 'GME/images/04040405428907908306-01230937887359499727',
    '3' : 'GME/images/04040405428907908306-18223429773227125129',
@@ -61,29 +61,30 @@ class MainPage(webapp2.RequestHandler):
         #fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
         fc = ee.FeatureCollection('ft:1ugWA45wi7yRdIxKAEbcfd1ks8nhuTcIUyx1Lv18').filter(ee.Filter().eq('Latin',sciname))
         feature = fc.union()
-        species = empty.paint(fc, 2)
+        species = empty.paint(fc, 1)
 
         min = int(elevation.split(',')[0])
         max = int(elevation.split(',')[1])
         habitat_list = habitats.split(",")
 
-
-        output = output.mask(species.neq(2))
-        output = output.where(elev.gt(min).And(elev.lt(max)),1)
+        output = output.mask(species.neq(1))
 
         for pref in consensus:
             cover = ee.Image(consensus[pref])
             output = output.add(cover)
 
-    
+        output = output.where(elev.lt(min),0)
+        output = output.where(elev.gt(max),0)
+
+
         result = output.mask(output)
-        
+
         if(get_area == 'false'):
             mapid = result.getMapId({
-                'palette': '000000,FF0000',                
-                'min': 1,
-                'max': 101,
-                'opacity': 0.5
+                'palette': '000000,DDDDDD',
+                'min': 0,
+                'max': 100,
+                'opacity': 1
             })
             template_values = {
                 'mapid' : mapid['mapid'],
@@ -94,29 +95,29 @@ class MainPage(webapp2.RequestHandler):
             #compute the area
             area = ee.call("Image.pixelArea")
             sum_reducer = ee.call("Reducer.sum")
-    
+
             total = area.mask(result.mask())
-    
+
             geometry = feature.geometry()
             #compute area on 1km scale
             total_area = area.reduceRegion(sum_reducer, geometry, 1000)
             clipped_area = total.reduceRegion(sum_reducer, geometry, 1000)
-    
+
             properties = {'total': total_area, 'clipped': clipped_area}
-    
+
             feature = feature.map_update(properties)
-    
+
             data = ee.data.getValue({"json": feature.serialize()})
             ta = 0
             ca = 0
-    
+
             for feature in data["features"]:
                if ("properties" in feature):
                    if ("total" in feature.get("properties")):
                        ta=ta+feature.get("properties").get("total").get("area")
                    if ("clipped" in feature.get("properties")):
                        ca=ca+feature.get("properties").get("clipped").get("area")
-    
+
             template_values = {
                 'total_area' : ta/1000000,
                 'clipped_area': ca/1000000
