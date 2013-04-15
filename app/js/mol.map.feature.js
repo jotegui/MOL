@@ -74,6 +74,13 @@ mol.modules.map.feature = function(mol) {
                     });
                 }
             );
+            this.bus.addHandler(
+                'clear-map',
+                function(event) {
+                    self.mapMarker.remove();
+                    self.map.setOptions({scrollwheel:true});
+                }
+            );
 
             this.bus.addHandler(
                 'layer-click-action',
@@ -195,6 +202,7 @@ mol.modules.map.feature = function(mol) {
                 var i,
                     j,
                     k,
+                    layerId,
                     contentHtml = '' +
                         '<h3>' +
                             '<a href="javascript:">' +
@@ -209,14 +217,15 @@ mol.modules.map.feature = function(mol) {
                                     'title="Layer Type: {3}">' +
                                     '<img src="/static/maps/search/{4}.png">' +
                                 '</button>' +
+                                '<span class="styler"></span>' + 
                             '</a>' +
                         '</h3>';
 
                 o = JSON.parse(row.get_map_feature_metadata);
                 all = _.values(o)[0];
                 allobj = all[0];
-
-                head = _.keys(o)[0].split("--");
+                layerId =  _.keys(o)[0];
+                head = layerId.split("--");
                 sp = head[1].replace(/_/g, " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
@@ -269,7 +278,7 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-
+                $(self.display).find('.styler').append($('.layers #{0} .styler'.format(layerId)).clone())
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(

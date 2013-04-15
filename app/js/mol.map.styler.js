@@ -129,7 +129,11 @@ mol.modules.map.styler = function(mol) {
                                             o.s4 = color;
                                             o.s5 = color;
                                             o.p = color;
-
+                                            
+                                            self.bus.fireEvent(
+                                                new mol.bus.Event(
+                                                    'clear-map'));
+                                            
                                             _.each(
                                                 layers,
                                                 function(layer) {
@@ -1162,7 +1166,7 @@ mol.modules.map.styler = function(mol) {
                 style_desc = style;
 
                 params.style = style_desc;
-
+                
                 self.bus.fireEvent(
                     new mol.bus.Event(
                         'apply-layer-style',

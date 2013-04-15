@@ -481,29 +481,29 @@ white-space: nowrap;
     padding: 0px;
 }
 
-.mol-LayerControl-Layers .layer button.styler{
+.styler{
     background-color: rgba(25, 25, 25, 0);
     -moz-box-shadow: none;
     -webkit-box-shadow: none;
     box-shadow: none;
 }
 
-.mol-LayerControl-Layers .layer button.styler[disabled]{
+.styler[disabled]{
     background-color: rgba(25, 25, 25, 0);
     -moz-box-shadow: none;
     -webkit-box-shadow: none;
     box-shadow: none;
     opacity:0.5;
 }
-.mol-LayerControl-Layers .layer button.styler[disabled]:hover{
+.styler[disabled]:hover{
     background-color: rgba(25, 25, 25, 0);
 }
 
-.mol-LayerControl-Layers .layer button.styler:hover{
+.styler:hover{
     background-color: rgba(25, 25, 25, 1);
 }
 
-.mol-LayerControl-Layers .layer .styler div{
+.styler div{
     background-color: #FF0000;
     height: 20px;
     width: 20px;
@@ -511,10 +511,10 @@ white-space: nowrap;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
-    border: none;
+    /*border: none;*/
 }
 
-.mol-LayerControl-Layers .layer .styler div.legend-point {
+.legend-point {
     height: 7px;
     width: 7px;
     border-style:solid;
@@ -524,18 +524,18 @@ white-space: nowrap;
     border-radius: 10px;
 }
 
-.mol-LayerControl-Layers .layer .styler div.legend-polygon {
+.legend-polygon {
     border-style:solid;
     width:18px;
     height:18px;
 }
 
-.mol-LayerControl-Layers .layer .styler div.legend-seasonal {
+.legend-seasonal {
     background-color:transparent;
     border: solid;
 }
 
-.mol-LayerControl-Layers .layer .styler div.legend-seasonal div.seasonal {
+.legend-seasonal div.seasonal {
     width: 20px;
     margin: 0px auto;
     -webkit-border-radius: 3px;
@@ -543,7 +543,7 @@ white-space: nowrap;
     border-radius: 3px;
 }
 
-.mol-LayerControl-Layers .layer .styler div.legend-seasonal div {
+.legend-seasonal div {
     height:5px;
 }
 
@@ -1641,7 +1641,9 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     width: 16px;
     height: 16px;
 }
-
+.mol-Map-FeatureDisplay .styler {
+    float:right;
+}
 .mol-Map-FeatureDisplay .source {
     float:right;
 }
@@ -1655,5 +1657,4 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     float: left;
     padding-top:2px;
 }
-
 

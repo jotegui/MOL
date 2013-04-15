@@ -137,7 +137,9 @@ mol.modules.map.tiles = function(mol) {
                             gridmt;
                             style = event.style;
                             sel = event.isSelected;
-
+                        
+                        self.bus.fireEvent(new mol.bus.Event('clear-map'));
+                                            
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
