@@ -77,7 +77,9 @@ mol.modules.map.feature = function(mol) {
             this.bus.addHandler(
                 'clear-map',
                 function(event) {
-                    self.mapMarker.remove();
+                    if (self.mapMarker) {
+                        self.mapMarker.remove();
+                    }
                     self.map.setOptions({scrollwheel:true});
                 }
             );
@@ -86,12 +88,12 @@ mol.modules.map.feature = function(mol) {
                 'layer-click-action',
                 function(event) {
                     var action = event.action;
-                    
+
                     self.clickDisabled = (action == 'info') ? false: true;
-                    
-                    
-                        
-                    if(!self.clickDisabled) {
+
+
+
+                    if(self.clickDisabled == false) {
                         google.maps.event.clearListeners(self.map,'click');
                         self.map.setOptions({
                             draggableCursor: 'auto'
@@ -101,9 +103,9 @@ mol.modules.map.feature = function(mol) {
                             "click",
                             self.featureclick.bind(self)
                         );
-                       
-                        self.bus.fireEvent(
-                            new mol.bus.Event('update-grid',{toggle: true})); 
+
+                        //self.bus.fireEvent(
+                        //    new mol.bus.Event('update-grid',{toggle: true}));
                     }
                 }
             );
@@ -116,59 +118,52 @@ mol.modules.map.feature = function(mol) {
                 self = this;
 
             if(!this.clickDisabled && this.activeLayers.length > 0) {
-                /*if(this.makingRequest) {
-                    alert('Please wait for your feature metadata ' +
-                      'request to complete before starting another.');
-                } else {
-                    this.makingRequest = true;
-                */
-                    if(this.display) {
-                        this.display.remove();
-                    }
+                if(this.display) {
+                    this.display.remove();
+                }
 
-                    sqlLayers =  _.pluck(_.reject(
-                                    this.activeLayers,
-                                    function(al) {
-                                        return al.op == 0;
-                                    }), 'id');
+                sqlLayers =  _.pluck(_.reject(
+                                this.activeLayers,
+                                function(al) {
+                                    return al.op == 0;
+                                }), 'id');
 
-                    sql = this.sql.format(
-                            mouseevent.latLng.lng(),
-                            mouseevent.latLng.lat(),
-                            tolerance,
-                            this.map.getZoom(),
-                            sqlLayers.toString()
-                    );
+                sql = this.sql.format(
+                        mouseevent.latLng.lng(),
+                        mouseevent.latLng.lat(),
+                        tolerance,
+                        this.map.getZoom(),
+                        sqlLayers.toString()
+                );
 
-                    this.bus.fireEvent(new mol.bus.Event(
-                        'show-loading-indicator',
-                        {source : 'feature'}));
+                this.bus.fireEvent(new mol.bus.Event(
+                    'show-loading-indicator',
+                    {source : 'feature'}));
 
 
 
-                    $.getJSON(
-                        this.url.format(sql),
-                        function(data, textStatus, jqXHR) {
-                            var results = {
-                                    latlng: mouseevent.latLng,
-                                    response: data
-                                },
-                                e;
+                $.getJSON(
+                    this.url.format(sql),
+                    function(data, textStatus, jqXHR) {
+                        var results = {
+                                latlng: mouseevent.latLng,
+                                response: data
+                            },
+                            e;
 
-                            if(!data.error && data.rows.length != 0) {
-                                self.processResults(data.rows);
-                                self.showFeatures(results)
-                            }
-
-                            self.makingRequest = false;
-
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                  'hide-loading-indicator',
-                                  {source : 'feature'}));
+                        if(!data.error && data.rows.length != 0) {
+                            self.processResults(data.rows);
+                            self.showFeatures(results)
                         }
-                    );
-               //}
+
+                        self.makingRequest = false;
+
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                              'hide-loading-indicator',
+                              {source : 'feature'}));
+                    }
+                );
             }
         },
         processResults: function(rows) {
@@ -195,8 +190,8 @@ mol.modules.map.feature = function(mol) {
                     self.map.setOptions({scrollwheel:true})
                 }
             );
-            
-            
+
+
             self.featurect = 0;
             _.each(rows, function(row) {
                 var i,
@@ -217,7 +212,7 @@ mol.modules.map.feature = function(mol) {
                                     'title="Layer Type: {3}">' +
                                     '<img src="/static/maps/search/{4}.png">' +
                                 '</button>' +
-                                '<span class="styler"></span>' + 
+                                '<span class="styler"></span>' +
                             '</a>' +
                         '</h3>';
 
@@ -438,17 +433,25 @@ mol.modules.map.feature = function(mol) {
         // Position the overlay
         point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
         if (point && div) {
-            div.style.left = (point.x -28) + 'px';
-            div.style.top = (point.y - $(div).height()-5) + 'px';
-            if($(div).offset().top<0) {
-                this.map.panBy(0,$(div).offset().top-10);
+
+            try {
+                $(div).css('left',((point.x -28)+'px'));
+                $(div).css('top',(point.y - $(div).height()-5) + 'px');
+                if($(div).offset().top<0) {
+                    this.map.panBy(0,$(div).offset().top-10);
+                }
+            } catch (e) {
+                console.log(e);
             }
         }
     };
     mol.map.FeatureMarker.prototype.remove = function() {
         if (this.div_) {
-          this.div_.parentNode.removeChild(this.div_);
+          if (this.div_.parentNode) {
+            this.div_.parentNode.removeChild(this.div_);
+          }
           this.div_ = null;
+
         }
     };
     mol.map.FeatureMarker.prototype.getPosition = function() {

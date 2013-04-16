@@ -293,13 +293,13 @@ mol.modules.services.cartodb = function(mol) {
                 this.jsonp_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041120131333&callback=?&q={0}';
+                    'api/v2/sql?mol_cache=041160131333&callback=?&q={0}';
                 this.json_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041120131333&q={0}';
+                    'api/v2/sql?mol_cache=041160131333&q={0}';
                 //cache key is mmddyyyyhhmm
-                this.sql_cache_key = '041120131333';
+                this.sql_cache_key = '041160131333';
             }
         }
     );
@@ -310,7 +310,7 @@ mol.modules.services.cartodb = function(mol) {
 //                    'mol.cartodb.com';
                     'd3dvrpov25vfw0.cloudfront.net';
                 //cache key is mmddyyyyhhmm of cache start
-                this.tile_cache_key = '041120131313';
+                this.tile_cache_key = '041160131313';
             }
         }
     );
@@ -883,7 +883,7 @@ mol.modules.map.layers = function(mol) {
 
             this.display.removeAll.click (
                 function(event) {
-                    
+
                     self.map.overlayMapTypes.clear();
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
@@ -972,6 +972,29 @@ mol.modules.map.layers = function(mol) {
             /*
              * Toggle Click Handler for Layer Clicking
              */
+            $(this.display.layerClickButton).qtip({
+                content: {
+                    text: 'Toggle this button to make map features clickable.',
+                    title: {
+                        text: 'Map Feature Clicks',
+                        button: true
+                    }
+
+                },
+                position: {
+                    my: 'top right',
+                    at: 'bottom left'
+                },
+                show: {
+                    event: false,
+                    ready: true
+                },
+                hide: {
+                    fixed: false,
+                    event: 'mouseenter'
+                }
+            });
+
             this.display.layerClickButton.click(
                 function(event) {
                     var params = {};
@@ -1069,24 +1092,25 @@ mol.modules.map.layers = function(mol) {
                 'layer-click-toggle',
                 function(event) {
                     self.clickDisabled = event.disable;
-                    
+
                     //if false, unselect layer query
                     if(self.clickDisabled) {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     }
-                    
-                    
+
+
                 }
             );
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
-                    
+
                     if(event.action != 'info') {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     } else {
+                        self.clickDisabled = false;
                         $(self.display.layerClickButton).addClass('selected');
                         $(self.display.layerClickButton).html("ON");
                     }
@@ -2976,7 +3000,7 @@ mol.modules.map.tiles = function(mol) {
                     } else {
                         self.updateGrid(false);
                     }
-                    
+
                 }
             );
             /**
@@ -3080,14 +3104,16 @@ mol.modules.map.tiles = function(mol) {
                             style = event.style;
                             sel = event.isSelected;
 
+                        self.bus.fireEvent(new mol.bus.Event('clear-map'));
+
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
                                 if(maptype.name == 'grid') {
-                                    gridmt = maptype; 
+                                    gridmt = maptype;
                                     self.map.overlayMapTypes.removeAt(index);
                                 }
-                                
+
                                 if (maptype.name === layer.id) {
                                     //remove it from the map
                                     self.map.overlayMapTypes.removeAt(index);
@@ -3242,7 +3268,7 @@ mol.modules.map.tiles = function(mol) {
         updateGrid: function(toggle) {
              var gridmt,
                 self = this;
-             
+
              this.map.overlayMapTypes.forEach(
                  function (mt, i) {
                      if(mt) {
@@ -3252,10 +3278,10 @@ mol.modules.map.tiles = function(mol) {
                      }
                   }
              );
-             
+
              if(toggle==true && this.map.overlayMapTypes.length>0) {
                 gridmt = new mol.map.tiles.GridTile(this.map);
-                this.map.overlayMapTypes.insertAt(this.map.overlayMapTypes.length,gridmt.layer);
+                this.map.overlayMapTypes.push(gridmt.layer);
              }
         },
         /**
@@ -3326,13 +3352,13 @@ mol.modules.map.tiles = function(mol) {
             );
 
             this.map.overlayMapTypes.insertAt(0,maptype.layer);
-            
+
             if(this.clickAction == 'info') {
                 this.updateGrid(true);
             } else {
                 this.updateGrid(false);
             }
-           
+
         }
     });
 
@@ -3360,7 +3386,7 @@ mol.modules.map.tiles = function(mol) {
             if(layer == null || layer == undefined) {
                 return;
             }
-            
+
             if(layer.tile_style == undefined) {
                 layer.tile_style = "#{0}{1}"
                     .format(layer.dataset_id,layer.css);
@@ -3453,8 +3479,8 @@ mol.modules.map.tiles = function(mol) {
                         if (x < 0 || x >= tileRange) {
                             x = (x % tileRange + tileRange) % tileRange;
                         }
-                        
-                        
+
+
                         return ('/static/blank_tile.png?z={0}&x={1}&y={2}&'
                             .format(
                                  zoom, x, y
@@ -3513,20 +3539,20 @@ mol.modules.map.tiles = function(mol) {
                     x = tileCoord.x,
                     tileRange = 1 << zoom,
                     url;
-                    
+
                     if (y < 0 || y >= tileRange) {
                         return null;
                     }
                     if (x < 0 || x >= tileRange) {
                         x = (x % tileRange + tileRange) % tileRange;
                     }
-                    
+
                     url = gridUrl
                         .replace('{x}',x)
                         .replace('{y}',y)
                         .replace('{z}',zoom);
-                   
-                    
+
+
                 $.getJSON(
                     url,
                     function(result) {
@@ -3544,7 +3570,7 @@ mol.modules.map.tiles = function(mol) {
                         var x = Math.round(event.offsetX*(64/256)),
                             y = Math.round(event.offsetY*(64/256)),
                             grid = $(this).data('grid');
-                        
+
                         if(grid) {
                             if(grid.grid[y]!=undefined) {
                                 if(grid.grid[y][x] != undefined) {
@@ -3554,7 +3580,7 @@ mol.modules.map.tiles = function(mol) {
                                         });
                                     } else {
                                         map.setOptions({
-                                            draggableCursor: 'pointer' 
+                                            draggableCursor: 'pointer'
                                         });
                                     }
                                 }
@@ -3977,17 +4003,26 @@ mol.modules.map.feature = function(mol) {
                     });
                 }
             );
+            this.bus.addHandler(
+                'clear-map',
+                function(event) {
+                    if (self.mapMarker) {
+                        self.mapMarker.remove();
+                    }
+                    self.map.setOptions({scrollwheel:true});
+                }
+            );
 
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
                     var action = event.action;
-                    
+
                     self.clickDisabled = (action == 'info') ? false: true;
-                    
-                    
-                        
-                    if(!self.clickDisabled) {
+
+
+
+                    if(self.clickDisabled == false) {
                         google.maps.event.clearListeners(self.map,'click');
                         self.map.setOptions({
                             draggableCursor: 'auto'
@@ -3997,9 +4032,9 @@ mol.modules.map.feature = function(mol) {
                             "click",
                             self.featureclick.bind(self)
                         );
-                       
-                        self.bus.fireEvent(
-                            new mol.bus.Event('update-grid',{toggle: true})); 
+
+                        //self.bus.fireEvent(
+                        //    new mol.bus.Event('update-grid',{toggle: true}));
                     }
                 }
             );
@@ -4012,59 +4047,52 @@ mol.modules.map.feature = function(mol) {
                 self = this;
 
             if(!this.clickDisabled && this.activeLayers.length > 0) {
-                /*if(this.makingRequest) {
-                    alert('Please wait for your feature metadata ' +
-                      'request to complete before starting another.');
-                } else {
-                    this.makingRequest = true;
-                */
-                    if(this.display) {
-                        this.display.remove();
-                    }
+                if(this.display) {
+                    this.display.remove();
+                }
 
-                    sqlLayers =  _.pluck(_.reject(
-                                    this.activeLayers,
-                                    function(al) {
-                                        return al.op == 0;
-                                    }), 'id');
+                sqlLayers =  _.pluck(_.reject(
+                                this.activeLayers,
+                                function(al) {
+                                    return al.op == 0;
+                                }), 'id');
 
-                    sql = this.sql.format(
-                            mouseevent.latLng.lng(),
-                            mouseevent.latLng.lat(),
-                            tolerance,
-                            this.map.getZoom(),
-                            sqlLayers.toString()
-                    );
+                sql = this.sql.format(
+                        mouseevent.latLng.lng(),
+                        mouseevent.latLng.lat(),
+                        tolerance,
+                        this.map.getZoom(),
+                        sqlLayers.toString()
+                );
 
-                    this.bus.fireEvent(new mol.bus.Event(
-                        'show-loading-indicator',
-                        {source : 'feature'}));
+                this.bus.fireEvent(new mol.bus.Event(
+                    'show-loading-indicator',
+                    {source : 'feature'}));
 
 
 
-                    $.getJSON(
-                        this.url.format(sql),
-                        function(data, textStatus, jqXHR) {
-                            var results = {
-                                    latlng: mouseevent.latLng,
-                                    response: data
-                                },
-                                e;
+                $.getJSON(
+                    this.url.format(sql),
+                    function(data, textStatus, jqXHR) {
+                        var results = {
+                                latlng: mouseevent.latLng,
+                                response: data
+                            },
+                            e;
 
-                            if(!data.error && data.rows.length != 0) {
-                                self.processResults(data.rows);
-                                self.showFeatures(results)
-                            }
-
-                            self.makingRequest = false;
-
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                  'hide-loading-indicator',
-                                  {source : 'feature'}));
+                        if(!data.error && data.rows.length != 0) {
+                            self.processResults(data.rows);
+                            self.showFeatures(results)
                         }
-                    );
-               //}
+
+                        self.makingRequest = false;
+
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                              'hide-loading-indicator',
+                              {source : 'feature'}));
+                    }
+                );
             }
         },
         processResults: function(rows) {
@@ -4091,13 +4119,14 @@ mol.modules.map.feature = function(mol) {
                     self.map.setOptions({scrollwheel:true})
                 }
             );
-            
-            
+
+
             self.featurect = 0;
             _.each(rows, function(row) {
                 var i,
                     j,
                     k,
+                    layerId,
                     contentHtml = '' +
                         '<h3>' +
                             '<a href="javascript:">' +
@@ -4112,14 +4141,15 @@ mol.modules.map.feature = function(mol) {
                                     'title="Layer Type: {3}">' +
                                     '<img src="/static/maps/search/{4}.png">' +
                                 '</button>' +
+                                '<span class="styler"></span>' +
                             '</a>' +
                         '</h3>';
 
                 o = JSON.parse(row.get_map_feature_metadata);
                 all = _.values(o)[0];
                 allobj = all[0];
-
-                head = _.keys(o)[0].split("--");
+                layerId =  _.keys(o)[0];
+                head = layerId.split("--");
                 sp = head[1].replace(/_/g, " ");
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
@@ -4172,7 +4202,7 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-
+                $(self.display).find('.styler').append($('.layers #{0} .styler'.format(layerId)).clone())
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(
@@ -4332,17 +4362,25 @@ mol.modules.map.feature = function(mol) {
         // Position the overlay
         point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
         if (point && div) {
-            div.style.left = (point.x -28) + 'px';
-            div.style.top = (point.y - $(div).height()-5) + 'px';
-            if($(div).offset().top<0) {
-                this.map.panBy(0,$(div).offset().top-10);
+
+            try {
+                $(div).css('left',((point.x -28)+'px'));
+                $(div).css('top',(point.y - $(div).height()-5) + 'px');
+                if($(div).offset().top<0) {
+                    this.map.panBy(0,$(div).offset().top-10);
+                }
+            } catch (e) {
+                console.log(e);
             }
         }
     };
     mol.map.FeatureMarker.prototype.remove = function() {
         if (this.div_) {
-          this.div_.parentNode.removeChild(this.div_);
+          if (this.div_.parentNode) {
+            this.div_.parentNode.removeChild(this.div_);
+          }
           this.div_ = null;
+
         }
     };
     mol.map.FeatureMarker.prototype.getPosition = function() {
@@ -6664,7 +6702,11 @@ mol.modules.map.styler = function(mol) {
                                             o.s4 = color;
                                             o.s5 = color;
                                             o.p = color;
-
+                                            
+                                            self.bus.fireEvent(
+                                                new mol.bus.Event(
+                                                    'clear-map'));
+                                            
                                             _.each(
                                                 layers,
                                                 function(layer) {
@@ -7697,7 +7739,7 @@ mol.modules.map.styler = function(mol) {
                 style_desc = style;
 
                 params.style = style_desc;
-
+                
                 self.bus.fireEvent(
                     new mol.bus.Event(
                         'apply-layer-style',

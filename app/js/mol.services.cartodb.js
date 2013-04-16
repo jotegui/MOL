@@ -6,13 +6,13 @@ mol.modules.services.cartodb = function(mol) {
                 this.jsonp_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041120131333&callback=?&q={0}';
+                    'api/v2/sql?mol_cache=041160131333&callback=?&q={0}';
                 this.json_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041120131333&q={0}';
+                    'api/v2/sql?mol_cache=041160131333&q={0}';
                 //cache key is mmddyyyyhhmm
-                this.sql_cache_key = '041120131333';
+                this.sql_cache_key = '041160131333';
             }
         }
     );
@@ -23,7 +23,7 @@ mol.modules.services.cartodb = function(mol) {
 //                    'mol.cartodb.com';
                     'd3dvrpov25vfw0.cloudfront.net';
                 //cache key is mmddyyyyhhmm of cache start
-                this.tile_cache_key = '041120131313';
+                this.tile_cache_key = '041160131313';
             }
         }
     );

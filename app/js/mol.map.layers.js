@@ -60,7 +60,7 @@ mol.modules.map.layers = function(mol) {
 
             this.display.removeAll.click (
                 function(event) {
-                    
+
                     self.map.overlayMapTypes.clear();
                     $(self.display.styleAll).prop('disabled', false);
                     $(self.display.styleAll).qtip('destroy');
@@ -149,6 +149,29 @@ mol.modules.map.layers = function(mol) {
             /*
              * Toggle Click Handler for Layer Clicking
              */
+            this.display.layerClickButton.qtip({
+                content: {
+                    text: 'Toggle this button to make map features clickable.',
+                    title: {
+                        text: 'Map Feature Clicks',
+                        button: true
+                    }
+
+                },
+                position: {
+                    my: 'top right',
+                    at: 'bottom left'
+                },
+                show: {
+                    event: true,
+                    ready: true
+                },
+                hide: {
+                    fixed: false,
+                    event: 'mouseenter'
+                }
+            });
+
             this.display.layerClickButton.click(
                 function(event) {
                     var params = {};
@@ -246,24 +269,25 @@ mol.modules.map.layers = function(mol) {
                 'layer-click-toggle',
                 function(event) {
                     self.clickDisabled = event.disable;
-                    
+
                     //if false, unselect layer query
                     if(self.clickDisabled) {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     }
-                    
-                    
+
+
                 }
             );
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
-                    
+
                     if(event.action != 'info') {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
                     } else {
+                        self.clickDisabled = false;
                         $(self.display.layerClickButton).addClass('selected');
                         $(self.display.layerClickButton).html("ON");
                     }

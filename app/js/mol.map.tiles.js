@@ -18,7 +18,7 @@ mol.modules.map.tiles = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.clickAction = '';
+            this.clickAction = 'info';
             this.gmap_events = [];
             this.addEventHandlers();
         },
@@ -34,7 +34,7 @@ mol.modules.map.tiles = function(mol) {
                     } else {
                         self.updateGrid(false);
                     }
-                    
+
                 }
             );
             /**
@@ -137,17 +137,17 @@ mol.modules.map.tiles = function(mol) {
                             gridmt;
                             style = event.style;
                             sel = event.isSelected;
-                        
+
                         self.bus.fireEvent(new mol.bus.Event('clear-map'));
-                                            
+
                         self.map.overlayMapTypes.forEach(
                             function(maptype, index) {
                                 //find the overlaymaptype to style
                                 if(maptype.name == 'grid') {
-                                    gridmt = maptype; 
+                                    gridmt = maptype;
                                     self.map.overlayMapTypes.removeAt(index);
                                 }
-                                
+
                                 if (maptype.name === layer.id) {
                                     //remove it from the map
                                     self.map.overlayMapTypes.removeAt(index);
@@ -302,7 +302,7 @@ mol.modules.map.tiles = function(mol) {
         updateGrid: function(toggle) {
              var gridmt,
                 self = this;
-             
+
              this.map.overlayMapTypes.forEach(
                  function (mt, i) {
                      if(mt) {
@@ -312,10 +312,10 @@ mol.modules.map.tiles = function(mol) {
                      }
                   }
              );
-             
+
              if(toggle==true && this.map.overlayMapTypes.length>0) {
                 gridmt = new mol.map.tiles.GridTile(this.map);
-                this.map.overlayMapTypes.insertAt(this.map.overlayMapTypes.length,gridmt.layer);
+                this.map.overlayMapTypes.push(gridmt.layer);
              }
         },
         /**
@@ -386,13 +386,13 @@ mol.modules.map.tiles = function(mol) {
             );
 
             this.map.overlayMapTypes.insertAt(0,maptype.layer);
-            
+
             if(this.clickAction == 'info') {
                 this.updateGrid(true);
             } else {
                 this.updateGrid(false);
             }
-           
+
         }
     });
 
@@ -420,7 +420,7 @@ mol.modules.map.tiles = function(mol) {
             if(layer == null || layer == undefined) {
                 return;
             }
-            
+
             if(layer.tile_style == undefined) {
                 layer.tile_style = "#{0}{1}"
                     .format(layer.dataset_id,layer.css);
@@ -513,8 +513,8 @@ mol.modules.map.tiles = function(mol) {
                         if (x < 0 || x >= tileRange) {
                             x = (x % tileRange + tileRange) % tileRange;
                         }
-                        
-                        
+
+
                         return ('/static/blank_tile.png?z={0}&x={1}&y={2}&'
                             .format(
                                  zoom, x, y
@@ -573,20 +573,20 @@ mol.modules.map.tiles = function(mol) {
                     x = tileCoord.x,
                     tileRange = 1 << zoom,
                     url;
-                    
+
                     if (y < 0 || y >= tileRange) {
                         return null;
                     }
                     if (x < 0 || x >= tileRange) {
                         x = (x % tileRange + tileRange) % tileRange;
                     }
-                    
+
                     url = gridUrl
                         .replace('{x}',x)
                         .replace('{y}',y)
                         .replace('{z}',zoom);
-                   
-                    
+
+
                 $.getJSON(
                     url,
                     function(result) {
@@ -604,7 +604,7 @@ mol.modules.map.tiles = function(mol) {
                         var x = Math.round(event.offsetX*(64/256)),
                             y = Math.round(event.offsetY*(64/256)),
                             grid = $(this).data('grid');
-                        
+
                         if(grid) {
                             if(grid.grid[y]!=undefined) {
                                 if(grid.grid[y][x] != undefined) {
@@ -614,7 +614,7 @@ mol.modules.map.tiles = function(mol) {
                                         });
                                     } else {
                                         map.setOptions({
-                                            draggableCursor: 'pointer' 
+                                            draggableCursor: 'pointer'
                                         });
                                     }
                                 }
