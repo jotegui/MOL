@@ -149,7 +149,7 @@ mol.modules.map.layers = function(mol) {
             /*
              * Toggle Click Handler for Layer Clicking
              */
-            this.display.layerClickButton.qtip({
+            $(this.display.layerClickButton).qtip({
                 content: {
                     text: 'Toggle this button to make map features clickable.',
                     title: {
@@ -286,6 +286,7 @@ mol.modules.map.layers = function(mol) {
                     if(event.action != 'info') {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
+                        self.clickDisabled = true;
                     } else {
                         self.clickDisabled = false;
                         $(self.display.layerClickButton).addClass('selected');

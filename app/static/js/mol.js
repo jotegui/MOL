@@ -509,7 +509,7 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
-                
+
                 /*
                  *  Turn on the loading indicator display when zooming
                  */
@@ -590,6 +590,7 @@ mol.modules.map = function(mol) {
                     panControl: true,
                     zoomControl: true,
                     streetViewControl: false,
+                    useStaticMap:false,
                     mapTypeId: google.maps.MapTypeId.ROADMAP,
                     styles:[
                         {
@@ -986,7 +987,7 @@ mol.modules.map.layers = function(mol) {
                     at: 'bottom left'
                 },
                 show: {
-                    event: false,
+                    event: true,
                     ready: true
                 },
                 hide: {
@@ -1109,6 +1110,7 @@ mol.modules.map.layers = function(mol) {
                     if(event.action != 'info') {
                         $(self.display.layerClickButton).removeClass('selected');
                         $(self.display.layerClickButton).html("OFF");
+                        self.clickDisabled = true;
                     } else {
                         self.clickDisabled = false;
                         $(self.display.layerClickButton).addClass('selected');
@@ -2984,7 +2986,7 @@ mol.modules.map.tiles = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.clickAction = '';
+            this.clickAction = 'info';
             this.gmap_events = [];
             this.addEventHandlers();
         },
@@ -3565,6 +3567,7 @@ mol.modules.map.tiles = function(mol) {
                     function(result) {
                         //oh well
                 });
+
                 $("img", node).mousemove(
                     function(event) {
                         var x = Math.round(event.offsetX*(64/256)),
@@ -4129,7 +4132,7 @@ mol.modules.map.feature = function(mol) {
                     layerId,
                     contentHtml = '' +
                         '<h3>' +
-                            '<a href="javascript:">' +
+                            '<a class="{5}" href="javascript:">' +
                                 '<span class="name">{0}</span>' +
                                 '<button ' +
                                     'class="source" ' +
@@ -4141,7 +4144,7 @@ mol.modules.map.feature = function(mol) {
                                     'title="Layer Type: {3}">' +
                                     '<img src="/static/maps/search/{4}.png">' +
                                 '</button>' +
-                                '<span class="styler"></span>' +
+                                '<span class="stylerContainer"></span>' +
                             '</a>' +
                         '</h3>';
 
@@ -4158,7 +4161,8 @@ mol.modules.map.feature = function(mol) {
                     allobj["Source"],
                     head[5],
                     allobj["Type"],
-                    head[2]
+                    head[2],
+                    layerId
                 );
 
                 //TODO try a stage content display
@@ -4202,7 +4206,7 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-                $(self.display).find('.styler').append($('.layers #{0} .styler'.format(layerId)).clone())
+                $(self.display).find('.{0} .stylerContainer'.format(layerId)).append($('.layers #{0} .styler'.format(layerId)).clone())
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(
@@ -4406,6 +4410,7 @@ mol.modules.map.query = function(mol) {
 
     mol.map.query.QueryEngine = mol.mvp.Engine.extend({
         init : function(proxy, bus, map) {
+
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
@@ -4419,23 +4424,30 @@ mol.modules.map.query = function(mol) {
             this.csv_sql = '' +
                 "SELECT * FROM get_species_list_csv('{0}',{1},{2},{3},'{4}')";
             this.queryct=0;
+            this.overlayView = new google.maps.OverlayView();
+            this.overlayView.draw = function () {};
+
+            try {
+                this.overlayView.setMap(map);
+            } catch(e) {}
+
         },
 
         start : function() {
             this.addQueryDisplay();
             this.addEventHandlers();
         },
-        
-        toggleMapClicks : function(toggle) {            
+
+        toggleMapClicks : function(toggle) {
             var action = (toggle==true) ? 'list' : '';
             this.bus.fireEvent(
                 new mol.bus.Event(
-                    'layer-click-action', 
+                    'layer-click-action',
                     {action: action}
                 )
             );
         },
-        
+
         /*
          *  Add the species list tool controls to the map.
          */
@@ -4446,8 +4458,8 @@ mol.modules.map.query = function(mol) {
                     position: google.maps.ControlPosition.TOP_RIGHT
                 },
                 self = this;
-            
-            
+
+
             this.enabled=true;
             this.features={};
             this.display = new mol.map.QueryDisplay();
@@ -4456,9 +4468,9 @@ mol.modules.map.query = function(mol) {
         },
         registerClick : function () {
             var self = this;
-            
+
             this.map.setOptions({draggableCursor: 'pointer'});
-            
+
             google.maps.event.addListener(
                 this.map,
                 "click",
@@ -4483,14 +4495,14 @@ mol.modules.map.query = function(mol) {
                 _class = (dataset_id == "ecoregion_species") ? "Reptilia" : "",
                 sql = this.sql.format(
                     dataset_id,
-                    Math.round(lng*100)/100, 
+                    Math.round(lng*100)/100,
                     Math.round(lat*100)/100,
                     listradius.radius,
                     _class),
                 csv_sql = escape(
                     this.csv_sql.format(
                         dataset_id,
-                        Math.round(lng*100)/100, 
+                        Math.round(lng*100)/100,
                         Math.round(lat*100)/100,
                         listradius.radius,
                         _class)),
@@ -4548,17 +4560,17 @@ mol.modules.map.query = function(mol) {
                     );
                 }
             );
-            
+
             /*
              * Toggle Click Handler for Species List Clicking
              */
             this.display.queryButton.click(
                 function(event) {
                     var params = {};
-                    
+
                     params.visible = self.display.speciesDisplay
                                         .is(':visible') ? false : true;
-                    
+
                     self.bus.fireEvent(
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
@@ -4575,29 +4587,29 @@ mol.modules.map.query = function(mol) {
                         $(self.display.queryButton).removeClass('selected');
                         $(self.display.queryButton).html("OFF");
                     }
-                    
+
                     if(self.enabled == false) {
                         self.display.speciesDisplay.hide();
                     } else {
                         self.display.speciesDisplay.show();
-                    }        
+                    }
                 }
             );
             this.bus.addHandler(
                 'dialog-closed-click',
-                function(event) {                  
+                function(event) {
                     if($.cookie('mol_species_list_query_tip_disabled2') == null) {
                         $(self.display.queryButton).qtip({
                             content: {
                                 text: 'Species list querying is currently ' +
                                       'disabled. Toggle this button to enable' +
-                                      ' querying and left-click the map to' + 
+                                      ' querying and left-click the map to' +
                                       ' generate a list.',
                                 title: {
                                     text: 'Species List Tool',
                                     button: true
-                                }     
-                                
+                                }
+
                             },
                             position: {
                                 my: 'top right',
@@ -4612,50 +4624,56 @@ mol.modules.map.query = function(mol) {
                                 event: 'mouseenter'
                             }
                         });
-                        
+
                         $.cookie(
-                            'mol_species_list_query_tip_disabled2', 
+                            'mol_species_list_query_tip_disabled2',
                             'tip_seen',
                             {expires: 1});
                     }
                 }
             );
-            
+
             /*
              *  Map click handler that starts a list tool request.
              */
             this.bus.addHandler(
                 'species-list-query-click',
                 function (event) {
-                    var listradius,
+                    var listradius, overlayPane,
                         dataset_id = $("option:selected",
                             $(self.display.dataset_id)).data(
-                                $('.selected',$(self.display.types)).val() 
+                                $('.selected',$(self.display.types)).val()
                             ),
                         className =  $("option:selected",
                             $(self.display.dataset_id)).text();
-                    
+
                     if($(self.display).data('qtip')) {
                         $(self.display).qtip('destroy');
                     }
 
-                    if (self.enabled 
-                            && 
+                    if (self.enabled
+                            &&
                             $(self.display.queryButton).hasClass('selected')) {
-                        listradius = new google.maps.Circle(
+                            listradius = new google.maps.Circle(
                             {
-                                map: event.map,
+                                map: self.map,
                                 radius: parseInt(
                                     self.display.radiusInput.val())*1000,
                                     // 50 km
                                 center: event.gmaps_event.latLng,
                                 strokeWeight: 3,
                                 strokeColor: 'darkred',
-                                clickable:false,
+                                clickable: true,
                                 fillOpacity:0,
+                                zIndex:0
 
                             }
                         );
+                        try {
+                            self.overlayPane = self.overlayView.getPanes().overlayLayer;
+                            $(self.overlayPane.firstChild.firstChild).show();
+                        } catch(e) {}
+
                         self.bus.fireEvent(new mol.bus.Event(
                             'show-loading-indicator',
                             {source : 'listradius'}));
@@ -4717,6 +4735,9 @@ mol.modules.map.query = function(mol) {
                             listRowsDone.iucnContent);
                     } else {
                         listradius.setMap(null);
+                        $(self.overlayPane.firstChild.firstChild)
+                            .hide();
+
                         delete(
                             self.features[listradius.center.toString()+
                                           listradius.radius]);
@@ -4730,39 +4751,41 @@ mol.modules.map.query = function(mol) {
 
             this.bus.addHandler(
                 'species-list-tool-toggle',
-                function(event, params) {                                      
+                function(event, params) {
                     if(event.visible == true) {
                         self.enabled = true;
                     } else {
                         self.enabled = false;
                     }
-                    
+
                     if(self.enabled == false) {
                         self.display.speciesDisplay.hide();
                     } else {
                         self.display.speciesDisplay.show();
                     }
-                    
+
                     if (self.listradius) {
                         self.listradius.setMap(null);
+                        $(self.overlayPane.firstChild.firstChild).hide();
+
                     }
-                    
+
                     if (self.enabled == true) {
                         self.registerClick();
                         _.each(
                             self.features,
                             function(feature) {
-                                feature.listradius.setMap(self.map);
-                                feature.listWindow.setMap(self.map);
+                                //feature.listradius.setMap(self.map);
+                                //feature.listWindow.setMap(self.map);
                             }
                         );
-                        
+
                         $(self.display.queryButton).addClass('selected');
                         $(self.display.queryButton).html("ON");
                         self.toggleMapClicks(true);
                     } else {
                          self.map.setOptions({draggableCursor: 'auto'});
-            
+
                         _.each(
                             self.features,
                             function(feature) {
@@ -4770,9 +4793,11 @@ mol.modules.map.query = function(mol) {
                                     feature.listWindow.dialog("close");
                                 }
                                 feature.listradius.setMap(null);
+                                $(self.overlayPane.firstChild.firstChild).hide();
+
                             }
                         );
-                        
+
                         $(self.display.queryButton).removeClass('selected');
                         $(self.display.queryButton).html("OFF");
                         self.toggleMapClicks(false);
@@ -4996,7 +5021,7 @@ mol.modules.map.query = function(mol) {
                 dlContent = $('' +
                     '<div class="mol-Map-ListQuery">' +
                     '   <div>' +
-                    '       <a href="' + 
+                    '       <a href="' +
                                 this.url.format(sqlurl) + '&format=csv"' +
                     '           class="mol-Map-ListQueryDownload">' +
                     '               download csv</a>' +
@@ -5086,7 +5111,7 @@ mol.modules.map.query = function(mol) {
             $(".mol-Map-ListDialog").parent().bind("resize", function() {
                 $(".mol-Map-ListQueryInfoWindow")
                     .height($(".mol-Map-ListDialog").height()-125);
-                    
+
                 $("#gallery")
                     .height($(".mol-Map-ListDialog").height()-125);
             });
@@ -5132,6 +5157,8 @@ mol.modules.map.query = function(mol) {
                    listTabs.tabs("destroy");
                    $(".mol-Map-ListDialogContent").remove();
                    listradius.setMap(null);
+                   $(self.overlayPane.firstChild.firstChild).hide();
+
                    delete (
                        self.features[listradius.center.toString() +
                                      listradius.radius]);
@@ -5618,14 +5645,13 @@ mol.modules.map.query = function(mol) {
             var className = 'mol-Map-QueryDisplay',
                 html = '' +
                     '<div title=' +
-                    '  "Use this control to select species group and radius.' +
-                    '  Then right click (Mac Users: \'control-click\')' +
-                    '  on focal location on map." class="' + className +
+                    '  "Use this control to select species group and radius."' +
+                    ' class="' + className +
                     '  widgetTheme">' +
                     '  <span class="title">Species Lists</span>' +
-                    '  <button id="speciesListButton" ' + 
+                    '  <button id="speciesListButton" ' +
                              'class="toggleBtn" ' +
-                             'title="Click to activate species' + 
+                             'title="Click to activate species' +
                                  ' list querying.">' +
                              'OFF' +
                     '  </button>' +
@@ -5680,7 +5706,7 @@ mol.modules.map.query = function(mol) {
             this.queryButton=$(this).find('#speciesListButton');
             this.speciesDisplay = $(this).find('.speciesDisplay');
             $(this.speciesDisplay).hide();
-            
+
             $(this.types).find('.ecoregion').toggle(false);
             $(this.types).find('.range').toggle(false);
         }

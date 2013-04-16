@@ -222,7 +222,13 @@ mol.modules.map.dashboard = function(mol) {
                     sortList: [[0,0]],
                     widthFixed: true,
                     theme: "blue",
-                    widgets: ["filter","zebra"]
+                    widgets: ["filter","zebra","scroller"],
+                    widgetOptions : {
+                      scroller_height : 500,
+                      scroller_barWidth : 17,
+                      scroller_jumpToHeader: true,
+                      scroller_idPrefix : 's_'
+                    }
                 });
                 this.datasets = $(this).find('.dataset');
 

@@ -190,7 +190,7 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
-                
+
                 /*
                  *  Turn on the loading indicator display when zooming
                  */
@@ -271,6 +271,7 @@ mol.modules.map = function(mol) {
                     panControl: true,
                     zoomControl: true,
                     streetViewControl: false,
+                    useStaticMap:false,
                     mapTypeId: google.maps.MapTypeId.ROADMAP,
                     styles:[
                         {

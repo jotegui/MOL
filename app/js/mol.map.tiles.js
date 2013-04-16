@@ -599,6 +599,7 @@ mol.modules.map.tiles = function(mol) {
                     function(result) {
                         //oh well
                 });
+
                 $("img", node).mousemove(
                     function(event) {
                         var x = Math.round(event.offsetX*(64/256)),

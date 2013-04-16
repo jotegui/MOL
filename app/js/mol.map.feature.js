@@ -200,7 +200,7 @@ mol.modules.map.feature = function(mol) {
                     layerId,
                     contentHtml = '' +
                         '<h3>' +
-                            '<a href="javascript:">' +
+                            '<a class="{5}" href="javascript:">' +
                                 '<span class="name">{0}</span>' +
                                 '<button ' +
                                     'class="source" ' +
@@ -212,7 +212,7 @@ mol.modules.map.feature = function(mol) {
                                     'title="Layer Type: {3}">' +
                                     '<img src="/static/maps/search/{4}.png">' +
                                 '</button>' +
-                                '<span class="styler"></span>' +
+                                '<span class="stylerContainer"></span>' +
                             '</a>' +
                         '</h3>';
 
@@ -229,7 +229,8 @@ mol.modules.map.feature = function(mol) {
                     allobj["Source"],
                     head[5],
                     allobj["Type"],
-                    head[2]
+                    head[2],
+                    layerId
                 );
 
                 //TODO try a stage content display
@@ -273,7 +274,7 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-                $(self.display).find('.styler').append($('.layers #{0} .styler'.format(layerId)).clone())
+                $(self.display).find('.{0} .stylerContainer'.format(layerId)).append($('.layers #{0} .styler'.format(layerId)).clone())
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(
