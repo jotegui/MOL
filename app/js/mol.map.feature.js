@@ -11,16 +11,15 @@ mol.modules.map.feature = function(mol) {
             this.url = 'http://mol.cartodb.com/api/v2/sql?callback=?&q={0}';
             //TODO add
             this.sql = "SELECT * FROM " +
-                       "get_map_feature_metadata({0},{1},{2},{3},'{4}')";
-            this.mesql = "SELECT {5} as timestamp,* FROM " +
-                       "get_feature_presence({0},{1},{2},{3},'{4}')";
-
+                       "get_map_feature_metadata_test({0},{1},{2},{3},'{4}')";
+            
             this.clickDisabled = true;
             this.makingRequest = false;
             this.mapMarker;
             this.activeLayers = [];
 
-            this.lastRequestTime;        },
+            this.lastRequestTime;
+        },
 
         start : function() {
             this.addEventHandlers();
@@ -133,7 +132,8 @@ mol.modules.map.feature = function(mol) {
                         mouseevent.latLng.lat(),
                         tolerance,
                         this.map.getZoom(),
-                        sqlLayers.toString()
+                        mol.core.decode(sqlLayers.toString())
+                            .replace(/ /g,'_')
                 );
 
                 this.bus.fireEvent(new mol.bus.Event(
@@ -216,12 +216,12 @@ mol.modules.map.feature = function(mol) {
                             '</a>' +
                         '</h3>';
 
-                o = JSON.parse(row.get_map_feature_metadata);
+                o = JSON.parse(row.get_map_feature_metadata_test);
                 all = _.values(o)[0];
                 allobj = all[0];
                 layerId =  _.keys(o)[0];
                 head = layerId.split("--");
-                sp = head[1].replace(/_/g, " ");
+                sp = mol.core.decode(head[1]).replace(/_/g, ' ');
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
                 content = contentHtml.format(
@@ -274,7 +274,12 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-                $(self.display).find('.{0} .stylerContainer'.format(layerId)).append($('.layers #{0} .styler'.format(layerId)).clone())
+                $(self.display).find(
+                    '.{0} .stylerContainer'.format(mol.core.encode(layerId))
+                    ).append(
+                        $('.layers #{0} .styler'.format(
+                            mol.core.encode(layerId))).clone()
+                    )
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(

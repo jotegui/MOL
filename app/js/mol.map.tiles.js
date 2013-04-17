@@ -551,7 +551,7 @@ mol.modules.map.tiles = function(mol) {
                                     return layersql.format(
                                         mt.layer.source,
                                         mt.layer.type,
-                                        mt.layer.name,
+                                        unescape(mt.layer.name.replace(/percent/g,'%')),
                                         mt.layer.dataset_id
                                     );
                                 }
