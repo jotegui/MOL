@@ -132,8 +132,7 @@ mol.modules.map.feature = function(mol) {
                         mouseevent.latLng.lat(),
                         tolerance,
                         this.map.getZoom(),
-                        mol.core.decode(sqlLayers.toString())
-                            .replace(/ /g,'_')
+                        sqlLayers.toString()
                 );
 
                 this.bus.fireEvent(new mol.bus.Event(
@@ -201,18 +200,21 @@ mol.modules.map.feature = function(mol) {
                     contentHtml = '' +
                         '<h3>' +
                             '<a class="{5}" href="javascript:">' +
-                                '<span class="name">{0}</span>' +
-                                '<button ' +
-                                    'class="source" ' +
-                                    'title="Layer Source: {1}">' +
-                                    '<img src="/static/maps/search/{2}.png">' +
-                                '</button>' +
-                                '<button ' +
-                                    'class="type" ' +
-                                    'title="Layer Type: {3}">' +
-                                    '<img src="/static/maps/search/{4}.png">' +
-                                '</button>' +
-                                '<span class="stylerContainer"></span>' +
+                                '<table width="100%"><tbody><tr>' +
+                                '<td class="name">{0}</td>' +
+                                '<td class="icons">' +
+                                    '<span class="stylerContainer"></span>' +
+                                    '<button ' +
+                                        'class="type" ' +
+                                        'title="Layer Type: {3}">' +
+                                        '<img src="/static/maps/search/{4}.png">' +
+                                    '</button>' +
+                                    '<button ' +
+                                        'class="source" ' +
+                                        'title="Layer Source: {1}">' +
+                                        '<img src="/static/maps/search/{2}.png">' +
+                                    '</button>' +
+                                '</td></tr></tbody></table>' +
                             '</a>' +
                         '</h3>';
 

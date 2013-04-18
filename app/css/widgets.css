@@ -1588,8 +1588,8 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     padding: 0.2em 0.2em 0.2em 0.3em;
     color: #FFF;
     padding-left: 1.4em;
-
-    height:18px;
+    padding-bottom: 0.3em;
+    /*height:18px;*/
 }
 
 .mol-Map-FeatureDisplay .ui-accordion .ui-accordion-content {
@@ -1641,20 +1641,20 @@ div.mol-Map-FeatureDisplay.ui-dialog-content.ui-widget-content {
     width: 16px;
     height: 16px;
 }
-.mol-Map-FeatureDisplay .styler {
+/*.mol-Map-FeatureDisplay .styler {
     float:right;
 }
 .mol-Map-FeatureDisplay .source {
     float:right;
-}
-.mol-Map-FeatureDisplay .type {
-    float:right;
+}*/
+.mol-Map-FeatureDisplay .icons {
+    text-align:right;
+    white-space: nowrap;
 }
 .mol-Map-FeatureDisplay .info {
     font-size: 12px;
 }
 .mol-Map-FeatureDisplay .name {
-    float: left;
-    padding-top:2px;
+    text-align: left;
 }
 

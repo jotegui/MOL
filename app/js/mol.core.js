@@ -18,11 +18,17 @@ mol.modules.core = function(mol) {
 
         return 'layer--{0}--{1}--{2}--{3}--{4}'.format(name, type, source, dataset_id, source_type);
     };
+    /*
+     * Makes a srting safe for use as a DOM id or class name.
+     */
     mol.core.encode = function(string) {
-        return (escape(string)).replace(/%/g,'percent');
+        return (escape(string)).replace(/%/g,'percent').replace(/\./g,'period');
     };
+    /*
+     * Decodes string encoded with mol.core.encode. 
+     */
     mol.core.decode = function(string) {
-        return (unescape(string.replace(/percent/g,'%')));
+        return (unescape(string.replace(/percent/g,'%').replace(/period/g,'.')));
     };
     
 }
