@@ -164,7 +164,9 @@ mol.modules.map.layers = function(mol) {
                 },
                 show: {
                     event: true,
-                    ready: true
+                    ready: true,
+                    solo: true,
+                    delay: 0
                 },
                 hide: {
                     fixed: false,
@@ -743,10 +745,10 @@ mol.modules.map.layers = function(mol) {
                         '<div class="layersHeader">' +
                             '<button class="layersToggle button">▲</button>' +
                             '<button id="layerClickButton" ' +
-                                     'class="toggleBtn" ' +
+                                     'class="toggleBtn selected" ' +
                                      'title="Click to activate map layer' +
                                          ' querying.">' +
-                                     'OFF' +
+                                     'ON' +
                             '</button>' +
                             '<span class="title">Identify Layers</span>' +
                             'Layers' +

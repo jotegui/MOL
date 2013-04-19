@@ -13,12 +13,21 @@ mol.modules.map.feature = function(mol) {
             this.sql = "SELECT * FROM " +
                        "get_map_feature_metadata_test({0},{1},{2},{3},'{4}')";
             
-            this.clickDisabled = true;
+            this.clickDisabled = false;
             this.makingRequest = false;
             this.mapMarker;
             this.activeLayers = [];
 
             this.lastRequestTime;
+            google.maps.event.clearListeners(this.map,'click');
+                this.map.setOptions({
+                draggableCursor: 'auto'
+            });
+            google.maps.event.addListener(
+                this.map,
+                "click",
+                this.featureclick.bind(this)
+            );
         },
 
         start : function() {
@@ -197,6 +206,7 @@ mol.modules.map.feature = function(mol) {
                     j,
                     k,
                     layerId,
+                    icon,
                     contentHtml = '' +
                         '<h3>' +
                             '<a class="{5}" href="javascript:">' +
@@ -276,12 +286,12 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
+                icon = $('.layers #{0} .styler'.format(
+                            mol.core.encode(layerId))).clone()
+                $(icon).attr('title','');
                 $(self.display).find(
                     '.{0} .stylerContainer'.format(mol.core.encode(layerId))
-                    ).append(
-                        $('.layers #{0} .styler'.format(
-                            mol.core.encode(layerId))).clone()
-                    )
+                ).append(icon);
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(

@@ -457,7 +457,7 @@ mol.modules.map.tiles = function(mol) {
                         .replace("{Z}",zoom)
                         .replace("{TILE_STYLE}",
                              encodeURIComponent(layer.tile_style))
-                        .replace("{HOST}",
+                        .replace("{CACHE_KEY}",
                             mol.services.cartodb.tileApi.tile_cache_key);
 
                     pendingurls.push(url);

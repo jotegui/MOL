@@ -77,17 +77,31 @@ mol.modules.core = function(mol) {
     mol.core = {};
 
     /**
-     * Retunrs a layer id string given a layer {name, type, source, englishname}.
+     * Returns a layer id string given a layer {name, type, source, englishname}.
      */
     mol.core.getLayerId = function(layer) {
-        var name = $.trim(layer.name.toLowerCase()).replace(/ /g, "_"),
-            type = $.trim(layer.type.toLowerCase()).replace(/ /g, "_"),
-            source = $.trim(layer.source.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
-            source_type = $.trim(layer.source_type.toLowerCase()).replace(/,/g, "").replace(/ /g, "_"),
-            dataset_id = $.trim(layer.dataset_id).replace(/,/g, "").replace(/ /g, "_");
+        var //name = $.trim(layer.name.toLowerCase()).replace(/ /g, "_").replace(/(.)/),
+            name = this.encode(layer.name),
+            type = this.encode(layer.type),
+            source = this.encode(layer.source),
+            source_type = this.encode(layer.source_type),
+            dataset_id = this.encode(layer.dataset_id);
 
         return 'layer--{0}--{1}--{2}--{3}--{4}'.format(name, type, source, dataset_id, source_type);
     };
+    /*
+     * Makes a srting safe for use as a DOM id or class name.
+     */
+    mol.core.encode = function(string) {
+        return (escape(string)).replace(/%/g,'percent').replace(/\./g,'period');
+    };
+    /*
+     * Decodes string encoded with mol.core.encode. 
+     */
+    mol.core.decode = function(string) {
+        return (unescape(string.replace(/percent/g,'%').replace(/period/g,'.')));
+    };
+    
 }
 mol.modules.bus = function(mol) {
 
@@ -293,13 +307,13 @@ mol.modules.services.cartodb = function(mol) {
                 this.jsonp_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041160131333&callback=?&q={0}';
+                    'api/v2/sql?mol_cache=041920131653&callback=?&q={0}';
                 this.json_url = '' +
                     'http://d3dvrpov25vfw0.cloudfront.net/' +
 //                    'http://mol.cartodb.com/' +
-                    'api/v2/sql?mol_cache=041160131333&q={0}';
+                    'api/v2/sql?mol_cache=041920131653&q={0}';
                 //cache key is mmddyyyyhhmm
-                this.sql_cache_key = '041160131333';
+                this.sql_cache_key = '041920131653';
             }
         }
     );
@@ -310,7 +324,7 @@ mol.modules.services.cartodb = function(mol) {
 //                    'mol.cartodb.com';
                     'd3dvrpov25vfw0.cloudfront.net';
                 //cache key is mmddyyyyhhmm of cache start
-                this.tile_cache_key = '041160131313';
+                this.tile_cache_key = '041920131653';
             }
         }
     );
@@ -988,7 +1002,9 @@ mol.modules.map.layers = function(mol) {
                 },
                 show: {
                     event: true,
-                    ready: true
+                    ready: true,
+                    solo: true,
+                    delay: 0
                 },
                 hide: {
                     fixed: false,
@@ -1567,10 +1583,10 @@ mol.modules.map.layers = function(mol) {
                         '<div class="layersHeader">' +
                             '<button class="layersToggle button">▲</button>' +
                             '<button id="layerClickButton" ' +
-                                     'class="toggleBtn" ' +
+                                     'class="toggleBtn selected" ' +
                                      'title="Click to activate map layer' +
                                          ' querying.">' +
-                                     'OFF' +
+                                     'ON' +
                             '</button>' +
                             '<span class="title">Identify Layers</span>' +
                             'Layers' +
@@ -3425,7 +3441,7 @@ mol.modules.map.tiles = function(mol) {
                         .replace("{Z}",zoom)
                         .replace("{TILE_STYLE}",
                              encodeURIComponent(layer.tile_style))
-                        .replace("{HOST}",
+                        .replace("{CACHE_KEY}",
                             mol.services.cartodb.tileApi.tile_cache_key);
 
                     pendingurls.push(url);
@@ -3519,7 +3535,7 @@ mol.modules.map.tiles = function(mol) {
                                     return layersql.format(
                                         mt.layer.source,
                                         mt.layer.type,
-                                        mt.layer.name,
+                                        unescape(mt.layer.name.replace(/percent/g,'%')),
                                         mt.layer.dataset_id
                                     );
                                 }
@@ -3820,7 +3836,13 @@ mol.modules.map.dashboard = function(mol) {
                     sortList: [[0,0]],
                     widthFixed: true,
                     theme: "blue",
-                    widgets: ["filter","zebra"]
+                    widgets: ["filter","zebra","scroller"],
+                    widgetOptions : {
+                      scroller_height : 500,
+                      scroller_barWidth : 17,
+                      scroller_jumpToHeader: true,
+                      scroller_idPrefix : 's_'
+                    }
                 });
                 this.datasets = $(this).find('.dataset');
 
@@ -3943,16 +3965,24 @@ mol.modules.map.feature = function(mol) {
             this.url = 'http://mol.cartodb.com/api/v2/sql?callback=?&q={0}';
             //TODO add
             this.sql = "SELECT * FROM " +
-                       "get_map_feature_metadata({0},{1},{2},{3},'{4}')";
-            this.mesql = "SELECT {5} as timestamp,* FROM " +
-                       "get_feature_presence({0},{1},{2},{3},'{4}')";
-
-            this.clickDisabled = true;
+                       "get_map_feature_metadata_test({0},{1},{2},{3},'{4}')";
+            
+            this.clickDisabled = false;
             this.makingRequest = false;
             this.mapMarker;
             this.activeLayers = [];
 
-            this.lastRequestTime;        },
+            this.lastRequestTime;
+            google.maps.event.clearListeners(this.map,'click');
+                this.map.setOptions({
+                draggableCursor: 'auto'
+            });
+            google.maps.event.addListener(
+                this.map,
+                "click",
+                this.featureclick.bind(this)
+            );
+        },
 
         start : function() {
             this.addEventHandlers();
@@ -4130,30 +4160,34 @@ mol.modules.map.feature = function(mol) {
                     j,
                     k,
                     layerId,
+                    icon,
                     contentHtml = '' +
                         '<h3>' +
                             '<a class="{5}" href="javascript:">' +
-                                '<span class="name">{0}</span>' +
-                                '<button ' +
-                                    'class="source" ' +
-                                    'title="Layer Source: {1}">' +
-                                    '<img src="/static/maps/search/{2}.png">' +
-                                '</button>' +
-                                '<button ' +
-                                    'class="type" ' +
-                                    'title="Layer Type: {3}">' +
-                                    '<img src="/static/maps/search/{4}.png">' +
-                                '</button>' +
-                                '<span class="stylerContainer"></span>' +
+                                '<table width="100%"><tbody><tr>' +
+                                '<td class="name">{0}</td>' +
+                                '<td class="icons">' +
+                                    '<span class="stylerContainer"></span>' +
+                                    '<button ' +
+                                        'class="type" ' +
+                                        'title="Layer Type: {3}">' +
+                                        '<img src="/static/maps/search/{4}.png">' +
+                                    '</button>' +
+                                    '<button ' +
+                                        'class="source" ' +
+                                        'title="Layer Source: {1}">' +
+                                        '<img src="/static/maps/search/{2}.png">' +
+                                    '</button>' +
+                                '</td></tr></tbody></table>' +
                             '</a>' +
                         '</h3>';
 
-                o = JSON.parse(row.get_map_feature_metadata);
+                o = JSON.parse(row.get_map_feature_metadata_test);
                 all = _.values(o)[0];
                 allobj = all[0];
                 layerId =  _.keys(o)[0];
                 head = layerId.split("--");
-                sp = head[1].replace(/_/g, " ");
+                sp = mol.core.decode(head[1]).replace(/_/g, ' ');
                 sp = sp.charAt(0).toUpperCase() + sp.slice(1);
 
                 content = contentHtml.format(
@@ -4206,7 +4240,12 @@ mol.modules.map.feature = function(mol) {
                 content+='<div>{0}</div>'.format(entry);
 
                 $(self.display).find('.accordion').append(content);
-                $(self.display).find('.{0} .stylerContainer'.format(layerId)).append($('.layers #{0} .styler'.format(layerId)).clone())
+                icon = $('.layers #{0} .styler'.format(
+                            mol.core.encode(layerId))).clone()
+                $(icon).attr('title','');
+                $(self.display).find(
+                    '.{0} .stylerContainer'.format(mol.core.encode(layerId))
+                ).append(icon);
                 $(self.display).find('.source').click(
                     function(event) {
                           self.bus.fireEvent(
