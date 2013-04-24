@@ -23,7 +23,17 @@ mol.modules.map.boot = function(mol) {
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
                     's.title as source_type_title, ' +   
-                    'l.feature_count as feature_count, '+
+                    "CASE WHEN d.type = 'taxogeooccchecklist' " +
+                        'THEN ' +
+                            "CONCAT("+
+                                "to_char(l.occ_count,'999,999,999'),"+
+                                "' records<br>'," +
+                                "to_char(l.feature_count, '999,999,999'),"+
+                                "' locations'"+
+                ") " +
+                        'ELSE ' +
+                            "CONCAT(to_char(l.feature_count,'999,999,999'),' features') "+
+                    'END as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
                     'CONCAT(\'{' +
@@ -35,7 +45,7 @@ mol.modules.map.boot = function(mol) {
                         '"lng":\',ST_XMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', ' +
                         '"lat":\',ST_YMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' ' +
                         '}}\') ' +
-		    'END as extent, ' +
+                    'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
