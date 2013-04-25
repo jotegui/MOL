@@ -21,9 +21,9 @@ mol.modules.map.search = function(mol) {
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " + 
-                        'THEN t.carto_css_point ' + 
-                        "WHEN 'polygons_style' " + 
+                    "CASE d.style_table WHEN 'points_style' " +
+                        'THEN t.carto_css_point ' +
+                        "WHEN 'polygons_style' " +
                         'THEN t.carto_css_poly END as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
@@ -31,7 +31,7 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +   
+                    's.title as source_type_title, ' +
                     "CASE WHEN d.type = 'taxogeooccchecklist' " +
                         'THEN ' +
                             "CONCAT("+
@@ -56,9 +56,13 @@ mol.modules.map.search = function(mol) {
                         '}}\') ' +
                     'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
-                    'd.dataset_title as dataset_title, ' + 
-                    'd.style_table as style_table ' +
-                    
+                    'd.dataset_title as dataset_title, ' +
+                    'd.style_table as style_table, ' +
+                    'e.habitatprefs as modis_habitats, ' +
+                    'c.consensusprefs as consensus_habitats, ' +
+                    'e.finalmin as mine, ' +
+                    'e.finalmax as maxe, ' +
+                    'ee.ee_id as ee_id ' +
                 'FROM layer_metadata_mar_8_2013 l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
@@ -70,6 +74,13 @@ mol.modules.map.search = function(mol) {
                     'p.source_type = s.source_type ' +
                 'LEFT JOIN ac_mar_8_2013 n ON ' +
                     'l.scientificname = n.n ' +
+                'LEFT JOIN consensus_prefs_join c ON ' +
+                    'l.scientificname = c.binomial ' +
+                'LEFT JOIN elevandhabitat e ON ' +
+                    'l.scientificname = e.scientific ' +
+                'LEFT JOIN ee_assets ee ON ' +
+                    'l.scientificname = ee.scientificname ' +
+                    'AND l.dataset_id = ee.dataset_id ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
                 'ORDER BY name, type_sort_order';
@@ -98,7 +109,7 @@ mol.modules.map.search = function(mol) {
                 item.label = item.label.replace(
                     new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
                        $.ui.autocomplete.escapeRegex(this.term) +
-                       ")(?![^<>]*>)(?![^&;]+;)", "gi"), 
+                       ")(?![^<>]*>)(?![^&;]+;)", "gi"),
                     "<strong>$1</strong>"
                 );
                 return $("<li></li>")
@@ -115,7 +126,7 @@ mol.modules.map.search = function(mol) {
             var self = this;
             $(this.display.searchBox).autocomplete(
                 {
-                    minLength: 3, 
+                    minLength: 3,
                     source: function(request, response) {
                         $.getJSON(
                             'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
@@ -132,8 +143,8 @@ mol.modules.map.search = function(mol) {
                                         var sci, eng;
                                         if(row.n != undefined){
                                             sci = row.n;
-                                            eng = (row.v == null || 
-                                                row.v == '') ? 
+                                            eng = (row.v == null ||
+                                                row.v == '') ?
                                                     '' :
                                                     ', {0}'.format(
                                                         row.v.replace(
@@ -142,7 +153,7 @@ mol.modules.map.search = function(mol) {
                                                     );
                                             names.push({
                                                 label:self.ac_label_html
-                                                    .format(sci, eng), 
+                                                    .format(sci, eng),
                                                 value:sci
                                             });
                                             scinames.push(sci);
@@ -155,7 +166,7 @@ mol.modules.map.search = function(mol) {
                                 response(names);
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
-                                        'hide-loading-indicator', 
+                                        'hide-loading-indicator',
                                         {source : "autocomplete"}
                                     )
                                 );
@@ -176,7 +187,7 @@ mol.modules.map.search = function(mol) {
                         self.names=[];
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'show-loading-indicator', 
+                                'show-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -185,7 +196,7 @@ mol.modules.map.search = function(mol) {
                         self.searching[$(this).val()] = false;
                         self.bus.fireEvent(
                              new mol.bus.Event(
-                                'hide-loading-indicator', 
+                                'hide-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -269,18 +280,18 @@ mol.modules.map.search = function(mol) {
                     var params = {
                         visible: false
                     }, that = this;
-                    
+
                     if(self.display.searchDisplay.is(':visible')) {
                         self.display.searchDisplay.hide();
                         $(this).text('▶');
                         params.visible = false;
                     } else {
-                        
+
                         self.display.searchDisplay.show();
                         $(this).text('◀');
                         params.visible = true;
                     }
-                    
+
                     self.bus.fireEvent(
                         new mol.bus.Event('results-display-toggle', params));
                 }
@@ -295,7 +306,7 @@ mol.modules.map.search = function(mol) {
                         $(this).autocomplete("close");
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'hide-loading-indicator', 
+                                'hide-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -322,18 +333,18 @@ mol.modules.map.search = function(mol) {
 
         /**
          * Searches CartoDB using a term from the search box. Fires
-         * a search event on the bus. The success callback fires a 
+         * a search event on the bus. The success callback fires a
          * search-results event on the bus.
          *
          * @param term the search term (scientific name)
          */
         search: function(term) {
             var self = this;
-                
-                
+
+
                 $(self.display.searchBox).autocomplete('disable');
                 $(self.display.searchBox).autocomplete('close');
-                
+
                 if(term.length<3) {
                     if ($.trim(term).length==0) {
                         self.bus.fireEvent(new mol.bus.Event('clear-results'));
@@ -346,7 +357,7 @@ mol.modules.map.search = function(mol) {
                 } else {
                     self.bus.fireEvent(
                         new mol.bus.Event(
-                            'show-loading-indicator', 
+                            'show-loading-indicator',
                             {source : "search-{0}".format(term)}
                         )
                     );
@@ -362,13 +373,13 @@ mol.modules.map.search = function(mol) {
                             var results = {term:term, response:response};
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'hide-loading-indicator', 
+                                    'hide-loading-indicator',
                                     {source : "search-{0}".format(term)}
                                 )
                             );
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'search-results', 
+                                    'search-results',
                                     results
                                 )
                             );

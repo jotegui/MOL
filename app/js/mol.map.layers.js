@@ -461,6 +461,38 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
 
+// Click handler for style toggle
+                    l.habitat.click(
+                        function(event) {
+                            _.each(
+                                self.display.layers,
+                                function(layer) {
+                                    var l,
+                                        b;
+
+                                    l = self.display.getLayer(layer);
+                                    b = $(l).find('.habitat');
+                                    $(b).prop('disabled', false);
+                                    $(b).qtip('destroy');
+                                }
+                            );
+
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'show-refine',
+                                    {params : {
+                                        target: this,
+                                        layer: layer
+                                    }}
+                                )
+                            );
+
+                            event.stopPropagation();
+                            event.cancelBubble = true;
+                        }
+                    );
+
+
                     l.layer.click(
                         function(event) {
                             var boo = false,
@@ -641,42 +673,48 @@ mol.modules.map.layers = function(mol) {
         init: function(layer) {
             var html = '' +
                 '<div class="layerContainer">' +
-                '  <div class="layer">' +
-                '    <button title="Click to edit layer style." ' +
+                    '<div class="layer">' +
+                        '<button title="Click to edit layer style." ' +
                             'class="styler">' +
-                '      <div class="legend-point"></div> ' +
-                '      <div class="legend-polygon"></div> ' +
-                '      <div class="legend-seasonal">' +
-                '        <div class="seasonal s1"></div>' +
-                '        <div class="seasonal s2"></div>' +
-                '        <div class="seasonal s3"></div>' +
-                '        <div class="seasonal s4"></div>' +
-                '      </div> ' +
-                '    </button>' +
-                '    <button class="source" title="Layer Source: {5}">' +
-                '      <img src="/static/maps/search/{0}.png">' +
-                '    </button>' +
-                '    <button class="type" title="Layer Type: {6}">' +
-                '      <img src="/static/maps/search/{1}.png">' +
-                '    </button>' +
-                '    <div class="layerName">' +
-                '      <div class="layerRecords">{4}</div>' +
-                '      <div title="{2}" class="layerNomial">{2}</div>' +
-                '      <div title="{3}" class="layerEnglishName">{3}</div>'+
-                '    </div>' +
-                '    <button title="Remove layer." class="close">' +
-                       'x' +
-                '    </button>' +
-                '    <button title="Zoom to layer extent." class="zoom">' +
-                       'z' +
-                '    </button>' +
-                '    <label class="buttonContainer">' +
-                '       <input class="toggle" type="checkbox">' +
-                '       <span title="Toggle layer visibility." ' +
-                        'class="customCheck"></span>' +
-                '    </label>' +
-                '   </div>' +
-                '   <div class="break"></div>' +
+                            '<div class="legend-point"></div>' +
+                            '<div class="legend-polygon"></div>' +
+                            '<div class="legend-seasonal">' +
+                                '<div class="seasonal s1"></div>' +
+                                '<div class="seasonal s2"></div>' +
+                                '<div class="seasonal s3"></div>' +
+                                '<div class="seasonal s4"></div>' +
+                            '</div>' +
+                        '</button>' +
+                        '<button class="source" title="Layer Source: {5}">' +
+                            '<img src="/static/maps/search/{0}.png">' +
+                        '</button>' +
+                        '<button class="type" title="Layer Type: {6}">' +
+                                '<img src="/static/maps/search/{1}.png">' +
+                        '</button>' +
+                        '<div class="layerName">' +
+                            '<div class="layerRecords">{4}</div>' +
+                            '<div title="{2}" class="layerNomial">{2}</div>' +
+                            '<div title="{3}" class="layerEnglishName">' +
+                                '{3}' +
+                            '</div>' +
+                         '</div>' +
+                        '<button title="Remove layer." class="close">' +
+                            'x' +
+                        '</button>' +
+                        '<button title="Zoom to layer extent." class="zoom">' +
+                            'z' +
+                        '</button>' +
+                        '<button title="Refine range map using habitat filters." ' +
+                            'class="habitat buttons">' +
+                            '<img src="/static/maps/layers/habitat.png">' +
+                        '</button>' +
+                        '<label class="buttonContainer">' +
+                            '<input class="toggle" type="checkbox">' +
+                                '<span title="Toggle layer visibility." ' +
+                                    'class="customCheck"></span>' +
+                        '</label>' +
+                    '</div>' +
+                    '<div class="break"></div>' +
                 '</div>',
                 self = this;
 
@@ -705,6 +743,7 @@ mol.modules.map.layers = function(mol) {
             this.type = $(this).find('.type');
             this.source = $(this).find('.source');
             this.layer = $(this).find('.layer');
+            this.habitat = $(this).find('.habitat');
             this.layerObj = layer;
 
             //legend items
@@ -712,6 +751,10 @@ mol.modules.map.layers = function(mol) {
             this.polygonLegend = $(this).find('.legend-polygon');
             this.seasonalLegend = $(this).find('.legend-seasonal');
             this.s4 = $(this).find('.s4');
+
+            if(layer.ee_id == null) {
+                this.habitat.hide();
+            }
 
             if(layer.style_table == "points_style") {
                 this.polygonLegend.hide();

@@ -434,7 +434,7 @@ white-space: nowrap;
 .mol-LayerControl-Layers .layer .layerName{
     float: left;
     white-space:normal;
-    width: 280px;
+    width: 260px;
     margin-left: 5px;
     margin-right: 5px;
     -webkit-touch-callout: none;
@@ -606,7 +606,10 @@ white-space: nowrap;
 
 
 
-
+.mol-LayerControl-Layers .layer .habitat img {
+    height: 20px;
+    width: 20px;
+}
 .mol-LayerControl-Layers .layer .zoom {
     float: right;
     position: relative;
@@ -763,6 +766,13 @@ white-space: nowrap;
     margin:2px 0 2px 0;
 }
 
+.mol-LayerControl-Styler .selected{
+    text-decoration: underline;
+}
+
+.mol-LayerControl-Styler .habitats{
+    cursor: pointer;
+}
 
 /*
  * End Layer Control
