@@ -464,6 +464,7 @@ mol.modules.map.tiles = function(mol) {
                     habitats: layer.selectedHabitats[layer.filter_mode].join(','),
                     elevation: layer.selectedElev.join(','),
                     year: layer.selectedYear,
+                    ee_id: layer.ee_id,
                     get_area: false
                 },
                 function (ee) {
@@ -498,6 +499,7 @@ mol.modules.map.tiles = function(mol) {
                     habitats: layer.selectedHabitats[layer.filter_mode].join(','),
                     elevation: layer.selectedElev.join(','),
                     year: layer.selectedYear,
+                    ee_id: layer.ee_id,
                     get_area: true
                 },
                 function (ee) {

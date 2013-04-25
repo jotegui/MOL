@@ -51,6 +51,7 @@ class MainPage(webapp2.RequestHandler):
         habitats = self.request.get('habitats', None)
         elevation = self.request.get('elevation', None)
         get_area = self.request.get('get_area', 'false')
+        ee_id = self.request.get('ee_id', None)
 
         #Get land cover and elevation layers
         elev = ee.Image('srtm90_v4')
@@ -58,10 +59,7 @@ class MainPage(webapp2.RequestHandler):
         output = ee.Image(0)
         empty = ee.Image(0).mask(0)
 
-        #fc = ee.FeatureCollection('ft:1qJV-TVLFM85XIWGbaESWGLQ1rWqsCZuYBdhyOMg').filter(ee.Filter().eq('Latin',sciname))
-        fc = ee.FeatureCollection('ft:1ugWA45wi7yRdIxKAEbcfd1ks8nhuTcIUyx1Lv18').filter(ee.Filter().eq('Latin',sciname))
-        feature = fc.union()
-        species = empty.paint(fc, 1)
+        species = ee.Image(ee_id)
 
         min = int(elevation.split(',')[0])
         max = int(elevation.split(',')[1])
@@ -73,8 +71,7 @@ class MainPage(webapp2.RequestHandler):
             cover = ee.Image(consensus[pref])
             output = output.add(cover)
 
-        output = output.where(elev.lt(min),0)
-        output = output.where(elev.gt(max),0)
+        output = output.where(elev.lt(min).Or(elev.gt(max)),0)
 
 
         result = output.mask(output)
