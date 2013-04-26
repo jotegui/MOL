@@ -352,7 +352,8 @@ mol.modules.map = function(mol) {
             'help',
             'status',
             'images',
-            'boot'
+            'boot',
+            'refine'
     ];
 
     mol.map.MapEngine = mol.mvp.Engine.extend(
@@ -1299,6 +1300,38 @@ mol.modules.map.layers = function(mol) {
                         }
                     );
 
+// Click handler for style toggle
+                    l.habitat.click(
+                        function(event) {
+                            _.each(
+                                self.display.layers,
+                                function(layer) {
+                                    var l,
+                                        b;
+
+                                    l = self.display.getLayer(layer);
+                                    b = $(l).find('.habitat');
+                                    $(b).prop('disabled', false);
+                                    $(b).qtip('destroy');
+                                }
+                            );
+
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'show-refine',
+                                    {params : {
+                                        target: this,
+                                        layer: layer
+                                    }}
+                                )
+                            );
+
+                            event.stopPropagation();
+                            event.cancelBubble = true;
+                        }
+                    );
+
+
                     l.layer.click(
                         function(event) {
                             var boo = false,
@@ -1479,42 +1512,48 @@ mol.modules.map.layers = function(mol) {
         init: function(layer) {
             var html = '' +
                 '<div class="layerContainer">' +
-                '  <div class="layer">' +
-                '    <button title="Click to edit layer style." ' +
+                    '<div class="layer">' +
+                        '<button title="Click to edit layer style." ' +
                             'class="styler">' +
-                '      <div class="legend-point"></div> ' +
-                '      <div class="legend-polygon"></div> ' +
-                '      <div class="legend-seasonal">' +
-                '        <div class="seasonal s1"></div>' +
-                '        <div class="seasonal s2"></div>' +
-                '        <div class="seasonal s3"></div>' +
-                '        <div class="seasonal s4"></div>' +
-                '      </div> ' +
-                '    </button>' +
-                '    <button class="source" title="Layer Source: {5}">' +
-                '      <img src="/static/maps/search/{0}.png">' +
-                '    </button>' +
-                '    <button class="type" title="Layer Type: {6}">' +
-                '      <img src="/static/maps/search/{1}.png">' +
-                '    </button>' +
-                '    <div class="layerName">' +
-                '      <div class="layerRecords">{4}</div>' +
-                '      <div title="{2}" class="layerNomial">{2}</div>' +
-                '      <div title="{3}" class="layerEnglishName">{3}</div>'+
-                '    </div>' +
-                '    <button title="Remove layer." class="close">' +
-                       'x' +
-                '    </button>' +
-                '    <button title="Zoom to layer extent." class="zoom">' +
-                       'z' +
-                '    </button>' +
-                '    <label class="buttonContainer">' +
-                '       <input class="toggle" type="checkbox">' +
-                '       <span title="Toggle layer visibility." ' +
-                        'class="customCheck"></span>' +
-                '    </label>' +
-                '   </div>' +
-                '   <div class="break"></div>' +
+                            '<div class="legend-point"></div>' +
+                            '<div class="legend-polygon"></div>' +
+                            '<div class="legend-seasonal">' +
+                                '<div class="seasonal s1"></div>' +
+                                '<div class="seasonal s2"></div>' +
+                                '<div class="seasonal s3"></div>' +
+                                '<div class="seasonal s4"></div>' +
+                            '</div>' +
+                        '</button>' +
+                        '<button class="source" title="Layer Source: {5}">' +
+                            '<img src="/static/maps/search/{0}.png">' +
+                        '</button>' +
+                        '<button class="type" title="Layer Type: {6}">' +
+                                '<img src="/static/maps/search/{1}.png">' +
+                        '</button>' +
+                        '<div class="layerName">' +
+                            '<div class="layerRecords">{4}</div>' +
+                            '<div title="{2}" class="layerNomial">{2}</div>' +
+                            '<div title="{3}" class="layerEnglishName">' +
+                                '{3}' +
+                            '</div>' +
+                         '</div>' +
+                        '<button title="Remove layer." class="close">' +
+                            'x' +
+                        '</button>' +
+                        '<button title="Zoom to layer extent." class="zoom">' +
+                            'z' +
+                        '</button>' +
+                        '<button title="Refine range map using habitat filters." ' +
+                            'class="habitat buttons">' +
+                            '<img src="/static/maps/layers/habitat.png">' +
+                        '</button>' +
+                        '<label class="buttonContainer">' +
+                            '<input class="toggle" type="checkbox">' +
+                                '<span title="Toggle layer visibility." ' +
+                                    'class="customCheck"></span>' +
+                        '</label>' +
+                    '</div>' +
+                    '<div class="break"></div>' +
                 '</div>',
                 self = this;
 
@@ -1543,6 +1582,7 @@ mol.modules.map.layers = function(mol) {
             this.type = $(this).find('.type');
             this.source = $(this).find('.source');
             this.layer = $(this).find('.layer');
+            this.habitat = $(this).find('.habitat');
             this.layerObj = layer;
 
             //legend items
@@ -1550,6 +1590,10 @@ mol.modules.map.layers = function(mol) {
             this.polygonLegend = $(this).find('.legend-polygon');
             this.seasonalLegend = $(this).find('.legend-seasonal');
             this.s4 = $(this).find('.s4');
+
+            if(layer.ee_id == null) {
+                this.habitat.hide();
+            }
 
             if(layer.style_table == "points_style") {
                 this.polygonLegend.hide();
@@ -2598,9 +2642,9 @@ mol.modules.map.search = function(mol) {
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " + 
-                        'THEN t.carto_css_point ' + 
-                        "WHEN 'polygons_style' " + 
+                    "CASE d.style_table WHEN 'points_style' " +
+                        'THEN t.carto_css_point ' +
+                        "WHEN 'polygons_style' " +
                         'THEN t.carto_css_poly END as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
@@ -2608,7 +2652,7 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +   
+                    's.title as source_type_title, ' +
                     "CASE WHEN d.type = 'taxogeooccchecklist' " +
                         'THEN ' +
                             "CONCAT("+
@@ -2633,9 +2677,13 @@ mol.modules.map.search = function(mol) {
                         '}}\') ' +
                     'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
-                    'd.dataset_title as dataset_title, ' + 
-                    'd.style_table as style_table ' +
-                    
+                    'd.dataset_title as dataset_title, ' +
+                    'd.style_table as style_table, ' +
+                    'e.habitatprefs as modis_habitats, ' +
+                    'c.consensusprefs as consensus_habitats, ' +
+                    'e.finalmin as mine, ' +
+                    'e.finalmax as maxe, ' +
+                    'ee.ee_id as ee_id ' +
                 'FROM layer_metadata_mar_8_2013 l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
@@ -2647,6 +2695,13 @@ mol.modules.map.search = function(mol) {
                     'p.source_type = s.source_type ' +
                 'LEFT JOIN ac_mar_8_2013 n ON ' +
                     'l.scientificname = n.n ' +
+                'LEFT JOIN consensus_prefs_join c ON ' +
+                    'l.scientificname = c.binomial ' +
+                'LEFT JOIN elevandhabitat e ON ' +
+                    'l.scientificname = e.scientific ' +
+                'LEFT JOIN ee_assets ee ON ' +
+                    'l.scientificname = ee.scientificname ' +
+                    'AND l.dataset_id = ee.dataset_id ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
                 'ORDER BY name, type_sort_order';
@@ -2675,7 +2730,7 @@ mol.modules.map.search = function(mol) {
                 item.label = item.label.replace(
                     new RegExp("(?![^&;]+;)(?!<[^<>]*)(" +
                        $.ui.autocomplete.escapeRegex(this.term) +
-                       ")(?![^<>]*>)(?![^&;]+;)", "gi"), 
+                       ")(?![^<>]*>)(?![^&;]+;)", "gi"),
                     "<strong>$1</strong>"
                 );
                 return $("<li></li>")
@@ -2692,7 +2747,7 @@ mol.modules.map.search = function(mol) {
             var self = this;
             $(this.display.searchBox).autocomplete(
                 {
-                    minLength: 3, 
+                    minLength: 3,
                     source: function(request, response) {
                         $.getJSON(
                             'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
@@ -2709,8 +2764,8 @@ mol.modules.map.search = function(mol) {
                                         var sci, eng;
                                         if(row.n != undefined){
                                             sci = row.n;
-                                            eng = (row.v == null || 
-                                                row.v == '') ? 
+                                            eng = (row.v == null ||
+                                                row.v == '') ?
                                                     '' :
                                                     ', {0}'.format(
                                                         row.v.replace(
@@ -2719,7 +2774,7 @@ mol.modules.map.search = function(mol) {
                                                     );
                                             names.push({
                                                 label:self.ac_label_html
-                                                    .format(sci, eng), 
+                                                    .format(sci, eng),
                                                 value:sci
                                             });
                                             scinames.push(sci);
@@ -2732,7 +2787,7 @@ mol.modules.map.search = function(mol) {
                                 response(names);
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
-                                        'hide-loading-indicator', 
+                                        'hide-loading-indicator',
                                         {source : "autocomplete"}
                                     )
                                 );
@@ -2753,7 +2808,7 @@ mol.modules.map.search = function(mol) {
                         self.names=[];
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'show-loading-indicator', 
+                                'show-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -2762,7 +2817,7 @@ mol.modules.map.search = function(mol) {
                         self.searching[$(this).val()] = false;
                         self.bus.fireEvent(
                              new mol.bus.Event(
-                                'hide-loading-indicator', 
+                                'hide-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -2846,18 +2901,18 @@ mol.modules.map.search = function(mol) {
                     var params = {
                         visible: false
                     }, that = this;
-                    
+
                     if(self.display.searchDisplay.is(':visible')) {
                         self.display.searchDisplay.hide();
                         $(this).text('▶');
                         params.visible = false;
                     } else {
-                        
+
                         self.display.searchDisplay.show();
                         $(this).text('◀');
                         params.visible = true;
                     }
-                    
+
                     self.bus.fireEvent(
                         new mol.bus.Event('results-display-toggle', params));
                 }
@@ -2872,7 +2927,7 @@ mol.modules.map.search = function(mol) {
                         $(this).autocomplete("close");
                         self.bus.fireEvent(
                             new mol.bus.Event(
-                                'hide-loading-indicator', 
+                                'hide-loading-indicator',
                                 {source : "autocomplete"}
                             )
                         );
@@ -2899,18 +2954,18 @@ mol.modules.map.search = function(mol) {
 
         /**
          * Searches CartoDB using a term from the search box. Fires
-         * a search event on the bus. The success callback fires a 
+         * a search event on the bus. The success callback fires a
          * search-results event on the bus.
          *
          * @param term the search term (scientific name)
          */
         search: function(term) {
             var self = this;
-                
-                
+
+
                 $(self.display.searchBox).autocomplete('disable');
                 $(self.display.searchBox).autocomplete('close');
-                
+
                 if(term.length<3) {
                     if ($.trim(term).length==0) {
                         self.bus.fireEvent(new mol.bus.Event('clear-results'));
@@ -2923,7 +2978,7 @@ mol.modules.map.search = function(mol) {
                 } else {
                     self.bus.fireEvent(
                         new mol.bus.Event(
-                            'show-loading-indicator', 
+                            'show-loading-indicator',
                             {source : "search-{0}".format(term)}
                         )
                     );
@@ -2939,13 +2994,13 @@ mol.modules.map.search = function(mol) {
                             var results = {term:term, response:response};
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'hide-loading-indicator', 
+                                    'hide-loading-indicator',
                                     {source : "search-{0}".format(term)}
                                 )
                             );
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'search-results', 
+                                    'search-results',
                                     results
                                 )
                             );
@@ -3017,6 +3072,61 @@ mol.modules.map.tiles = function(mol) {
                         self.updateGrid(true);
                     } else {
                         self.updateGrid(false);
+                    }
+
+                }
+            );
+        /**
+             * Handler for when the toggle-ee-filter event is fired. This
+             * switches the layer's getTile to point to earth engine
+             */
+            this.bus.addHandler(
+                'toggle-ee-filter',
+                function(event) {
+                    var layer = event.layer,
+                        layerAdded = false;
+
+                    self.map.overlayMapTypes.forEach(
+                        function(maptype, index) {
+                            //find the overlaymaptype to switch to ee
+                            if (maptype != undefined) {
+                                if (maptype.name === layer.id) {
+                                    //remove it from the map
+                                    if(maptype.interaction != undefined) {
+                                        maptype.interaction.remove();
+                                        maptype.interaction.clickAction="";
+                                    }
+                                    self.map.overlayMapTypes.removeAt(index);
+                                    //put it back the layer
+                                    self.getEETile(layer);
+                                    //fix the layer order
+                                    self.map.overlayMapTypes.forEach(
+                                        function(newmaptype, newindex) {
+                                            var mt,
+                                                e,
+                                                params = {
+                                                    layer: layer,
+                                                    opacity: maptype.opacity
+                                                };
+                                            if(newmaptype.name === layer.id) {
+                                                mt = self.map.overlayMapTypes.removeAt(newindex);
+                                                self.map.overlayMapTypes.insertAt(index, mt);
+                                                layerAdded = true;
+                                                e = new mol.bus.Event(
+                                                    'layer-opacity',
+                                                    params
+                                                );
+                                                self.bus.fireEvent(e);
+                                                return;
+                                            }
+                                        }
+                                    );
+                                }
+                            }
+                        }
+                    );
+                    if(!layerAdded) {
+                        self.getTile(layer);
                     }
 
                 }
@@ -3377,6 +3487,90 @@ mol.modules.map.tiles = function(mol) {
                 this.updateGrid(false);
             }
 
+        },
+        getEETile: function(layer) {
+            var self = this;
+            this.bus.fireEvent(
+                new mol.bus.Event(
+                    "show-loading-indicator",
+                    {source : layer.id}
+                )
+            );
+            $.getJSON(
+                'ee_{0}'.format(layer.filter_mode),
+                {
+                    sciname: layer.name,
+                    habitats: layer.selectedHabitats[layer.filter_mode].join(','),
+                    elevation: layer.selectedElev.join(','),
+                    year: layer.selectedYear,
+                    ee_id: layer.ee_id,
+                    get_area: false
+                },
+                function (ee) {
+                    var maptype = new mol.map.tiles.EarthEngineTile(
+                        ee,
+                        layer,
+                        self.map
+                    );
+                    maptype.layer.onafterload = function (){
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                "hide-loading-indicator",
+                                {source : layer.id}
+                            )
+                        )
+                    };
+                    maptype.layer.onbeforeload = function (){
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                "show-loading-indicator",
+                                {source : layer.id}
+                            )
+                        )
+                    };
+                   self.map.overlayMapTypes.insertAt(0,maptype.layer);
+                }
+            );
+            $.getJSON(
+                'ee_{0}'.format(layer.filter_mode),
+                {
+                    sciname: layer.name,
+                    habitats: layer.selectedHabitats[layer.filter_mode].join(','),
+                    elevation: layer.selectedElev.join(','),
+                    year: layer.selectedYear,
+                    ee_id: layer.ee_id,
+                    get_area: true
+                },
+                function (ee) {
+                    var maptype = new mol.map.tiles.EarthEngineTile(
+                        ee,
+                        layer,
+                        self.map
+                    );
+                    maptype.layer.onafterload = function (){
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                "hide-loading-indicator",
+                                {source : layer.id}
+                            )
+                        )
+                    };
+                    maptype.layer.onbeforeload = function (){
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                "show-loading-indicator",
+                                {source : layer.id}
+                            )
+                        )
+                    };
+                   $("<div>" +
+                        "{0}<br>".format(layer.name) +
+                        "Expert map range size: {0}".format(Math.round(ee.total_area)) +
+                        " km<sup><font size=-2>2</font></sup><br>" +
+                        "Refined range size: {0}".format(Math.round(ee.clipped_area)) +
+                    " km<sup><font size=-2>2</font></sup></div>").dialog({width: 400});
+                }
+            );
         }
     });
 
@@ -3611,6 +3805,65 @@ mol.modules.map.tiles = function(mol) {
             }
         }
     });
+    mol.map.tiles.EarthEngineTile = Class.extend({
+            init: function(ee, layer, map) {
+                var eeMapOptions = {
+                        getTileUrl: function(tile, zoom) {
+                            var y = tile.y,
+                                x = tile.x,
+                                tileRange = 1 << zoom;
+                            if (y < 0 || y >= tileRange) {
+                                return null;
+                            }
+                            if (x < 0 || x >= tileRange) {
+                                x = (x % tileRange + tileRange) % tileRange;
+                            }
+
+                            if (self.layer.pending.length === 1) {
+                                $(self.layer).trigger("onbeforeload");
+                            }
+
+                            return ee.urlPattern.replace("{X}",x).replace("{Y}",y).replace("{Z}",zoom);
+                        },
+                        tileSize: new google.maps.Size(256, 256),
+                        maxZoom: 9,
+                        minZoom: 0
+                },
+                self = this;
+
+                this.layer= new google.maps.ImageMapType(eeMapOptions);
+                this.layer.baseGetTile = this.layer.getTile;
+
+                this.layer.pending = [];
+                //override getTile so we can add in an event when finished
+                this.layer.getTile = function(tileCoord, zoom, ownerDocument) {
+
+                    // Get the DOM node generated by the out-of-the-box ImageMapType
+                    var node = self.layer.baseGetTile(tileCoord, zoom, ownerDocument);
+
+                    // Listen for any images within the node to finish loading
+                    $("img", node).one("load", function() {
+
+                        // Remove the image from our list of pending urls
+                        var index = $.inArray(this.__src__, self.layer.pending);
+                        self.layer.pending.splice(index, 1);
+
+                        // If the pending url list is empty, emit an event to
+                        // indicate that the tiles are finished loading
+                        if (self.layer.pending.length === 0) {
+                            $(self.layer).trigger("onafterload");
+                        }
+                    });
+
+                    return node;
+                };
+
+                this.layer.layer = layer;
+                this.layer.name = layer.id;
+
+            }
+        }
+    );
 }
 mol.modules.map.dashboard = function(mol) {
 
@@ -7936,9 +8189,9 @@ mol.modules.map.boot = function(mol) {
             this.sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " + 
-                        'THEN t.carto_css_point ' + 
-                        "WHEN 'polygons_style' " + 
+                    "CASE d.style_table WHEN 'points_style' " +
+                        'THEN t.carto_css_point ' +
+                        "WHEN 'polygons_style' " +
                         'THEN t.carto_css_poly END as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
@@ -7946,7 +8199,7 @@ mol.modules.map.boot = function(mol) {
                     'CONCAT(l.provider,\'\') as source, '+
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
-                    's.title as source_type_title, ' +   
+                    's.title as source_type_title, ' +
                     "CASE WHEN d.type = 'taxogeooccchecklist' " +
                         'THEN ' +
                             "CONCAT("+
@@ -7971,9 +8224,13 @@ mol.modules.map.boot = function(mol) {
                         '}}\') ' +
                     'END as extent, ' +
                     'l.dataset_id as dataset_id, ' +
-                    'd.dataset_title as dataset_title, ' + 
-                    'd.style_table as style_table ' +
-                    
+                    'd.dataset_title as dataset_title, ' +
+                    'd.style_table as style_table, ' +
+                    'e.habitatprefs as modis_habitats, ' +
+                    'c.consensusprefs as consensus_habitats, ' +
+                    'e.finalmin as mine, ' +
+                    'e.finalmax as maxe, ' +
+                    'ee.ee_id as ee_id ' +
                 'FROM layer_metadata_mar_8_2013 l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
@@ -7985,6 +8242,13 @@ mol.modules.map.boot = function(mol) {
                     'p.source_type = s.source_type ' +
                 'LEFT JOIN ac_mar_8_2013 n ON ' +
                     'l.scientificname = n.n ' +
+                'LEFT JOIN consensus_prefs_join c ON ' +
+                    'l.scientificname = c.binomial ' +
+                'LEFT JOIN elevandhabitat e ON ' +
+                    'l.scientificname = e.scientific ' +
+                'LEFT JOIN ee_assets ee ON ' +
+                    'l.scientificname = ee.scientificname ' +
+                    'AND l.dataset_id = ee.dataset_id ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
                 'ORDER BY name, type_sort_order';
@@ -7997,7 +8261,7 @@ mol.modules.map.boot = function(mol) {
          */
         loadTerm: function() {
             var self = this;
-            
+
             // Remove backslashes and replace characters that equal spaces.
             this.term = unescape(
                 window.location.pathname
@@ -8006,7 +8270,7 @@ mol.modules.map.boot = function(mol) {
                     .replace(/_/g, ' ')
             );
 
-            if ((this.getIEVersion() >= 0 && this.getIEVersion() <= 8) 
+            if ((this.getIEVersion() >= 0 && this.getIEVersion() <= 8)
                 || this.term == '') {
                 // If on IE8- or no query params, fire the splash event
                 self.bus.fireEvent(new mol.bus.Event('toggle-splash'));
@@ -8029,7 +8293,7 @@ mol.modules.map.boot = function(mol) {
             }
         },
         /*
-         * Adds layers to the map if there are fewer than 25 results, 
+         * Adds layers to the map if there are fewer than 25 results,
          * or fires the search results widgetif there are more.
          */
         loadLayers: function(layers) {
