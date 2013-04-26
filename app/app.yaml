@@ -49,6 +49,12 @@ handlers:
 - url: /eol/.*
   script: eol_handler.application
 
+- url: /ee_modis
+  script: ee_modis_handler.application
+  
+- url: /ee_consensus
+  script: ee_consensus_handler.application
+
 - url: /gbif/.*
   script: gbif_handler.application
 
