@@ -398,7 +398,7 @@ div#content .wrapper #code{
 div#content .wrapper #code a{ 
     color: #b8fd85;
 }
-div#footer {float: left; position: relative; width: 800px; left: 50%; margin-left: -690px; margin-bottom: 0px; height: 40px;}
+div#footer {float: left; position: relative; width: 800px; left: 50%; margin-left: -400px; margin-bottom: 30px; height: 40px;}
 div#footer #footer_links { float: right; width: 500px; text-align: left; margin-right: 10px; height: auto; color: #fff; }
 div#footer #footer_links a { font-size: 1.1em; color: #aaa; padding-right: 8px; padding-left: 8px; line-height: 150%; text-decoration: underline;}
  
